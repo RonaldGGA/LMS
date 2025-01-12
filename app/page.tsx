@@ -1,101 +1,134 @@
-import Image from "next/image";
+"use client";
 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { getUserById } from "@/data/getUser";
+import { searchSchema } from "@/zod-schemas";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { useUserSession } from "./hooks/useUserSession";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { BookStatus, User } from "@prisma/client";
+import toast from "react-hot-toast";
+import { getBooksByName } from "@/data/getBooks";
+import CardBook from "./components/card-book";
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const router = useRouter();
+  const [searchedBooks, setSearchedBokks] = useState<
+    | {
+        book_name: string;
+        id: string;
+        author: string;
+        category: string;
+        status: BookStatus;
+      }[]
+    | null
+  >(null);
+  const [user, setUser] = useState<User | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const userId = useUserSession();
+  if (!userId) {
+    router.push("/auth/user?type=login");
+  }
+  async function getDbUser() {
+    const userDb = await getUserById(userId);
+    if (userDb) {
+      setUser(userDb);
+    }
+  }
+  useEffect(() => {
+    getDbUser();
+  }, [userId]);
+
+  const form = useForm<z.infer<typeof searchSchema>>({
+    resolver: zodResolver(searchSchema),
+    defaultValues: {
+      book_name: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof searchSchema>) => {
+    const result = searchSchema.safeParse(values);
+    if (!result.success) {
+      toast("invalid query");
+    }
+    // Improve this
+    console.log({ THIS: values });
+    const results = await getBooksByName(values.book_name);
+    if (results?.success) {
+      const data = results.data!.map((item) => {
+        return {
+          book_name: item.book_name,
+          id: item.id,
+          author: item.author.author_name,
+          category: item.category.cat_type,
+          status: item.book_status,
+        };
+      });
+      setSearchedBokks(data);
+    }
+    console.log(results);
+  };
+  // console.log(user);
+  return (
+    <div className="flex items-center flex-col gap-5 max-w-[1400px] justify-center">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            name="book_name"
+            render={({ field }) => (
+              <FormItem>
+                {/* <FormLabel>Book name*</FormLabel> */}
+                <FormControl>
+                  <div className="flex flex-1 max-w-[350px] focus-within:ring-1 items-center border rounded-md ">
+                    {/* Asegúrate de que el icono tenga un poco de margen */}
+                    <Input
+                      {...field}
+                      type="text"
+                      className="rounded-none focus-visible:ring-0 outline-none border-none focus-visible:outline-none focus-visible:border-none focus:ring-none flex-1 focus:border-none" // Flex-1 para que ocupe el espacio disponible
+                      placeholder="Harry Potter..." // Agregar un placeholder para mejor UX
+                    />
+                    <Button
+                      type="submit"
+                      variant={"ghost"}
+                      className=" rounded-l-none border-l "
+                    >
+                      <Search />{" "}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormDescription></FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+      <div className="justify-center w-full border flex items-center gap-3 flex-wrap">
+        {searchedBooks &&
+          searchedBooks.map((book) => (
+            <CardBook
+              id={book.id}
+              key={book.id}
+              title={book.book_name}
+              author={book.author}
+              category={book.category}
+              status={book.status}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          ))}
+      </div>
     </div>
   );
 }
