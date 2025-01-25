@@ -15,7 +15,7 @@ const authConfig = {
           password: credentials.password as string,
         });
         if (user) {
-          console.log("User logged in:", user); // Log user info
+          // console.log("User logged in:", user); // Log user info
           return user;
         } else {
           throw new Error("Invalid username or password");

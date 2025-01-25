@@ -1,7 +1,6 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import AuthCard from "./authCard";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Form,
@@ -43,7 +42,7 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
     defaultValues: {
       username: "",
       password: "",
-      ...(isLogin ? { DNI: "" } : {}),
+      ...(isLogin ? {} : { DNI: "" }),
     },
   });
 

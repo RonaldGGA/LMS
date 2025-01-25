@@ -12,7 +12,7 @@ interface createBookProps {
 export const createBook = async (values: createBookProps) => {
   try {
     // get the values
-    const { book_name, author = "", category = "", price = "0" } = values;
+    const { book_name, author, category = "", price = "0" } = values;
     if (!book_name) {
       return { success: false, error: "Invalid book name" };
     }
@@ -51,24 +51,31 @@ export const createBook = async (values: createBookProps) => {
 
     //if it does exist, get the id, if not, create a new author and get its id
     let author_id = "";
-    if (!authorDb) {
-      if (author.length > 2) {
+
+    try {
+      if (!authorDb) {
+        const authorName = author && author.length > 2 ? author : "unknown";
+
         const author_res = await db.author.create({
           data: {
-            author_name: author,
+            author_name: authorName,
           },
         });
+
         if (author_res) {
           author_id = author_res.id;
         } else {
           return { success: false, error: "Invalid Author" };
         }
       } else {
-        return { success: false, error: "Author must be larger" };
+        author_id = authorDb.id;
       }
-    } else {
-      author_id = authorDb.id;
+    } catch (error) {
+      console.log({ CREATEBOOKS: error });
+      return { success: false, error: "Database error: " };
     }
+
+    //TODO SEARCH IF THERE IS A BOOK WITH THAT NAME ALREADY
 
     // Create the new book
     const newBook = await db.book.create({

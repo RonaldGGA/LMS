@@ -18,3 +18,9 @@ export const hashPassword = async (password: string, salt = 10) => {
     }
   }
 };
+
+export const createErrorResponse = (message: string) => ({
+  success: false,
+  error: message,
+  data: null,
+});

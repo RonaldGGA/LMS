@@ -1,7 +1,43 @@
 "use server";
 
-import { auth } from "@/auth";
 import db from "@/lib/prisma";
+import { createErrorResponse } from "@/lib/utils";
+
+export const getLiveBooksName = async (partial_name: string) => {
+  if (!partial_name) {
+    return createErrorResponse("No name specified");
+  }
+
+  try {
+    const books = await db.book.findMany({
+      where: {
+        book_name: {
+          contains: partial_name,
+          mode: "insensitive",
+        },
+      },
+      take: 10,
+      select: {
+        author: {
+          select: {
+            author_name: true,
+          },
+        },
+        id: true,
+        book_name: true,
+      },
+    });
+
+    return {
+      success: true,
+      error: null,
+      data: books,
+    };
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return createErrorResponse("Server side error");
+  }
+};
 
 export const getBooksByName = async (book_name: string) => {
   try {

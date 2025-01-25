@@ -1,12 +1,10 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Link from "next/link";
 
 import React from "react";
 
@@ -22,7 +20,7 @@ const CardBooks: React.FC<CardBooksProps> = ({
   footerText,
 }) => {
   return (
-    <Card className=" border-none bg-transparent">
+    <Card className="bg-gray-100 border shadow-md mx-auto max-w-[500px] mt-10">
       <CardHeader className="flex items-center justify-center">
         <CardTitle className="text-3xl">
           {type == "add" ? "Add a New Book" : "Return a book"}

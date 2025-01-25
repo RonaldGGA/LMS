@@ -56,6 +56,14 @@
     --chart-5: 340 75% 55%
   }
 }
+
+ .bgCustomized {
+  background-color: #1f2122;
+  background-image: radial-gradient(#55c6d8aa 2px, transparent 2px), radial-gradient(#55c6d8aa 2px, #1b1c1daa 2px);
+  background-size: 100px 100px;
+  background-position: 0 0, 40px 40px;
+ }
+
 @layer base {
   * {
     @apply border-border;

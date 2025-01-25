@@ -6,6 +6,14 @@ export const loginSchema = z.object({
   }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters long",
+    //add more constraints
+  }),
+});
+
+export const passwordSchema = z.object({
+  oldPassword: z.string().min(8, {
+    message: "Password must be at least 8 characters long",
+    //add more constraints
   }),
 });
 
@@ -15,6 +23,16 @@ export const registerSchema = z.object({
   }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters long",
+    //add more constraints
+  }),
+  DNI: z.string().min(11, {
+    message: "11 characters min",
+  }),
+});
+
+export const updateProfileSchema = z.object({
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
   }),
   DNI: z.string().min(11, {
     message: "11 characters min",
@@ -27,7 +45,7 @@ export const bookSchema = z.object({
   }),
   author: z.string(),
   category: z.string().refine((val) => (!val ? val : val.length > 2), {
-    message: "Minimun category length is 2",
+    message: "Choose a valid category, min length 2",
   }),
   price: z
     .string()

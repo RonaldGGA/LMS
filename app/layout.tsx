@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+
+import { Andika } from "next/font/google";
 
 import HomeNavbar from "./components/homeNavbar";
 import { auth } from "@/auth";
@@ -9,21 +10,12 @@ import { getUserById } from "@/data/getUser";
 import { SessionProvider } from "next-auth/react";
 import IssuedBooksSpan from "./components/issued-books-span";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const andika = Andika({ weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   icons: "/bookIcon.svg",
   title: "LMS Home",
-  description: "Here you can go for every functionality",
+  description: "Search, add and issue books",
 };
 
 export default async function RootLayout({
@@ -36,26 +28,29 @@ export default async function RootLayout({
   let dbUser = null;
   if (session?.user?.id) {
     dbUser = await getUserById(session.user.id);
-    console.log("Fetched dbUser:", dbUser);
-  } else {
-    console.log("User session does not exist or userId is missing.");
+    // console.log("Fetched dbUser:", dbUser);
   }
-
+  // else {
+  //   console.log("User session does not exist or userId is missing.");
+  // }
+  // console.log(dbUser);
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={` overflow-y-scroll ${andika.className} antialiased`}>
         <SessionProvider session={session}>
           {dbUser && (
-            <>
+            <div className="bgCustomized min-h-screen">
               <HomeNavbar user={dbUser} />
-              <div className="w-full h-screen container mx-auto max-w-[1250px] relative">
+              <div className="w-full container mx-auto max-w-[1250px] relative">
                 {children}
-                <IssuedBooksSpan length={dbUser.issuedBooks.length} />
+                <IssuedBooksSpan
+                  user_id={dbUser.id}
+                  userIssuedBooks={dbUser.issuedBooks}
+                />
               </div>
-            </>
+            </div>
           )}
+          {!dbUser && <> {children}</>}
 
           <Toaster />
         </SessionProvider>

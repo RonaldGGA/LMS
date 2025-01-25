@@ -57,13 +57,14 @@ model Book {
 }
 
 model IssuedBook {
-  issued_id   String   @id @default(cuid())
+  id          String     @id @default(cuid())
   book_id     String
   user_id     String
   issued_date DateTime
   return_date DateTime
-  user        User     @relation(fields: [user_id], references: [id])
-  book        Book     @relation(fields: [book_id], references: [id])
+  status      BookStatus @default(ISSUED)
+  user        User       @relation(fields: [user_id], references: [id])
+  book        Book       @relation(fields: [book_id], references: [id])
 }
 
 model Author {

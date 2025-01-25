@@ -1,20 +1,19 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 import Formulary from "../components/formulary";
 import LoginLeft from "../components/login-left";
-import AuthCard from "../components/authCard";
-import { usePathname, useSearchParams } from "next/navigation";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 const UserAuth = () => {
   const params = useSearchParams();
   const type = params.get("type") || "login";
+  const router = useRouter();
 
   if (!["login", "register"].includes(type)) {
     // If the type is invalid, redirect or handle the error as needed
-    return <div>Invalid authentication type specified.</div>;
+    router.push("/auth/user?type=login");
   }
 
   return (

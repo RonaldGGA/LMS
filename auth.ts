@@ -1,9 +1,6 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import db from "@/lib/prisma";
-import Credentials from "next-auth/providers/credentials";
-import { loginUser } from "./actions/auth-user";
-import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -23,7 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.username = user.name as string;
           token.sub = user.id;
         }
-        console.log({ USER: user });
+        // console.log({ USER: user });
         if (!token.sub) return token;
 
         const existingUser = await db.user.findUnique({
@@ -42,9 +39,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   adapter: PrismaAdapter(db),
   debug: true,
-  pages: {
-    signIn: "/auth/login",
-  },
   session: { strategy: "jwt" },
   ...authConfig,
 });

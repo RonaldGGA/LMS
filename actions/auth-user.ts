@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
 interface registerUserProps {
   username: string;
   password: string;
-  DNI: string;
+  DNI?: string;
 }
 
 //TODO validar si la fecha del DNI es valida
@@ -61,7 +61,7 @@ export const loginUser = async (values: loginUserProps) => {
   let user = null;
   try {
     // get the inputs and validate
-    console.log(values);
+    // console.log(values);
     const { username, password } = values;
     if (!username || !password) {
       return user;

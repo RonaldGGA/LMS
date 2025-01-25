@@ -3,37 +3,87 @@
 import { getBookById } from "@/data/getBook";
 import { BookStatus } from "@prisma/client";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
-import { Book } from "@prisma/client";
+import React, { useCallback, useEffect, useState } from "react";
 import { BigBook } from "@/types";
 import toast from "react-hot-toast";
 
+import { issueBook } from "@/actions/issue-book";
+import { useUserSession } from "@/app/hooks/useUserSession";
+import Confirmation from "@/app/components/issue-confirmation";
+import { returnBook } from "@/actions/return-book";
+
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
+  const [issuedByUser, setIssuedByUser] = useState(false);
   console.log(params);
-
-  const getBook = async () => {
+  const userId = useUserSession();
+  const getBook = useCallback(async () => {
     try {
+      console.log(`getting book with id ${params.id}`);
       const result = await getBookById(params.id);
-      if (result?.success) {
-        setBookInfo(result.data);
-      }
-    } catch (error) {
-      if (error) {
-        console.log(error);
-        return null;
-      }
-    }
-  };
 
+      if (!result?.success) {
+        setBookInfo(null);
+        console.log({ BOOKID: result?.error });
+        return;
+      }
+
+      setBookInfo(result.data);
+      console.log("Got the book");
+    } catch (error) {
+      console.log(error);
+    }
+  }, [params.id]); // Dependency on params.id
   useEffect(() => {
     getBook();
-  }, []);
+  }, [getBook]);
 
-  const handleIssueBook = () => {
+  useEffect(() => {
+    if (bookInfo && userId) {
+      const issued = bookInfo.issuedBooks.some(
+        (issuedBook) =>
+          issuedBook.user_id === userId &&
+          new Date(issuedBook.return_date) > new Date(Date.now())
+      );
+      setIssuedByUser(issued);
+      console.log("Issued by user:", issued);
+    }
+  }, [bookInfo, userId]); // Only run this effect when bookInfo or userId changes
+
+  if (!userId) {
+    return null;
+  }
+  if (!userId) {
+    return null;
+  }
+
+  // check if the book is an issued book, and it is issued by the current user
+
+  // if so, give it the oportunity to return it
+  // if not just give the normal information
+
+  const handleIssueBook = async () => {
     // Logic for issuing the book, e.g., updating the status in the database
     console.log("Issuing the book...");
-    toast("Issuing the book...");
+    toast(`Issuing the book with the id ${params.id}`);
+    const result = await issueBook(params.id);
+    if (result?.success) {
+      toast.success("Book issued succesfully");
+      window.location.reload();
+    } else {
+      toast.error("Book coulnt be issued, something happpened");
+    }
+  };
+  const handleReturnBook = async () => {
+    console.log("Returning the book...");
+    toast(`Returning the book with the id ${params.id}`);
+    const result = await returnBook(params.id);
+    if (result?.success) {
+      toast.success("Book returned succesfully");
+      window.location.reload();
+    } else {
+      toast.error("Book coulnt be returned, something happpened");
+    }
   };
   if (!bookInfo) {
     return null;
@@ -82,19 +132,19 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               ? "Status: Issued"
               : "Status: Available"}
           </p>
-          <button
-            onClick={handleIssueBook}
-            className={`mt-4 px-4 py-2 rounded-md text-white font-semibold ${
-              bookInfo.book_status === BookStatus.ISSUED
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-            disabled={bookInfo.book_status === BookStatus.ISSUED} // Disable button if book is already issued
-          >
-            {bookInfo.book_status == BookStatus.ISSUED
-              ? "Already Issued"
-              : "Issue Book"}
-          </button>
+          <div className="flex items-center gap-4">
+            <Confirmation
+              bookInfo={bookInfo}
+              handleIssueBook={handleIssueBook}
+            />
+            {issuedByUser && (
+              <Confirmation
+                type={issuedByUser ? BookStatus.ISSUED : BookStatus.IN_STOCK}
+                bookInfo={bookInfo}
+                handleReturnBook={handleReturnBook}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

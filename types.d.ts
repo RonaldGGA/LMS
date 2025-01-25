@@ -7,4 +7,8 @@ export type BigBook = Book & {
   category: {
     cat_type: string;
   };
+  issuedBooks: {
+    return_date: Date;
+    user_id: string;
+  }[];
 };
