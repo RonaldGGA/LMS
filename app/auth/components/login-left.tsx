@@ -3,7 +3,7 @@ import React from "react";
 
 const LoginLeft = () => {
   return (
-    <div className="relative hidden lg:flex  flex-col w-full h-[600px] max-w-[500px]  justify-between items-center gap-5 overflow-hidden  p-5">
+    <div className="flex-1 relative hidden lg:flex  flex-col w-full h-[600px]  max-w-[99%]  justify-between items-center gap-5 overflow-hidden  p-5 rounded-md  ">
       <div className="font-serif flex flex-col gap-2">
         <p className="  text-5xl ">“Knowledge is the key to success”</p>
         <p className="text-end text-xl">Anonimus</p>

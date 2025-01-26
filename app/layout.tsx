@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+
 import { Toaster } from "react-hot-toast";
 
 import { Andika } from "next/font/google";
@@ -33,7 +34,7 @@ export default async function RootLayout({
   // else {
   //   console.log("User session does not exist or userId is missing.");
   // }
-  // console.log(dbUser);
+  console.log(dbUser);
   return (
     <html lang="en">
       <body className={` overflow-y-scroll ${andika.className} antialiased`}>

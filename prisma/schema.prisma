@@ -40,7 +40,7 @@ model Admin {
 
 model Book {
   id          String       @id @default(cuid())
-  book_name   String
+  book_name   String       @unique
   book_status BookStatus   @default(IN_STOCK)
   description String
   cat_id      String

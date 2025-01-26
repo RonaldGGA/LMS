@@ -29,12 +29,21 @@ const Navbar = () => {
   if (pathname === "/auth/user") {
     return (
       <div className="z-20 sticky  bg-white  shadow-sm  w-full flex items-center justify-center h-[90px]">
-        <div className="w-full max-w-[1440px] flex items-center justify-between h-[100px] px-5 md:px-10">
+        <div className="w-full max-w-[1440px] flex items-center justify-between h-[100px] px-1 md:px-5 lg:px-10">
           <Link href="/" className=" relative flex items-center gap-2">
-            <Image src="/bookIcon.svg" alt="logo" width={45} height={45} />
-            <p className="font-medium text-2xl tracking-wide"> LMS</p>
+            <Image
+              src="/bookIcon.svg"
+              className="w-10 sm:w-12 h-10 sm:h-12"
+              alt="logo"
+              width={45}
+              height={45}
+            />
+            <p className="font-semibold text-lg sm:text-2xl tracking-wide">
+              {" "}
+              LMS
+            </p>
           </Link>
-          <div className="self-stretch justify-start items-center inline-flex">
+          <div className="hidden self-stretch justify-start items-center md:inline-flex">
             <button
               onClick={handleLoginClick}
               className={clsx(

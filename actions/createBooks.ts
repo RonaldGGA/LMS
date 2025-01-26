@@ -1,6 +1,7 @@
 "use server";
 
 import db from "@/lib/prisma";
+import { createErrorResponse } from "@/lib/utils";
 
 interface createBookProps {
   book_name: string;
@@ -16,6 +17,13 @@ export const createBook = async (values: createBookProps) => {
     if (!book_name) {
       return { success: false, error: "Invalid book name" };
     }
+    // no repeated books
+    // TODO: MAYBE add a validation, perhaps there are 2 books with the same name, but not with the same author so validate that
+    const isDbBook = await db.book.findFirst({
+      where: {
+        book_name,
+      },
+    });
     // check if the category exists
     const categoryDb = await db.category.findFirst({
       where: {
@@ -75,8 +83,10 @@ export const createBook = async (values: createBookProps) => {
       return { success: false, error: "Database error: " };
     }
 
-    //TODO SEARCH IF THERE IS A BOOK WITH THAT NAME ALREADY
-
+    if (isDbBook) {
+      console.log("Book in db");
+      return createErrorResponse("Book already in db");
+    }
     // Create the new book
     const newBook = await db.book.create({
       data: {

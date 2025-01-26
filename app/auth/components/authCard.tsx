@@ -31,7 +31,7 @@ const AuthCard: React.FC<AuthCardProps> = ({ type, children, footerLink }) => {
           {type === "login" ? (
             <>
               If you don’t have an account,{" "}
-              <Link href={footerLink} className="  underline">
+              <Link href={footerLink} className="underline-offset-4  underline">
                 Register
               </Link>{" "}
               first.
@@ -39,7 +39,10 @@ const AuthCard: React.FC<AuthCardProps> = ({ type, children, footerLink }) => {
           ) : (
             <>
               If you already have an account,{" "}
-              <Link href={footerLink} className="  underline">
+              <Link
+                href={footerLink}
+                className="  underline underline-offset-4 hover:text-gray-200"
+              >
                 Login
               </Link>{" "}
               instead.

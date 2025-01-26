@@ -23,26 +23,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import CardBooks from "./card-books";
 import { useForm } from "react-hook-form";
 import { bookSchema } from "@/zod-schemas";
-import z from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-// import {
-//   InputOTP,
-//   InputOTPGroup,
-//   InputOTPSeparator,
-//   InputOTPSlot,
-// } from "@/components/ui/input-otp";
 
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { createBook } from "@/actions/createBooks";
 import { Category } from "@prisma/client";
 import { getCategories } from "@/data/getCategories";
-
+import AuthorInput from "./author-input";
+import z from "zod";
 const FormBooks = () => {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[] | null>(null);
+
+  const [authorValue, setAuthorValue] = useState("");
 
   const [isInputMode, setInputMode] = useState(false);
 
@@ -55,7 +50,6 @@ const FormBooks = () => {
       price: "0",
       img: "",
       description: "",
-      // pin: "",
     },
   });
 
@@ -72,16 +66,13 @@ const FormBooks = () => {
       }
     };
     searchCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (values: z.infer<typeof bookSchema>) => {
     const result = bookSchema.safeParse(values);
 
-    // Handle new category submission
     if (isInputMode && values.category) {
-      // Here you might want to add logic for creating a new category in the database
-      const newCategory = { id: String(Date.now()), cat_type: values.category }; // Temporary ID generation
+      const newCategory = { id: String(Date.now()), cat_type: values.category };
       setCategories((prev) => (prev ? [...prev, newCategory] : [newCategory]));
       toast.success("Category added successfully!");
     }
@@ -102,6 +93,8 @@ const FormBooks = () => {
       }
     }
   };
+
+  const bookValue = form.watch("book_name");
   return (
     <CardBooks
       type="add"
@@ -123,21 +116,12 @@ const FormBooks = () => {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="author"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Author</FormLabel>
-                <FormControl>
-                  <Input placeholder="Joanne Rowling" {...field} />
-                </FormControl>
-                <FormDescription></FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+          <AuthorInput
+            bookValue={bookValue}
+            form={form}
+            authorValue={authorValue}
+            setAuthorValue={setAuthorValue}
           />
-
           {isInputMode ? (
             <div className="flex items-end gap-2">
               <FormField
@@ -191,11 +175,8 @@ const FormBooks = () => {
                                 </SelectItem>
                               ))
                             : "Loading"}
-                          {/* <SelectItem value={"new"}>New</SelectItem> */}
                         </SelectContent>
                       </Select>
-
-                      {/* <Input placeholder="Fiction" {...field} /> */}
                     </FormControl>
                     <FormDescription></FormDescription>
                     <FormMessage />
@@ -227,29 +208,6 @@ const FormBooks = () => {
               </FormItem>
             )}
           />
-          {/* <FormField
-            control={form.control}
-            name="pin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pin</FormLabel>
-                <FormControl>
-                  <InputOTP pattern="^[0-9]+$" maxLength={4} {...field}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </FormControl>
-                <FormDescription>
-                  Please, provide the security code given by an admin.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
           <Button type="submit" variant={"outline"}>
             Add book
           </Button>

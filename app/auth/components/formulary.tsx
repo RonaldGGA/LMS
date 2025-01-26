@@ -125,7 +125,7 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
                   </div>
                 </FormControl>
 
-                <FormDescription>This is your password</FormDescription>
+                {/* <FormDescription>Type your password</FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -139,15 +139,17 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
                   <FormControl>
                     <Input placeholder="06061232434" type="text" {...field} />
                   </FormControl>
-                  <FormDescription>This is your DNI number</FormDescription>
+                  <FormDescription>Type your DNI number</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
           )}
 
-          <div className="flex justify-center">
-            <Button className="p-5">Get In</Button>
+          <div className="flex justify-center text-black">
+            <Button variant={"outline"} className="p-5">
+              Get In
+            </Button>
           </div>
           <p className=" text-gray-400 max-w-[380px]text-sm ">
             By accesing this system, you accept the{" "}
