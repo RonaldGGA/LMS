@@ -36,7 +36,9 @@ const IssuedBooks: React.FC<IssuedBooksProps> = async ({ params }) => {
         </TableRow>
       </TableHeader>
       <TableBody className="">
-        {searchedBooks?.success ? (
+        {searchedBooks?.success &&
+        searchedBooks.data &&
+        searchedBooks?.data?.length > 0 ? (
           searchedBooks?.data?.map((item) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">
@@ -66,6 +68,8 @@ const IssuedBooks: React.FC<IssuedBooksProps> = async ({ params }) => {
               </TableCell>
             </TableRow>
           ))
+        ) : searchedBooks?.success && searchedBooks.data?.length === 0 ? (
+          <div className="w-[250px] text-lg p-3">No books issued so far !</div>
         ) : (
           <div className="text-xl text-center ">Loading...</div>
         )}

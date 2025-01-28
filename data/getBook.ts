@@ -23,13 +23,18 @@ export const getBookById = async (id: string) => {
             author_name: true,
           },
         },
-        category: {
+        categories: {
           select: {
-            cat_type: true,
+            category: {
+              select: {
+                cat_type: true,
+              },
+            },
           },
         },
       },
     });
+    console.log(book);
     if (!book) {
       return {
         success: false,

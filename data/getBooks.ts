@@ -60,9 +60,13 @@ export const getBooksByName = async (book_name: string) => {
             author_name: true,
           },
         },
-        category: {
+        categories: {
           select: {
-            cat_type: true,
+            category: {
+              select: {
+                cat_type: true,
+              },
+            },
           },
         },
       },

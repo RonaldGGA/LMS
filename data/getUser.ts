@@ -6,7 +6,7 @@ export const getUserById = async (id: string | undefined) => {
     console.log(`No id ${id}`);
     return null;
   }
-  console.log(`Fetching user with ID: ${id}`);
+  // console.log(`Fetching user with ID: ${id}`);
   try {
     const user = await db.user.findFirst({
       where: {
@@ -16,8 +16,8 @@ export const getUserById = async (id: string | undefined) => {
         issuedBooks: true,
       },
     });
+
     // console.log({ USER: user });
-    console.log({ USER: user });
     return user;
   } catch (error) {
     if (error) {

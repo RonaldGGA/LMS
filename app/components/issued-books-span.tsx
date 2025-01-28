@@ -76,6 +76,10 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
     }
   }, [returnDate, currentTime]);
 
+  if (!userIssuedBooks) {
+    return null;
+  }
+
   if (
     hide ||
     userIssuedBooks.filter((item) => item.status === BookStatus.ISSUED)

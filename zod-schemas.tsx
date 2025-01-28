@@ -44,9 +44,7 @@ export const bookSchema = z.object({
     message: "Invalid book name, min 2 characters",
   }),
   author: z.string(),
-  category: z.string().refine((val) => (!val ? val : val.length > 2), {
-    message: "Choose a valid category, min length 2",
-  }),
+  categories: z.array(z.string()),
   price: z
     .string()
     .trim()

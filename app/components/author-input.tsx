@@ -29,7 +29,7 @@ interface ResponseData {
 interface AuthorInputProps {
   form: UseFormReturn<
     {
-      category: string;
+      categories: string[];
       book_name: string;
       author: string;
       price: string;

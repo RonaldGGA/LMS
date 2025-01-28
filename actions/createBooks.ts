@@ -2,18 +2,19 @@
 
 import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 interface createBookProps {
   book_name: string;
   author: string;
-  category: string;
+  categories: string[];
   price: string;
 }
 
 export const createBook = async (values: createBookProps) => {
   try {
     // get the values
-    const { book_name, author, category = "", price = "0" } = values;
+    const { book_name, author, categories, price = "0" } = values;
     if (!book_name) {
       return { success: false, error: "Invalid book name" };
     }
@@ -24,40 +25,32 @@ export const createBook = async (values: createBookProps) => {
         book_name,
       },
     });
-    // check if the category exists
-    const categoryDb = await db.category.findFirst({
-      where: {
-        cat_type: category,
-      },
-    });
-    //if it doesnt exist, create one and get its id, if it does exists, get its id
-    let cat_id = "";
-    if (!categoryDb) {
-      if (category.length > 2) {
-        const cat_res = await db.category.create({
-          data: {
-            cat_type: category,
-          },
-        });
-        if (cat_res) {
-          cat_id = cat_res.id;
-        } else {
-          return { success: false, error: "Invalid category" };
-        }
-      } else {
-        return { success: false, error: "Category must be larger" };
+
+    //validate the existance of the categories
+    const searchCategory = async (categoryId: string) => {
+      const categoryDb = await db.category.findFirst({
+        where: {
+          id: categoryId,
+        },
+      });
+      if (!categoryDb) {
+        return createErrorResponse("Invalid category id");
       }
-    } else {
-      cat_id = categoryDb.id;
-    }
-    // check if the author exists
+    };
+    // check if the category exists
+    categories.forEach((categoryId) => {
+      searchCategory(categoryId);
+    });
+
     const authorDb = await db.author.findFirst({
       where: {
         author_name: author,
       },
     });
 
-    //if it does exist, get the id, if not, create a new author and get its id
+    // validate the existance of the author
+
+    // TODO: improve this
     let author_id = "";
 
     try {
@@ -87,17 +80,26 @@ export const createBook = async (values: createBookProps) => {
       console.log("Book in db");
       return createErrorResponse("Book already in db");
     }
+
     // Create the new book
+    // 1. Crear el libro sin categorías
     const newBook = await db.book.create({
       data: {
         book_name,
-        cat_id: cat_id.length > 5 ? cat_id : "",
         author_id: author_id.length > 5 ? author_id : "",
         book_price: parseInt(price) > 0 ? price : "0",
         description: "",
         img: "",
         rating: "",
       },
+    });
+
+    // 2. Conectar las categorías (finalizado)
+    await db.catgeoryBook.createMany({
+      data: categories.map((categoryId) => ({
+        bookId: newBook.id, // ID del libro creado
+        categoryId: categoryId, // ID de la categoría
+      })),
     });
     if (!newBook) {
       return { success: false, error: "Couldnt add the book" };
@@ -106,7 +108,7 @@ export const createBook = async (values: createBookProps) => {
   } catch (error) {
     if (error) {
       console.log(error);
-      return { success: false, error: "Internal server error" };
+      return createErrorResponse("Something happened creating the new book");
     }
   }
 };

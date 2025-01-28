@@ -44,10 +44,12 @@ export default async function RootLayout({
               <HomeNavbar user={dbUser} />
               <div className="w-full container mx-auto max-w-[1250px] relative">
                 {children}
-                <IssuedBooksSpan
-                  user_id={dbUser.id}
-                  userIssuedBooks={dbUser.issuedBooks}
-                />
+                {dbUser && dbUser.issuedBooks.length > 0 && (
+                  <IssuedBooksSpan
+                    user_id={dbUser.id}
+                    userIssuedBooks={dbUser.issuedBooks}
+                  />
+                )}
               </div>
             </div>
           )}

@@ -17,9 +17,9 @@ export const getIssuedBooks = async (id: string) => {
             img: true,
             id: true,
             rating: true,
-            category: {
+            categories: {
               select: {
-                cat_type: true,
+                category: true,
               },
             },
           },
@@ -29,11 +29,18 @@ export const getIssuedBooks = async (id: string) => {
         return_date: "asc",
       },
     });
-    if (!books || books.length === 0) {
+    if (!books) {
       return {
         success: false,
         error: "Something happened while fetching the books",
         data: null,
+      };
+    }
+    if (books.length === 0) {
+      return {
+        success: true,
+        error: null,
+        data: [],
       };
     }
     console.log({ DATA: books });

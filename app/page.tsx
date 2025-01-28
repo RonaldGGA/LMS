@@ -26,7 +26,7 @@ const Home = () => {
         id: string;
         title: string;
         author: string;
-        category: string;
+        categories: string[];
         status: BookStatus;
       }[]
     | null
@@ -110,7 +110,7 @@ const Home = () => {
             id: item.id,
             title: item.book_name,
             author: item.author.author_name,
-            category: item.category.cat_type,
+            categories: item.categories.map((item) => item.category.cat_type),
             status: item.book_status,
           };
         });
@@ -198,7 +198,7 @@ const Home = () => {
               key={book.id}
               title={book.title}
               author={book.author}
-              category={book.category}
+              categories={book.categories}
               status={book.status}
             />
           ))}

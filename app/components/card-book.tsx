@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -17,7 +18,7 @@ interface CardBookProps {
   title: string;
   img?: string;
   author?: string;
-  category?: string;
+  categories?: string[];
   rating?: number;
   status?: BookStatus;
   issued_date?: Date;
@@ -30,13 +31,14 @@ const CardBook: React.FC<CardBookProps> = ({
   title,
   img = "",
   author = "unknown",
-  category = "not-currently",
+  categories = [],
   rating = 5,
   status,
   // issued_date = "",
   return_date = "",
 }) => {
   // Improve this further
+  console.log(categories);
   return (
     <Card className="w-[300px]  lg:rounded overflow-hidden shadow-lg">
       <CardHeader className="bg-gray-800 text-white p-4">
@@ -61,8 +63,16 @@ const CardBook: React.FC<CardBookProps> = ({
               Author: {author}
             </p>
 
-            <p className="text-gray-700 text-base text-nowrap">
-              Category: {category}
+            <p className="text-gray-700 text-base text-nowrap  overflow-hidden flex ">
+              Category:{" "}
+              <span className="flex gap-1 flex-nowrap">
+                {" "}
+                {categories.slice(0, 2).map((item, index) => (
+                  <Badge className="bg-gray-700" key={index}>
+                    {item}
+                  </Badge>
+                ))}
+              </span>
             </p>
 
             {/* Status or return date */}

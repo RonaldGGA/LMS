@@ -11,6 +11,7 @@ import { issueBook } from "@/actions/issue-book";
 import { useUserSession } from "@/app/hooks/useUserSession";
 import Confirmation from "@/app/components/issue-confirmation";
 import { returnBook } from "@/actions/return-book";
+import { Badge } from "@/components/ui/badge";
 
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
@@ -58,7 +59,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   }
 
   // check if the book is an issued book, and it is issued by the current user
-
   // if so, give it the oportunity to return it
   // if not just give the normal information
 
@@ -107,9 +107,24 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             {bookInfo?.book_name}
           </h2>
           <p className="text-gray-600">Author: {bookInfo.author.author_name}</p>
-          <p className="text-gray-600">
-            Category: {bookInfo.category.cat_type}
-          </p>
+          <div className="text-gray-600 my-2 flex items-center gap-1">
+            Categories:{" "}
+            {bookInfo?.categories && bookInfo.categories.length > 0 ? (
+              bookInfo.categories.map((item, index) => {
+                console.log(`your item is ${item.category.cat_type}`);
+                return (
+                  <Badge
+                    className="p-2 tracking-widest bg-gray-700"
+                    key={index}
+                  >
+                    {item.category.cat_type}{" "}
+                  </Badge>
+                );
+              })
+            ) : (
+              <span>No categories available</span>
+            )}
+          </div>
           <p className="text-lg font-semibold text-green-600">
             Fine-Price: ${parseFloat(bookInfo.book_price).toFixed(2)}
           </p>
