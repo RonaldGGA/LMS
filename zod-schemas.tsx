@@ -67,3 +67,9 @@ export const bookSchema = z.object({
 export const searchSchema = z.object({
   book_name: z.string().min(1, "Book name is required"),
 });
+
+export const ratingSchema = z.object({
+  rating: z.number().refine((item) => {
+    return item >= 0 && item <= 5;
+  }),
+});

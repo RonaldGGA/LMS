@@ -3,7 +3,7 @@
 import { getBookById } from "@/data/getBook";
 import { BookStatus } from "@prisma/client";
 import Image from "next/image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { BigBook } from "@/types";
 import toast from "react-hot-toast";
 
@@ -12,8 +12,38 @@ import { useUserSession } from "@/app/hooks/useUserSession";
 import Confirmation from "@/app/components/issue-confirmation";
 import { returnBook } from "@/actions/return-book";
 import { Badge } from "@/components/ui/badge";
+import { StarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import { ratingSchema } from "@/zod-schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import z from "zod";
+import { addRating } from "@/actions/add-rating";
 
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
+  const [pickedStars, setPickedStars] = useState(0);
+  const [reload, setReload] = useState(false);
+
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
   const [issuedByUser, setIssuedByUser] = useState(false);
   console.log(params);
@@ -34,10 +64,20 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     } catch (error) {
       console.log(error);
     }
-  }, [params.id]); // Dependency on params.id
+
+    //TODO: handle this more properly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id, reload]); // Dependency on params.id
   useEffect(() => {
     getBook();
   }, [getBook]);
+
+  const form = useForm<z.infer<typeof ratingSchema>>({
+    resolver: zodResolver(ratingSchema),
+    defaultValues: {
+      rating: 0,
+    },
+  });
 
   useEffect(() => {
     if (bookInfo && userId) {
@@ -50,6 +90,21 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
       console.log("Issued by user:", issued);
     }
   }, [bookInfo, userId]); // Only run this effect when bookInfo or userId changes
+
+  const ratingMedia = useMemo(() => {
+    // Verificamos que bookInfo y bookInfo.ratings existan y tengan elementos
+    if (!bookInfo || !bookInfo.ratings || bookInfo.ratings.length === 0) {
+      return 0;
+    }
+
+    // Calculamos el promedio de las calificaciones
+    const averageRating =
+      bookInfo.ratings.reduce((total, item) => total + item.rating, 0) /
+      bookInfo.ratings.length;
+
+    // Devolvemos el promedio con dos decimales
+    return Number(averageRating.toFixed(2));
+  }, [bookInfo]); // Asegúrate de incluir todas las dependencias
 
   if (!userId) {
     return null;
@@ -90,6 +145,34 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   }
   console.log(bookInfo);
 
+  const onSubmit = async (values: z.infer<typeof ratingSchema>) => {
+    try {
+      const result = await addRating({
+        userId,
+        userRating: values.rating,
+        bookId: bookInfo.id,
+      });
+      if (!result.success) {
+        toast.error("Something happened adding the rating");
+      } else {
+        toast.success("Rating added correctly");
+        setReload((prev) => !prev);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("An error ocurred");
+    }
+  };
+  const handleStarsPicked = (starNumber: number) => {
+    if (pickedStars == 1 && starNumber == 1) {
+      setPickedStars(0);
+      form.setValue("rating", 0);
+    } else {
+      setPickedStars(starNumber);
+      form.setValue("rating", starNumber);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="shadow-lg rounded-lg w-full flex flex-col lg:flex-row p-8 bg-white">
@@ -129,11 +212,85 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             Fine-Price: ${parseFloat(bookInfo.book_price).toFixed(2)}
           </p>
           <div className="flex items-center">
-            <p className="text-lg font-semibold">Rating: {bookInfo.rating}</p>
-            <span className="ml-2 text-yellow-500">
-              {"★".repeat(Math.round(parseFloat(bookInfo.rating)))}
-              {"★".repeat(5 - Math.round(parseFloat(bookInfo.rating)))}
+            <p className="text-lg font-semibold">Rating: {ratingMedia}/5</p>
+            <span className="ml-2 text-yellow-500 flex">
+              {/* {[...Array(Math.round(ratingMedia))].map((_, i) => (
+                <StarIcon fill="yellow" width={20} key={i} color="black" />
+              ))}
+              {[...Array(5 - Math.round(ratingMedia))].map((_, i) => (
+                <StarIcon key={i} color="black" width={20} fill="" />
+              ))} */}
             </span>
+
+            <Dialog>
+              <DialogTrigger className="p-1 shadow shadow-gray-400 hover:bg-gray-500 transition-colors rounded">
+                Rate it!
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>What do you think about this book?</DialogTitle>
+                  <DialogDescription>
+                    <Form {...form}>
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-8"
+                      >
+                        <FormField
+                          control={form.control}
+                          name="rating"
+                          render={() => (
+                            <FormItem>
+                              <FormLabel>Rating</FormLabel>
+                              <FormControl className="flex flex-col gap-2">
+                                <>
+                                  <div className="flex">
+                                    {[...Array(5)].map((_, i) => {
+                                      if (i + 1 > pickedStars) {
+                                        return (
+                                          <StarIcon
+                                            fill=""
+                                            width={20}
+                                            key={i}
+                                            color="black"
+                                            onClick={() =>
+                                              handleStarsPicked(i + 1)
+                                            }
+                                          />
+                                        );
+                                      } else {
+                                        return (
+                                          <StarIcon
+                                            fill="yellow"
+                                            width={20}
+                                            key={i}
+                                            color="black"
+                                            onClick={() =>
+                                              handleStarsPicked(i + 1)
+                                            }
+                                          />
+                                        );
+                                      }
+                                    })}
+                                  </div>
+                                  <Badge>{pickedStars}/5</Badge>
+                                  <DialogFooter className="text-md text-black p-3">
+                                    <DialogClose>
+                                      <Button type="submit">Save</Button>
+                                    </DialogClose>
+                                  </DialogFooter>
+                                </>
+                              </FormControl>
+                              <FormDescription></FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </form>
+                    </Form>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
           <p className="mt-2 text-gray-700">{bookInfo.description}</p>
           <p

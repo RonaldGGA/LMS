@@ -28,6 +28,7 @@ model User {
   issuedBooks IssuedBook[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  ratings     Rating[]
 
   @@index([username])
 }
@@ -38,6 +39,17 @@ model Admin {
   password String
 }
 
+model Rating {
+  rating Int    @default(0)
+  userId String
+  bookId String
+
+  User User @relation(fields: [userId], references: [id])
+  Book Book @relation(fields: [bookId], references: [id])
+
+  @@id([bookId, userId])
+}
+
 model Book {
   id          String         @id @default(cuid())
   book_name   String         @unique
@@ -45,7 +57,7 @@ model Book {
   description String
   author_id   String
   book_price  String         @default("0")
-  rating      String
+  ratings     Rating[]
   issuedBooks IssuedBook[]
   categories  CatgeoryBook[]
   author      Author         @relation(fields: [author_id], references: [id])

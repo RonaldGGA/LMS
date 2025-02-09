@@ -1,6 +1,9 @@
 import { Book, Category } from "@prisma/client";
 
 export type BigBook = Book & {
+  ratings?: {
+    rating: number;
+  }[];
   author: {
     author_name: string;
   };

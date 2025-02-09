@@ -53,7 +53,8 @@ const AuthorInput: React.FC<AuthorInputProps> = ({
 }) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const debouncedFetchAuthors = useDebounce(authorValue, 300); // Debounce API calls
 
   useEffect(() => {
@@ -96,11 +97,13 @@ const AuthorInput: React.FC<AuthorInputProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const value = event.target.value;
     setAuthorValue(value);
+    setShowSuggestions(true);
   };
 
   const handleSuggestionClick = (author: string) => {
     setAuthorValue(author);
     setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   return (
@@ -120,7 +123,7 @@ const AuthorInput: React.FC<AuthorInputProps> = ({
                   value={authorValue}
                   {...field}
                 />
-                {suggestions.length > 0 && (
+                {suggestions.length > 0 && showSuggestions && (
                   <ul className="border border-gray-300 mt-1 p-0 bg-white rounded-sm absolute z-10">
                     {suggestions.map((author, index) => (
                       <li

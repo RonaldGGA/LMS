@@ -2,56 +2,58 @@
 
 import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
-import { v4 as uuidv4 } from "uuid";
 
 interface createBookProps {
   book_name: string;
   author: string;
   categories: string[];
   price: string;
+  img: string;
 }
 
 export const createBook = async (values: createBookProps) => {
   try {
     // get the values
-    const { book_name, author, categories, price = "0" } = values;
+    const { book_name, author, categories, img = "", price = "0" } = values;
+    console.log(`Your image src is ${img}`);
     if (!book_name) {
       return { success: false, error: "Invalid book name" };
     }
-    // no repeated books
-    // TODO: MAYBE add a validation, perhaps there are 2 books with the same name, but not with the same author so validate that
-    const isDbBook = await db.book.findFirst({
-      where: {
-        book_name,
-      },
-    });
 
-    //validate the existance of the categories
-    const searchCategory = async (categoryId: string) => {
-      const categoryDb = await db.category.findFirst({
+    // Validate categories
+    const categoryPromises = categories.map(async (categoryId) => {
+      const category = await db.category.findFirst({
         where: {
           id: categoryId,
         },
       });
-      if (!categoryDb) {
-        return createErrorResponse("Invalid category id");
+      if (!category) {
+        throw new Error("Invalid category id");
       }
-    };
-    // check if the category exists
-    categories.forEach((categoryId) => {
-      searchCategory(categoryId);
     });
 
+    await Promise.all(categoryPromises);
+
+    // Handle author creation
+    let author_id = "";
     const authorDb = await db.author.findFirst({
       where: {
         author_name: author,
       },
     });
 
-    // validate the existance of the author
+    // Handle repeated books, no books with the same author and name
+    const isDbBook = await db.book.findFirst({
+      where: {
+        book_name,
+        author_id: authorDb?.id,
+      },
+    });
 
-    // TODO: improve this
-    let author_id = "";
+    if (isDbBook) {
+      console.log("Book in db");
+      return createErrorResponse("Book already in db");
+    }
 
     try {
       if (!authorDb) {
@@ -62,12 +64,7 @@ export const createBook = async (values: createBookProps) => {
             author_name: authorName,
           },
         });
-
-        if (author_res) {
-          author_id = author_res.id;
-        } else {
-          return { success: false, error: "Invalid Author" };
-        }
+        author_id = author_res.id;
       } else {
         author_id = authorDb.id;
       }
@@ -76,34 +73,29 @@ export const createBook = async (values: createBookProps) => {
       return { success: false, error: "Database error: " };
     }
 
-    if (isDbBook) {
-      console.log("Book in db");
-      return createErrorResponse("Book already in db");
-    }
+    //TODO: validate img Url
 
-    // Create the new book
-    // 1. Crear el libro sin categorías
+    // Create the new book wiithot categories
+
     const newBook = await db.book.create({
       data: {
         book_name,
         author_id: author_id.length > 5 ? author_id : "",
         book_price: parseInt(price) > 0 ? price : "0",
         description: "",
-        img: "",
-        rating: "",
+        img,
+        ratings: {},
       },
     });
 
-    // 2. Conectar las categorías (finalizado)
+    // Connect the categories
     await db.catgeoryBook.createMany({
       data: categories.map((categoryId) => ({
         bookId: newBook.id, // ID del libro creado
         categoryId: categoryId, // ID de la categoría
       })),
     });
-    if (!newBook) {
-      return { success: false, error: "Couldnt add the book" };
-    }
+
     return { success: true, error: "", data: newBook };
   } catch (error) {
     if (error) {

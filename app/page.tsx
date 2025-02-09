@@ -15,6 +15,7 @@ import z from "zod";
 import { useUserSession } from "./hooks/useUserSession";
 import { BookStatus } from "@prisma/client";
 import { getUserById } from "@/data/getUser";
+import { SkeletonDemo } from "./components/skeleton-demo";
 
 const Home = () => {
   const router = useRouter();
@@ -28,6 +29,8 @@ const Home = () => {
         author: string;
         categories: string[];
         status: BookStatus;
+        img: string;
+        ratings: { rating: number }[];
       }[]
     | null
   >(null);
@@ -112,6 +115,8 @@ const Home = () => {
             author: item.author.author_name,
             categories: item.categories.map((item) => item.category.cat_type),
             status: item.book_status,
+            img: item.img,
+            ratings: item.ratings,
           };
         });
         setSearchedBooks(data);
@@ -194,15 +199,26 @@ const Home = () => {
           !loading &&
           searchedBooks.map((book) => (
             <CardBook
+              img={book.img}
               id={book.id}
               key={book.id}
               title={book.title}
               author={book.author}
               categories={book.categories}
               status={book.status}
+              rating={
+                book.ratings.reduce((total, value) => value.rating + total, 0) /
+                book.ratings.length
+              }
             />
           ))}
-        {loading && <p className="text-3xl text-white bg-black">LOADING...</p>}
+        {loading && (
+          <div className="flex gap- flex-col md:flex-row">
+            {[...Array(3)].map((_, i) => (
+              <SkeletonDemo key={i} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

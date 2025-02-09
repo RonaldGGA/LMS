@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
+import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import {
   Form,
   FormControl,
@@ -30,7 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Separator } from "@/components/ui/separator";
 import { CategoryPlus } from "@/types";
 import { createCategoriesPlus } from "@/actions/create-categories";
-
+import Image from "next/image";
 const FormBooks = () => {
   const ulRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,16 +115,15 @@ const FormBooks = () => {
       return;
     }
 
-    // create the book with all the categories added
-
     // create the book
     toast("Clicked");
-    console.log({ VALUES: values });
+    // console.log({ VALUES: values });
 
     const res = await createBook(values);
     if (res?.success) {
       router.refresh();
       toast.success("Book added correctly");
+      router.push("/");
     } else {
       console.log(res?.error);
       router.refresh();
@@ -182,6 +181,7 @@ const FormBooks = () => {
       selectedCategories.filter((item) => item.id !== category.id)
     );
   };
+
   return (
     <CardBooks
       type="add"
@@ -197,6 +197,53 @@ const FormBooks = () => {
                 <FormLabel>Book name*</FormLabel>
                 <FormControl>
                   <Input placeholder="Harry Potter ..." {...field} />
+                </FormControl>
+                <FormDescription></FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="img"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Image*</FormLabel>
+                <FormControl>
+                  <>
+                    {/* Vista previa de la imagen */}
+                    {field.value && (
+                      <div className="relative h-48 w-48">
+                        <Image
+                          src={field.value}
+                          alt="Preview"
+                          fill
+                          className="rounded-md object-cover"
+                        />
+                      </div>
+                    )}
+                    <CldUploadWidget
+                      signatureEndpoint="/api/sign-cloudinary-params"
+                      onSuccess={(result, { widget }) => {
+                        if (result.info && typeof result.info !== "string") {
+                          const info =
+                            result.info as CloudinaryUploadWidgetInfo;
+                          form.setValue("img", info.secure_url);
+                        }
+                        widget.close();
+                      }}
+                    >
+                      {({ open }) => (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => open()}
+                        >
+                          Subir imagen
+                        </Button>
+                      )}
+                    </CldUploadWidget>
+                  </>
                 </FormControl>
                 <FormDescription></FormDescription>
                 <FormMessage />

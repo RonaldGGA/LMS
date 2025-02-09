@@ -16,7 +16,7 @@ export const getIssuedBooks = async (id: string) => {
             book_price: true,
             img: true,
             id: true,
-            rating: true,
+            ratings: true,
             categories: {
               select: {
                 category: true,

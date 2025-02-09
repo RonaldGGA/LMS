@@ -32,7 +32,7 @@ const CardBook: React.FC<CardBookProps> = ({
   img = "",
   author = "unknown",
   categories = [],
-  rating = 5,
+  rating = 0,
   status,
   // issued_date = "",
   return_date = "",
@@ -40,15 +40,15 @@ const CardBook: React.FC<CardBookProps> = ({
   // Improve this further
   console.log(categories);
   return (
-    <Card className="w-[300px]  lg:rounded overflow-hidden shadow-lg">
+    <Card className="w-[300px]  lg:rounded overflow-hidden shadow-md shadow-white">
       <CardHeader className="bg-gray-800 text-white p-4">
         <CardTitle className="text-xl font-bold text-clip  text-nowrap">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 flex ">
-        <div className="flex gap-5 flex-row justify-center w-full">
-          <div className="flex items-center w-full  justify-center">
+        <div className="flex gap-5  flex-row justify-center w-full">
+          <div className="flex items-center  w-full  justify-center">
             <Image
               src={img.length ? img : "/default.webp"}
               alt="book_image"
@@ -67,11 +67,15 @@ const CardBook: React.FC<CardBookProps> = ({
               Category:{" "}
               <span className="flex gap-1 flex-nowrap">
                 {" "}
-                {categories.slice(0, 2).map((item, index) => (
-                  <Badge className="bg-gray-700" key={index}>
-                    {item}
-                  </Badge>
-                ))}
+                {categories && categories.length > 0 ? (
+                  categories.slice(0, 1).map((item, index) => (
+                    <Badge className="bg-gray-700" key={index}>
+                      {item.length > 10 ? item.slice(0, 5).concat("...") : item}
+                    </Badge>
+                  ))
+                ) : (
+                  <span>No categories</span>
+                )}
               </span>
             </p>
 

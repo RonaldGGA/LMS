@@ -9,6 +9,11 @@ export const getBookById = async (id: string) => {
         id: id,
       },
       include: {
+        ratings: {
+          select: {
+            rating: true,
+          },
+        },
         issuedBooks: {
           select: {
             return_date: true,

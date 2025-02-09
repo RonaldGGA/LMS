@@ -47,7 +47,13 @@ const IssuedBooks: React.FC<IssuedBooksProps> = async ({ params }) => {
                     "..."
                   : item.book.book_name}
               </TableCell>
-              <TableCell className="">{item.book.rating || "5"}</TableCell>
+              <TableCell className="">
+                {item.book.ratings.reduce(
+                  (total, value) => total + value.rating,
+                  0
+                ) / item.book.ratings.length}
+                /5
+              </TableCell>
               <TableCell>{item.status}</TableCell>
               <TableCell className="">
                 {format(new Date(item.issued_date), "yyy.MM.dd")}
