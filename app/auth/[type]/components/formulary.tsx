@@ -30,8 +30,8 @@ interface FormularyProps {
 }
 
 const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
-  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
 
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev); // Cambia el estado a su opuesto
@@ -51,41 +51,41 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     if (isLogin) {
-      dispatch({ username: values.username, password: values.password });
+      dispatch({
+        username: values.username,
+        password: values.password,
+      });
     } else {
-      if (!registerSchema.safeParse(values).success) {
-        toast.error("Invalid values");
-        return;
-      }
       // Register the user
       const result = await registerUser(values);
       if (result?.success) {
         toast.success("User Registered Successfully");
-
-        dispatch({ username: values.username, password: values.password });
+        dispatch({
+          username: values.username,
+          password: values.password,
+        });
       } else {
         toast.error(result!.error);
+        return;
       }
     }
     toast.success("User logged in successfully");
-
     return;
   }
-
   function LoginButton() {
     const { pending } = useFormStatus();
+
     return (
       <Button
         variant={"outline"}
-        className="p-5"
-        aria-disabled={pending}
+        className=""
         type="submit"
+        aria-disabled={pending}
       >
         Get In
       </Button>
     );
   }
-
   return (
     <AuthCard type={type} footerLink={footerLink}>
       <Form {...form}>
@@ -166,17 +166,15 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
       </Form>
 
       <div className="mt-5 w-[300px] mb-2 h-[0px] border border-gray-300 mx-auto"></div>
+      {errorMessage && (
+        <p className="text-sm mx-auto text-red-500">{errorMessage}</p>
+      )}
       {/* <Link
         href={"#"}
         className="block  text-center text-base underline underline-offset-2"
       >
         Forgot your password?
       </Link> */}
-      {errorMessage && (
-        <>
-          <p className="text-sm text-red-500">{errorMessage}</p>
-        </>
-      )}
     </AuthCard>
   );
 };

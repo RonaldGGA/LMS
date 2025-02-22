@@ -2,6 +2,7 @@
 
 import db from "@/lib/prisma";
 import { createErrorResponse, hashPassword } from "@/lib/utils";
+import { loginSchema, registerSchema } from "@/zod-schemas";
 import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -21,13 +22,13 @@ export const registerUser = async (values: registerUserProps) => {
       const { username, password, dni, role = Role.MEMBER } = values;
 
       // Validate input fields
-      if (!username || !password || !dni) {
-        return createErrorResponse("Missing required fields");
+      if (!registerSchema.safeParse(values).success) {
+        return createErrorResponse("Invalid values");
       }
 
       // Validate DNI format
-      if (dni.length !== 11 || isNaN(Number(dni))) {
-        return { success: false, error: "Invalid DNI number" };
+      if (!dni || dni.length !== 11 || isNaN(Number(dni))) {
+        return createErrorResponse("Invalid dni number");
       }
 
       // Extract date parts from DNI
@@ -117,9 +118,10 @@ export const loginUser = async (values: loginUserProps) => {
   try {
     const { username, password } = values;
 
-    // Input validation
-    if (!username || !password) {
-      return createErrorResponse("Username and password are required.");
+    // This is a backend check of the credentials, it is checkec before in the frontend
+    const response = loginSchema.safeParse(values);
+    if (!response.success && response.error) {
+      return createErrorResponse(response.error.message);
     }
 
     // Find user in database
