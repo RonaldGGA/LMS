@@ -15,14 +15,14 @@ const UserAuth = () => {
 
   if (!type) {
     // If the type is invalid, redirect or handle the error as needed
-    router.push("/login");
+    router.push("/auth/login");
     return;
   }
 
   return (
     <div className="bgCustomized flex items-center justify-center min-h-screen py-10 bg-cover bg-center relative text-gray-100 ">
       <Image
-        className="absolute inset-0 brightness-[30%] min-h-screen bg-cover bg-center "
+        className="absolute inset-0 brightness-[30%] bg-cover bg-center hidden lg:block"
         src={"/register.jpg "}
         fill
         alt="bg-image"
@@ -32,7 +32,7 @@ const UserAuth = () => {
         {/* Área de formulario */}
         <Formulary
           type={authType}
-          footerLink={`/${type == "login" ? "register" : "login"}`}
+          footerLink={`/auth/${type == "login" ? "register" : "login"}`}
         />
         <div className="hidden lg:block h-[600px] border w-0"></div>
         {/* Sección de la cita */}

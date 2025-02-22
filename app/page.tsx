@@ -147,7 +147,6 @@ const Home = () => {
 
   return (
     <div className="flex items-center flex-col gap-5 mt-7 max-w-[1400px] justify-center">
-      <p className="text-white">{counter}</p>
       <div className="mb-10 bg-gray-100 rounded-md focus-within:block relative  focus-within:shadow focus-within:shadow-black focus-within:rounded-b-none transition-shadow max-w-[90%] lg:w-[500px]">
         <form onSubmit={form.handleSubmit(onSubmit)} className="">
           <div className="bg-gray-100 flex  items-center  focus-within:border-none rounded-sm mx-auto  p-0 w-full">
