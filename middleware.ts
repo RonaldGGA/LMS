@@ -9,8 +9,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const isLoggedIn = !!token;
 
-  const authRoutes = ["/auth/login", "/auth/register"];
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
   const isApiRoute = nextUrl.pathname.startsWith("/api");
 
   if (isApiRoute) {
