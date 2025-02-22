@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
-export default async function middleware(request: NextRequest) {
-  const session = await getToken({ req: request });
+export default async function middleware(request:NextRequest) {
+  const token = await 
   const { pathname } = new URL(request.url);
 
   // 1. Siempre permitir las rutas de API
@@ -35,10 +34,7 @@ export default async function middleware(request: NextRequest) {
     }
 
     // Verificar si el usuario es admin
-    if (
-      (session as unknown as { user: { role: string } }).user.role !==
-      "SUPERADMIN"
-    ) {
+    if (session.user.role !== "admin") {
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
