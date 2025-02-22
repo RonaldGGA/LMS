@@ -27,7 +27,11 @@ export async function middleware(request: NextRequest) {
 
     // If the user is already authenticated, redirect to the dashboard
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      if (token.role === Role.MEMBER) {
+        return NextResponse.redirect(new URL("/", request.url));
+      } else {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
     }
 
     // Allow access to login and register pages
@@ -56,6 +60,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };

@@ -13,6 +13,7 @@ import { useDebounce } from "@uidotdev/usehooks";
 import z from "zod";
 import { SkeletonDemo } from "./components/skeleton-demo";
 import { searchedBooks } from "@/types";
+import { useRouter } from "next/navigation";
 
 const Home = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -25,6 +26,10 @@ const Home = () => {
   const [suggestionBooks, setSuggestionBooks] = useState<
     { id: string; title: string; author: { author_name: string } }[] | null
   >(null);
+
+  useEffect(() => {
+    window.history.replaceState({}, "", "/");
+  }, []);
 
   const [counter, setCounter] = useState(false);
 
