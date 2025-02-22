@@ -1,26 +1,26 @@
 "use server";
 
 import db from "@/lib/prisma";
+import { createErrorResponse } from "@/lib/utils";
 
 export const getBookById = async (id: string) => {
   try {
-    const book = await db.book.findUnique({
+    const book = await db.bookTitle.findUnique({
       where: {
-        id: id,
+        id,
       },
-      include: {
-        ratings: {
+      select: {
+        id: true,
+        book_price: true,
+        authorId: true,
+        title: true,
+        img: true,
+        description: true,
+        stock: true,
+
+        bookRatings: {
           select: {
             rating: true,
-          },
-        },
-        issuedBooks: {
-          select: {
-            return_date: true,
-            user_id: true,
-          },
-          orderBy: {
-            return_date: "desc",
           },
         },
         author: {
@@ -30,9 +30,15 @@ export const getBookById = async (id: string) => {
         },
         categories: {
           select: {
-            category: {
+            name: true,
+          },
+        },
+        bookCopies: {
+          select: {
+            bookLoanRequests: {
               select: {
-                cat_type: true,
+                userId: true,
+                status: true,
               },
             },
           },
@@ -41,17 +47,11 @@ export const getBookById = async (id: string) => {
     });
     console.log(book);
     if (!book) {
-      return {
-        success: false,
-        error: "Something happened while fetching the book",
-        data: null,
-      };
+      return createErrorResponse("Couldnt find the book");
     }
     return { success: true, error: null, data: book };
   } catch (err) {
-    if (err) {
-      console.log(err);
-      return { success: false, error: "Internal server error", data: null };
-    }
+    console.log(err);
+    return createErrorResponse("Internal Server Error in book by Id searching");
   }
 };

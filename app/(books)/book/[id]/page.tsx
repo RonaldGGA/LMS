@@ -1,10 +1,14 @@
 "use client";
 
 import { getBookById } from "@/data/getBook";
-import { BookStatus } from "@prisma/client";
+import {
+  BookLoanRequestStatus,
+  BookLoanStatus,
+  BookPaymentMethod,
+  Role,
+} from "@prisma/client";
 import Image from "next/image";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { BigBook } from "@/types";
+import React, { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { issueBook } from "@/actions/issue-book";
@@ -12,42 +16,54 @@ import { useUserSession } from "@/app/hooks/useUserSession";
 import Confirmation from "@/app/components/issue-confirmation";
 import { returnBook } from "@/actions/return-book";
 import { Badge } from "@/components/ui/badge";
-import { StarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogFooter,
-  DialogHeader,
-  DialogTrigger,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useForm } from "react-hook-form";
-import { ratingSchema } from "@/zod-schemas";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
-import z from "zod";
-import { addRating } from "@/actions/add-rating";
+import { requestIssueBook } from "@/actions/request-issue-book";
+import Rating from "@/app/components/rating";
+
+import { Button } from "@/components/ui/button";
+import { addBookCopy } from "@/actions/add-book-copy";
+import { getBigUser } from "@/data/getUser";
+import { BigBook } from "@/types";
+import { useRouter } from "next/navigation";
+
+type BigUser = {
+  role: Role;
+  bookLoans: {
+    userId: string;
+    status: string;
+    bookCopy: {
+      bookTitleId: string;
+    };
+  }[];
+  bookLoanRequests: {
+    userId: string;
+    status: BookLoanRequestStatus;
+    bookCopy: {
+      bookTitleId: string;
+    };
+  }[];
+};
 
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
-  const [pickedStars, setPickedStars] = useState(0);
   const [reload, setReload] = useState(false);
+
+  const router = useRouter();
+  const userSession = useUserSession();
 
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
   const [issuedByUser, setIssuedByUser] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState("");
+  const [userRole, setUserRole] = useState<Role | undefined>(Role.MEMBER);
+  const [userId, setUserId] = useState<string | undefined>("");
+
+  const [userDb, setUserDb] = useState<BigUser | null>(null);
+
+  useEffect(() => {
+    setUserId(userSession?.id);
+    setUserRole(userSession?.role);
+  }, []);
   console.log(params);
-  const userId = useUserSession();
+
   const getBook = useCallback(async () => {
     try {
       console.log(`getting book with id ${params.id}`);
@@ -59,7 +75,11 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         return;
       }
 
-      setBookInfo(result.data);
+      if (result.data) {
+        setBookInfo(result.data);
+      } else {
+        setBookInfo(null);
+      }
       console.log("Got the book");
     } catch (error) {
       console.log(error);
@@ -70,63 +90,120 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   }, [params.id, reload]); // Dependency on params.id
   useEffect(() => {
     getBook();
-  }, [getBook]);
+  }, [getBook, reload]);
 
-  const form = useForm<z.infer<typeof ratingSchema>>({
-    resolver: zodResolver(ratingSchema),
-    defaultValues: {
-      rating: 0,
-    },
-  });
+  useEffect(() => {
+    async function getUserFromDb() {
+      const userDb = await getBigUser(userId as string);
+      if (userDb?.success && userDb.data) {
+        setUserDb(userDb.data);
+      }
+    }
+    if (userId) {
+      getUserFromDb();
+    }
+  }, [userId, reload, router]);
 
   useEffect(() => {
     if (bookInfo && userId) {
-      const issued = bookInfo.issuedBooks.some(
-        (issuedBook) =>
-          issuedBook.user_id === userId &&
-          new Date(issuedBook.return_date) > new Date(Date.now())
+      const date = new Date().toLocaleDateString(); // Date placeholder
+
+      // Check if book is already issued by the user
+      const isIssued = userDb?.bookLoans.some(
+        (item) =>
+          item.userId === userId &&
+          item.status === "ISSUED" &&
+          item.bookCopy.bookTitleId === params.id
       );
-      setIssuedByUser(issued);
-      console.log("Issued by user:", issued);
+
+      if (isIssued) {
+        setIssuedByUser(isIssued);
+        return;
+      }
+      // Check if user has a pending request with the book
+      const hasPendingRequest = userDb?.bookLoanRequests.some(
+        (item) =>
+          item.bookCopy.bookTitleId === bookInfo.id &&
+          item.status === BookLoanRequestStatus.PENDING
+      );
+
+      if (hasPendingRequest) {
+        setPendingRequest(`Requested by you on ${date}`);
+        return;
+      }
+      // Check if someone else has a pending request
+      const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) => {
+        const result = item.bookLoanRequests.some(
+          (item) =>
+            item.userId !== userId &&
+            item.status === BookLoanRequestStatus.PENDING
+        );
+        return result;
+      });
+
+      if (hasPendingRequestFromOthers && bookInfo.stock === 1) {
+        setPendingRequest(`Requested by another user`);
+      } else {
+        setIssuedByUser(false);
+        setPendingRequest("");
+      }
     }
-  }, [bookInfo, userId]); // Only run this effect when bookInfo or userId changes
+  }, [
+    bookInfo,
+    userId,
+    reload,
+    userDb?.bookLoans,
+    userDb?.bookLoanRequests,
+    params.id,
+  ]); // Only run this effect when bookInfo or userId changes
 
-  const ratingMedia = useMemo(() => {
-    // Verificamos que bookInfo y bookInfo.ratings existan y tengan elementos
-    if (!bookInfo || !bookInfo.ratings || bookInfo.ratings.length === 0) {
-      return 0;
-    }
-
-    // Calculamos el promedio de las calificaciones
-    const averageRating =
-      bookInfo.ratings.reduce((total, item) => total + item.rating, 0) /
-      bookInfo.ratings.length;
-
-    // Devolvemos el promedio con dos decimales
-    return Number(averageRating.toFixed(2));
-  }, [bookInfo]); // Asegúrate de incluir todas las dependencias
-
-  if (!userId) {
+  if (!userId || !userDb) {
     return null;
   }
   if (!userId) {
     return null;
   }
-
-  // check if the book is an issued book, and it is issued by the current user
-  // if so, give it the oportunity to return it
-  // if not just give the normal information
-
-  const handleIssueBook = async () => {
+  const handleBorrowBook = async (
+    paymentMethod: BookPaymentMethod,
+    paymentReference: string | undefined
+  ) => {
     // Logic for issuing the book, e.g., updating the status in the database
+    if (bookInfo && parseFloat(bookInfo?.book_price) > 0) {
+      toast("Payment required");
+
+      const response = await requestIssueBook({
+        id: bookInfo.id,
+        author: bookInfo.authorId,
+        name: bookInfo.title,
+        price: bookInfo.book_price,
+        paymentMethod,
+        paymentReference,
+      });
+      // save the response in a global variable
+      if (response?.success) {
+        toast.success(
+          "Book requested, please wait for the admin for confirmation"
+        );
+        setReload(!reload);
+      } else {
+        console.log(response?.error);
+        toast.error("Something happened");
+        setReload(!reload);
+      }
+      if (userDb.role === Role.MEMBER) {
+        return;
+      }
+    }
+
     console.log("Issuing the book...");
     toast(`Issuing the book with the id ${params.id}`);
-    const result = await issueBook(params.id);
+    const allowed = !(userDb.role === Role.MEMBER);
+    const result = await issueBook(params.id, allowed);
     if (result?.success) {
       toast.success("Book issued succesfully");
       window.location.reload();
     } else {
-      toast.error("Book coulnt be issued, something happpened");
+      toast.error(result.error);
     }
   };
   const handleReturnBook = async () => {
@@ -137,6 +214,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
       toast.success("Book returned succesfully");
       window.location.reload();
     } else {
+      toast.error(result.error);
       toast.error("Book coulnt be returned, something happpened");
     }
   };
@@ -145,31 +223,23 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   }
   console.log(bookInfo);
 
-  const onSubmit = async (values: z.infer<typeof ratingSchema>) => {
+  const createBookCopy = async () => {
     try {
-      const result = await addRating({
-        userId,
-        userRating: values.rating,
-        bookId: bookInfo.id,
-      });
-      if (!result.success) {
-        toast.error("Something happened adding the rating");
-      } else {
-        toast.success("Rating added correctly");
-        setReload((prev) => !prev);
+      // TRADEOFF: CURRENT AND ACCURATE OR FASTER, FOR NOW THE FIRST
+      const result = await addBookCopy(params.id);
+      if (result.error) {
+        console.log(result.error);
+        toast.error("Error happened creating the copy");
+        return;
       }
+      console.log(result.data);
+      toast.success("Copy created");
+      setReload(!reload);
     } catch (error) {
       console.log(error);
-      toast.error("An error ocurred");
-    }
-  };
-  const handleStarsPicked = (starNumber: number) => {
-    if (pickedStars == 1 && starNumber == 1) {
-      setPickedStars(0);
-      form.setValue("rating", 0);
-    } else {
-      setPickedStars(starNumber);
-      form.setValue("rating", starNumber);
+      toast.error(
+        "Couldnt add the copy of the book, check the console for mor details"
+      );
     }
   };
 
@@ -180,27 +250,25 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
           <Image
             width={200}
             height={300}
-            alt={bookInfo?.book_name}
+            alt={bookInfo?.title}
             src={bookInfo?.img ? bookInfo.img : "/default.webp"}
             className="rounded-lg"
           />
         </div>
         <div className="flex-grow mt-4 lg:mt-0 lg:ml-6">
-          <h2 className="text-3xl font-bold capitalize">
-            {bookInfo?.book_name}
-          </h2>
+          <h2 className="text-3xl font-bold capitalize">{bookInfo?.title}</h2>
           <p className="text-gray-600">Author: {bookInfo.author.author_name}</p>
-          <div className="text-gray-600 my-2 flex items-center gap-1">
+          <div className="text-gray-600 my-2 flex-wrap flex items-center gap-1">
             Categories:{" "}
             {bookInfo?.categories && bookInfo.categories.length > 0 ? (
               bookInfo.categories.map((item, index) => {
-                console.log(`your item is ${item.category.cat_type}`);
+                console.log(`your item is ${item.name}`);
                 return (
                   <Badge
                     className="p-2 tracking-widest bg-gray-700"
                     key={index}
                   >
-                    {item.category.cat_type}{" "}
+                    {item.name}{" "}
                   </Badge>
                 );
               })
@@ -211,111 +279,57 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
           <p className="text-lg font-semibold text-green-600">
             Fine-Price: ${parseFloat(bookInfo.book_price).toFixed(2)}
           </p>
-          <div className="flex items-center">
-            <p className="text-lg font-semibold">Rating: {ratingMedia}/5</p>
-            <span className="ml-2 text-yellow-500 flex">
-              {/* {[...Array(Math.round(ratingMedia))].map((_, i) => (
-                <StarIcon fill="yellow" width={20} key={i} color="black" />
-              ))}
-              {[...Array(5 - Math.round(ratingMedia))].map((_, i) => (
-                <StarIcon key={i} color="black" width={20} fill="" />
-              ))} */}
-            </span>
-
-            <Dialog>
-              <DialogTrigger className="p-1 shadow shadow-gray-400 hover:bg-gray-500 transition-colors rounded">
-                Rate it!
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>What do you think about this book?</DialogTitle>
-                  <DialogDescription>
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-8"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="rating"
-                          render={() => (
-                            <FormItem>
-                              <FormLabel>Rating</FormLabel>
-                              <FormControl className="flex flex-col gap-2">
-                                <>
-                                  <div className="flex">
-                                    {[...Array(5)].map((_, i) => {
-                                      if (i + 1 > pickedStars) {
-                                        return (
-                                          <StarIcon
-                                            fill=""
-                                            width={20}
-                                            key={i}
-                                            color="black"
-                                            onClick={() =>
-                                              handleStarsPicked(i + 1)
-                                            }
-                                          />
-                                        );
-                                      } else {
-                                        return (
-                                          <StarIcon
-                                            fill="yellow"
-                                            width={20}
-                                            key={i}
-                                            color="black"
-                                            onClick={() =>
-                                              handleStarsPicked(i + 1)
-                                            }
-                                          />
-                                        );
-                                      }
-                                    })}
-                                  </div>
-                                  <Badge>{pickedStars}/5</Badge>
-                                  <DialogFooter className="text-md text-black p-3">
-                                    <DialogClose>
-                                      <Button type="submit">Save</Button>
-                                    </DialogClose>
-                                  </DialogFooter>
-                                </>
-                              </FormControl>
-                              <FormDescription></FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </form>
-                    </Form>
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Rating
+            bookInfo={bookInfo}
+            setReload={() => setReload(!reload)}
+            userId={userId}
+          />
           <p className="mt-2 text-gray-700">{bookInfo.description}</p>
           <p
             className={`mt-2 font-semibold ${
-              bookInfo.book_status == BookStatus.ISSUED
+              issuedByUser == true || pendingRequest || bookInfo.stock <= 0
                 ? "text-red-500"
                 : "text-green-500"
             }`}
           >
-            {bookInfo.book_status == BookStatus.ISSUED
-              ? "Status: Issued"
-              : "Status: Available"}
+            {
+              //TODO: ADD CANCEL REQUEST, not needed for mvp
+
+              issuedByUser
+                ? "Status: Borrowed by you"
+                : pendingRequest
+                ? pendingRequest
+                : bookInfo.stock <= 0
+                ? "Status: Out of stock"
+                : "Status: Avaible"
+            }
           </p>
           <div className="flex items-center gap-4">
-            <Confirmation
-              bookInfo={bookInfo}
-              handleIssueBook={handleIssueBook}
-            />
+            {bookInfo.stock > 0 && !pendingRequest && !issuedByUser && (
+              <Confirmation
+                type={"STOCK"}
+                price={bookInfo.book_price}
+                handleBorrowBook={handleBorrowBook}
+              />
+            )}
             {issuedByUser && (
               <Confirmation
-                type={issuedByUser ? BookStatus.ISSUED : BookStatus.IN_STOCK}
-                bookInfo={bookInfo}
+                type={BookLoanStatus.ISSUED}
+                price={bookInfo.book_price}
                 handleReturnBook={handleReturnBook}
               />
             )}
+            {/* TOOD: CONFIRMATION OF COPYING THE BOOK */}
+            {(userRole && userRole === Role.LIBRARIAN) ||
+              (userRole === Role.SUPERADMIN && (
+                <Button
+                  className="p-5 mt-3"
+                  variant={"outline"}
+                  onClick={createBookCopy}
+                >
+                  Add copy
+                </Button>
+              ))}
           </div>
         </div>
       </div>

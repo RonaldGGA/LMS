@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import AuthCard from "./authCard";
 import Link from "next/link";
@@ -17,10 +18,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { registerUser } from "@/actions/auth-user";
 import { signIn } from "next-auth/react";
+import { Eye, EyeClosed } from "lucide-react";
 
 interface FormularyProps {
   type: string;
@@ -42,24 +43,69 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
     defaultValues: {
       username: "",
       password: "",
-      ...(isLogin ? {} : { DNI: "" }),
+      ...(isLogin ? {} : { dni: "" }),
     },
   });
 
   async function onSubmit(values: z.infer<typeof schema>) {
+    toast("loading");
+
     if (isLogin) {
       const result = loginSchema.safeParse(values);
       if (!result.success) {
         toast("Invalid values");
         return;
       }
-      const res = await signIn("credentials", {
+      const signInResponse = await signIn("credentials", {
         username: values.username,
         password: values.password,
+        redirect: false,
       });
-      console.log(res);
-      console.log(["WTF"]);
-      toast("loading");
+
+      if (signInResponse?.error) {
+        switch (signInResponse.error) {
+          case "Invalid username/password":
+            toast.error(
+              `Invalid username or password. Please check your credentials. `
+            );
+            break;
+          case "Network Error":
+            toast.error(
+              "Unable to connect to the server. Please check your internet connection."
+            );
+            break;
+          case "User not found":
+            toast.error("User not found. Please check your username.");
+            break;
+          case "Account locked":
+            toast.error(
+              "Your account is temporarily locked. Please try again later."
+            );
+            break;
+          case "Server Error":
+            toast.error(
+              "An unexpected server error occurred. Please try again later."
+            );
+            break;
+          case "Validation Error":
+            toast.error(
+              "One or more fields do not meet the required criteria."
+            );
+            break;
+          case "Configuration":
+            toast.error(
+              `There's a configuration issue. Please contact support for assistance. error:${signInResponse.error}`
+            );
+            break;
+          default:
+            toast.error(
+              signInResponse.error || "An unexpected error occurred."
+            );
+        }
+        return;
+      }
+      toast.success("User logged in succesfully");
+      window.location.reload();
       return;
     }
     if (!registerSchema.safeParse(values).success) {
@@ -70,13 +116,20 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
     const result = await registerUser(values);
     if (result?.success) {
       toast.success("User Registered Succesfully");
-      await signIn("credentials", {
+      const signInResponse = await signIn("credentials", {
         username: values.username,
         password: values.password,
+        redirect: false,
       });
-      toast("User logged in...");
+      if (signInResponse?.error) {
+        toast.error(signInResponse?.error);
+        return;
+      }
+      window.location.reload();
+
+      toast.success("User logged in succesfully");
     } else {
-      toast(result!.error);
+      toast.error(result!.error);
     }
     return;
   }
@@ -109,19 +162,18 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
                 <FormControl>
                   <div className="flex relative">
                     <Input
-                      className="password-input"
+                      className="password-input "
                       placeholder="---"
                       type={showPassword ? "text" : "password"}
                       {...field}
                     />
-                    <Image
+
+                    <div
+                      className="absolute flex items-center justify-center right-0 inset-y-0  w-10 h-10"
                       onClick={handleShowPassword}
-                      className="absolute right-2 inset-y-1"
-                      width="25"
-                      height="25"
-                      alt="show/hidde-password"
-                      src={showPassword ? "/eyeclosed.svg" : "/eye.svg"}
-                    />
+                    >
+                      {showPassword ? <EyeClosed /> : <Eye />}
+                    </div>
                   </div>
                 </FormControl>
 
@@ -132,7 +184,7 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
           />
           {type == "register" && (
             <FormField
-              name="DNI"
+              name="dni"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>DNI</FormLabel>
@@ -165,12 +217,12 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
       </Form>
 
       <div className="mt-5 w-[300px] mb-2 h-[0px] border border-gray-300 mx-auto"></div>
-      <Link
+      {/* <Link
         href={"#"}
         className="block  text-center text-base underline underline-offset-2"
       >
         Forgot your password?
-      </Link>
+      </Link> */}
     </AuthCard>
   );
 };

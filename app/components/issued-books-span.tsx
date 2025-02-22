@@ -1,20 +1,25 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
-import { BookStatus, IssuedBook } from "@prisma/client";
+import { BookLoanStatus } from "@prisma/client";
 import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { Clock2, Info, X } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 
+type userBorrowedBooks = {
+  returnDate: Date | null;
+  status: BookLoanStatus;
+};
+
 interface IssuedBooksSpanProps {
   user_id: string | undefined;
-  userIssuedBooks: IssuedBook[];
+  userBorrowedBooks: userBorrowedBooks[];
 }
 
 const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
   user_id,
-  userIssuedBooks,
+  userBorrowedBooks,
 }) => {
   const [returnDate, setReturnDate] = useState<Date | null>(null);
   const [hide, setHide] = useState(false);
@@ -38,24 +43,23 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
   };
 
   const getReturnDate = useCallback(() => {
-    const closestReturnDate = userIssuedBooks.reduce<IssuedBook | null>(
-      (closest, book) => {
-        const returnDate = new Date(book.return_date);
+    // FIX EL PIE QUE LE METI CON ! AL FINAL A RETURN DATE
+    const closestReturnDate =
+      userBorrowedBooks.reduce<userBorrowedBooks | null>((closest, book) => {
+        const returnDate = new Date(book.returnDate!);
 
         if (returnDate >= currentTime) {
-          if (!closest || returnDate < new Date(closest.return_date)) {
+          if (!closest || returnDate < new Date(closest.returnDate!)) {
             return book;
           }
         }
         return closest;
-      },
-      null
-    );
+      }, null);
 
     setReturnDate(
-      closestReturnDate ? new Date(closestReturnDate.return_date) : null
+      closestReturnDate ? new Date(closestReturnDate.returnDate!) : null
     );
-  }, [userIssuedBooks, currentTime]);
+  }, [userBorrowedBooks, currentTime]);
 
   useEffect(() => {
     getReturnDate();
@@ -76,13 +80,13 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
     }
   }, [returnDate, currentTime]);
 
-  if (!userIssuedBooks) {
+  if (!userBorrowedBooks) {
     return null;
   }
 
   if (
     hide ||
-    userIssuedBooks.filter((item) => item.status === BookStatus.ISSUED)
+    userBorrowedBooks.filter((item) => item.status === BookLoanStatus.ISSUED)
       .length === 0
   ) {
     return null;
@@ -109,8 +113,9 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
         Issued Books:
         <span className="ml-1 font-semibold">
           {
-            userIssuedBooks.filter((item) => item.status === BookStatus.ISSUED)
-              .length
+            userBorrowedBooks.filter(
+              (item) => item.status === BookLoanStatus.ISSUED
+            ).length
           }
         </span>
       </div>

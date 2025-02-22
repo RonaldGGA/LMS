@@ -14,8 +14,8 @@ export const createCategoriesPlus = async (values: CategoryPlus[]) => {
     // TODO: really validate the inputs
 
     // create the categories
-    const categories = await db.category.createMany({
-      data: values.map((item) => ({ id: item.id, cat_type: item.cat_type })),
+    const categories = await db.bookCategory.createMany({
+      data: values.map((item) => ({ id: item.id, name: item.name })),
     });
     return {
       success: true,

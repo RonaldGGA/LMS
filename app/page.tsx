@@ -13,52 +13,54 @@ import CardBook from "./components/card-book";
 import { useDebounce } from "@uidotdev/usehooks";
 import z from "zod";
 import { useUserSession } from "./hooks/useUserSession";
-import { BookStatus } from "@prisma/client";
-import { getUserById } from "@/data/getUser";
 import { SkeletonDemo } from "./components/skeleton-demo";
+import { searchedBooks } from "@/types";
 
 const Home = () => {
   const router = useRouter();
-  const userId = useUserSession();
+  const userId = useUserSession()?.id;
 
   const [searchValue, setSearchValue] = useState<string>("");
-  const [searchedBooks, setSearchedBooks] = useState<
-    | {
-        id: string;
-        title: string;
-        author: string;
-        categories: string[];
-        status: BookStatus;
-        img: string;
-        ratings: { rating: number }[];
-      }[]
-    | null
-  >(null);
+  const [quantity] = useState(10);
+  const [searchedBooks, setSearchedBooks] = useState<searchedBooks[] | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId) {
-      router.push("/auth/user?type=login");
+      router.push("/login");
     }
   }, [userId, router]);
 
-  useEffect(() => {
-    async function getDbUser() {
-      const userDb = await getUserById(userId);
-      if (userDb) {
-        // setUser(userDb);
-      }
-    }
-    getDbUser();
-  }, [userId]);
   const [suggestionBooks, setSuggestionBooks] = useState<
-    { id: string; book_name: string; author: { author_name: string } }[] | null
+    { id: string; title: string; author: { author_name: string } }[] | null
   >(null);
+
+  const [counter, setCounter] = useState(false);
+
+  useEffect(() => {
+    // Función para manejar la tecla Enter o Search
+    const handleKeyPress = (e: { key: string }) => {
+      if (e.key === "Enter" || e.key === "Search") {
+        // Lógica que se ejecutará cuando se presione Enter o Search
+        setCounter(!counter);
+      }
+    };
+
+    // Añadir el event listener al documento
+    document.addEventListener("keydown", handleKeyPress);
+
+    // Limpia el event listener al desmontar
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [counter]); // Agregamos contador como dependencia
 
   const form = useForm<z.infer<typeof searchSchema>>({
     resolver: zodResolver(searchSchema),
     defaultValues: {
-      book_name: "",
+      title: "",
     },
   });
 
@@ -70,6 +72,24 @@ const Home = () => {
   const debouncedSearchValue = useDebounce(searchValue, 300);
 
   useEffect(() => {
+    const searchDefaultBooks = async () => {
+      const result = await getBooksByName(undefined, quantity);
+      if (!result?.success) {
+        if (result?.error) {
+          toast.error(result.error);
+          return;
+        }
+        return;
+      }
+      setSearchedBooks(result.data);
+    };
+    searchDefaultBooks();
+  }, [quantity, counter]);
+
+  useEffect(() => {
+    // Puedes crear notificaciones en cualquier lugar de tu aplicación
+
+    // createNotification(userId, "First message");
     const fetchSuggestions = async () => {
       if (!debouncedSearchValue) {
         setSuggestionBooks(null);
@@ -95,33 +115,24 @@ const Home = () => {
   const handleSuggestionClick = (bookName: string) => {
     setSearchValue(bookName);
     setSuggestionBooks(null);
-    form.setValue("book_name", bookName);
+    form.setValue("title", bookName);
     form.handleSubmit(onSubmit)();
     setSearchValue("");
   };
 
   const onSubmit = async (values: z.infer<typeof searchSchema>) => {
-    console.log(`submmited ${values.book_name}`);
+    console.log(`submmited ${values.title}`);
 
     setLoading(true);
 
     try {
-      const results = await getBooksByName(values.book_name);
+      const results = await getBooksByName(values.title, undefined);
       if (results?.success && results.data) {
-        const data = results.data.map((item) => {
-          return {
-            id: item.id,
-            title: item.book_name,
-            author: item.author.author_name,
-            categories: item.categories.map((item) => item.category.cat_type),
-            status: item.book_status,
-            img: item.img,
-            ratings: item.ratings,
-          };
-        });
-        setSearchedBooks(data);
+        setSearchedBooks(results.data);
         setSuggestionBooks(null);
       }
+      toast.success("searched");
+      console.log(searchedBooks);
     } catch (error) {
       console.log(error);
       toast("error");
@@ -136,6 +147,7 @@ const Home = () => {
 
   return (
     <div className="flex items-center flex-col gap-5 mt-7 max-w-[1400px] justify-center">
+      <p className="text-white">{counter}</p>
       <div className="mb-10 bg-gray-100 rounded-md focus-within:block relative  focus-within:shadow focus-within:shadow-black focus-within:rounded-b-none transition-shadow max-w-[90%] lg:w-[500px]">
         <form onSubmit={form.handleSubmit(onSubmit)} className="">
           <div className="bg-gray-100 flex  items-center  focus-within:border-none rounded-sm mx-auto  p-0 w-full">
@@ -144,11 +156,12 @@ const Home = () => {
             </div>
             <div className="relative flex-1">
               <Input
-                {...form.register("book_name")} // Registra el campo
+                {...form.register("title")} // Registra el campo
                 onChange={(e) => {
                   setSearchValue(e.currentTarget.value);
-                  form.setValue("book_name", e.currentTarget.value); // Actualiza el valor en react-hook-form
+                  form.setValue("title", e.currentTarget.value); // Actualiza el valor en react-hook-form
                 }}
+                autoFocus
                 autoComplete="off"
                 type="text"
                 value={searchValue || ""}
@@ -176,18 +189,18 @@ const Home = () => {
               suggestionBooks.map(
                 (book: {
                   id: string;
-                  book_name: string;
+                  title: string;
                   author: { author_name: string };
                 }) => (
                   <li
                     className="p-1 flex items-center cursor-pointer hover:bg-gray-200 gap-5 text-gray-600"
-                    onClick={() => handleSuggestionClick(book.book_name)}
+                    onClick={() => handleSuggestionClick(book.title)}
                     key={book.id}
                   >
                     <div className="ml-2">
                       <SearchIcon width={20} height={20} color="#999999" />
                     </div>
-                    {capitalize(book.book_name)} by {book.author.author_name}
+                    {capitalize(book.title)} by {book.author.author_name}
                   </li>
                 )
               )}
@@ -203,15 +216,17 @@ const Home = () => {
               id={book.id}
               key={book.id}
               title={book.title}
-              author={book.author}
+              author={book.author.author_name}
               categories={book.categories}
-              status={book.status}
-              rating={
-                book.ratings.reduce((total, value) => value.rating + total, 0) /
-                book.ratings.length
-              }
+              price={book.book_price}
+              ratings={book.bookRatings}
             />
           ))}
+        {searchedBooks && searchedBooks.length === 0 && (
+          <div className="text-lg text-white">
+            No Book matchs your input, please try something else
+          </div>
+        )}
         {loading && (
           <div className="flex gap- flex-col md:flex-row">
             {[...Array(3)].map((_, i) => (

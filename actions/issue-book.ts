@@ -3,91 +3,156 @@
 import { auth } from "@/auth";
 import { getBookById } from "@/data/getBook";
 import db from "@/lib/prisma";
-import { BookStatus } from "@prisma/client";
 import { format } from "date-fns";
-import { date } from "zod";
-export const issueBook = async (id: string) => {
-  try {
-    //get the book from the db
-    const dbBook = await getBookById(id);
-    if (!dbBook?.success) {
-      return {
-        success: false,
-        error: `Invalid book with id ${id}`,
-        data: null,
-      };
-    }
-    //check if the book is used or not
-    if (dbBook?.data?.book_status === BookStatus.ISSUED) {
-      return {
-        success: false,
-        error: `Book already issued by someone alse ...`,
-        data: null,
-      };
-    }
+import { createErrorResponse } from "@/lib/utils";
+import { BookLoanRequestStatus, BookLoanStatus, Role } from "@prisma/client";
+import { acceptLoanRequest } from "./accept-issue-request";
 
-    //get the actual user
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) {
-      return {
-        success: false,
-        error: `User not authenticated`,
-        data: null,
-      };
-    }
-    // To Do
-    const issued_date = format(
-      new Date(Date.now()),
-      "yyyy-MM-dd'T'HH:mm:ss'Z'"
-    ); // 'Z' indica UTC
-    const return_date = format(
-      new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      "yyyy-MM-dd'T'HH:mm:ss'Z'"
+export const issueBook = async (
+  id: string,
+  allowed: boolean,
+  providedUserId?: string,
+  requestId?: string,
+  role?: Role
+) => {
+  try {
+    const result = await db.$transaction(
+      async (tx) => {
+        // get the userId
+        const session = await auth();
+        let userId;
+
+        if (!providedUserId) {
+          userId = session?.user?.id;
+          if (!userId) {
+            throw new Error(
+              "Invalid userId, not signed or admin didnt called it"
+            );
+          }
+        } else {
+          userId = providedUserId;
+        }
+        const userRole = session?.user?.role as Role;
+
+        if (userRole === Role.LIBRARIAN || userRole == Role.SUPERADMIN) {
+          allowed = true;
+        }
+
+        // get the book from the db
+        const dbBook = await getBookById(id);
+
+        if (!dbBook?.success || !dbBook.data) {
+          throw new Error(`Invalid book with id ${id}`);
+        }
+        if (dbBook.data.stock === 0) {
+          throw new Error("Book not avaible, out of stock");
+        }
+
+        // Check if the user already requested or owns one of the books
+        const allBookRequestedCopies = await db.bookCopy.findFirst({
+          where: {
+            bookTitleId: id,
+            bookLoans: {
+              some: {
+                userId,
+                status: BookLoanStatus.ISSUED,
+              },
+            },
+            bookLoanRequests: {
+              some: {
+                userId,
+                status: BookLoanRequestStatus.PENDING,
+              },
+            },
+          },
+        });
+        if (allBookRequestedCopies) {
+          throw new Error("User already owns or requested one of the books");
+        }
+
+        // Check if there are books avaible in stock
+        if (dbBook.data.stock <= 0) {
+          throw new Error("Book not avaible in stock");
+        }
+
+        // ToDo:not needed for mvp time zone correct handling
+        const issued_date = format(
+          new Date(Date.now()),
+          "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ); // 'Z' indica UTC
+        const return_date = format(
+          new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+          "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        );
+
+        const bookCopy = await tx.bookCopy.findFirst({
+          where: {
+            bookTitleId: id,
+          },
+        });
+        if (!bookCopy) {
+          throw new Error("Error searching an avaible copy to issue");
+        }
+
+        // Use the data from the book to coonect that book with the issued ones
+        const bookLoanData = await tx.bookLoan.create({
+          data: {
+            bookCopyId: bookCopy.id,
+            userId,
+            status: BookLoanStatus.ISSUED,
+            //Improve time zone handling, not needed for the mvp
+            loanDate: issued_date,
+            returnDate: return_date,
+          },
+        });
+
+        if (!bookLoanData) {
+          throw new Error("Something happened creating the new loan");
+        }
+
+        // Update all the copies of the book in the stock
+        const updateStock = await tx.bookTitle.update({
+          where: {
+            id,
+          },
+          data: {
+            stock: dbBook.data.stock - 1,
+          },
+        });
+        if (!updateStock) {
+          throw new Error("Error updating the book in the stock");
+        }
+
+        // If the book needs a payment, then accept it if the admin called this function allowing it
+        if (
+          dbBook.data &&
+          parseFloat(dbBook.data?.book_price) > 0 &&
+          allowed &&
+          requestId
+        ) {
+          const acceptIssueRequestResult = await acceptLoanRequest(
+            requestId,
+            "Paymend correctly verified",
+            role
+          );
+          if (!acceptIssueRequestResult.success) {
+            return createErrorResponse(
+              "Couldnt manage the notification request"
+            );
+          }
+        }
+        return { success: true, error: null, data: bookLoanData };
+      },
+      {
+        timeout: 30000,
+      }
     );
-    //use the data from the book to coonect that book with the issued ones
-    const issuedBookData = await db.issuedBook.create({
-      data: {
-        book: {
-          connect: {
-            id: id, // ID del libro que estás emitiendo
-          },
-        },
-        user: {
-          connect: {
-            id: userId, // ID del usuario que está emitiendo el libro
-          },
-        },
-        //Improve this to get the actual hour, independently from the users date at that moment
-        issued_date,
-        return_date,
-      },
-    });
-    //return the data with the success
-    if (!issuedBookData) {
-      return { success: false, error: "Error issuing the book", data: null };
-    }
-    // Update the book to issued status
-    const result = await db.book.update({
-      where: {
-        id: id,
-      },
-      data: {
-        book_status: BookStatus.ISSUED,
-      },
-    });
-    if (!result) {
-      return {
-        success: false,
-        error: "Error updating the status of the book",
-        data: null,
-      };
-    }
-    return { success: true, error: null, data: issuedBookData };
+
+    return result;
   } catch (error) {
-    if (error) {
-      console.log(error);
-      return { success: false, error: "Internal server error", data: null };
-    }
+    console.log(error);
+    return createErrorResponse(
+      "Something happened server side in issue-books action"
+    );
   }
 };

@@ -29,7 +29,6 @@ import { X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { Separator } from "@/components/ui/separator";
 import { CategoryPlus } from "@/types";
-import { createCategoriesPlus } from "@/actions/create-categories";
 import Image from "next/image";
 const FormBooks = () => {
   const ulRef = useRef<HTMLUListElement>(null);
@@ -79,6 +78,11 @@ const FormBooks = () => {
         if (res?.success && res.data) {
           const data = res.data.map((item) => ({ ...item, isNew: false }));
           setCategories(data);
+        } else {
+          if (res && res?.error) {
+            toast.error(res.error);
+          }
+          return;
         }
         console.log({ CATEGORIES: categories });
       } catch (error) {
@@ -96,35 +100,18 @@ const FormBooks = () => {
       toast.error(result.error.message);
       return;
     }
-    // Create the categories added
-    try {
-      const newCategories = selectedCategories.filter(
-        (item) => item.isNew === true
-      );
-      console.log(newCategories);
-      if (newCategories.length > 0) {
-        const result = await createCategoriesPlus(newCategories);
-        if (!result.success) {
-          toast.error("something happened with the categories");
-          return;
-        }
-        toast.success("Categories added correctly");
-      }
-    } catch (error) {
-      console.log(error);
-      return;
-    }
-
     // create the book
     toast("Clicked");
-    // console.log({ VALUES: values });
 
-    const res = await createBook(values);
+    // IMPROVE THE COPIES MANAGEMENT; MORE lESS NAME-AUTHOR SPECIFIC
+
+    const res = await createBook(values, selectedCategories);
     if (res?.success) {
       router.refresh();
       toast.success("Book added correctly");
       router.push("/");
     } else {
+      toast.error(res?.error || "Something happened creting the book");
       console.log(res?.error);
       router.refresh();
     }
@@ -157,7 +144,7 @@ const FormBooks = () => {
       return;
     } else if (
       selectedCategories.find(
-        (item) => item.cat_type.toLowerCase() == value.toLowerCase()
+        (item) => item.name.toLowerCase() == value.toLowerCase()
       )
     ) {
       toast("Category already added");
@@ -168,7 +155,7 @@ const FormBooks = () => {
       ...prev,
       {
         id: uuidv4(),
-        cat_type: value,
+        name: value,
         isNew: true,
       },
     ]);
@@ -203,6 +190,7 @@ const FormBooks = () => {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="img"
@@ -278,7 +266,7 @@ const FormBooks = () => {
                                 onClick={() => handleRemoveCategory(item)}
                               >
                                 <Badge className="p-1 gap-1 text-xs tracking-wider text-gray-300">
-                                  {item.cat_type} <X width={15} height={15} />
+                                  {item.name} <X width={15} height={15} />
                                 </Badge>
                               </li>
                             ))}
@@ -321,8 +309,8 @@ const FormBooks = () => {
                                     !selectedCategories.find(
                                       (singleCategory) =>
                                         singleCategory.id == item.id ||
-                                        singleCategory.cat_type.toLowerCase() ==
-                                          item.cat_type.toLowerCase()
+                                        singleCategory.name.toLowerCase() ==
+                                          item.name.toLowerCase()
                                     )
                                 )
                                 .map((category) => (
@@ -334,7 +322,7 @@ const FormBooks = () => {
                                       }
                                       key={category.id}
                                     >
-                                      {category.cat_type}
+                                      {category.name}
                                     </li>
                                     <Separator />
                                   </>

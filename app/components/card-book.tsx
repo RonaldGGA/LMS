@@ -6,23 +6,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookStatus } from "@prisma/client";
 import { format } from "date-fns";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useMemo } from "react";
 
 interface CardBookProps {
   type?: "ISSUE" | "BOOK";
   id: string;
   title: string;
-  img?: string;
+  img: string | null;
   author?: string;
-  categories?: string[];
-  rating?: number;
-  status?: BookStatus;
+  categories?: { name: string }[];
+  ratings?: { rating: number }[];
   issued_date?: Date;
-  return_date?: Date;
+  returnDate?: Date;
+  price: string;
 }
 
 const CardBook: React.FC<CardBookProps> = ({
@@ -32,13 +31,27 @@ const CardBook: React.FC<CardBookProps> = ({
   img = "",
   author = "unknown",
   categories = [],
-  rating = 0,
-  status,
+  ratings = [],
+  price,
   // issued_date = "",
-  return_date = "",
+  returnDate = "",
 }) => {
   // Improve this further
-  console.log(categories);
+
+  const ratingMedia = useMemo(() => {
+    // Verificamos que bookInfo y bookInfo.ratings existan y tengan elementos
+    if (!ratings || ratings.length === 0) {
+      return 0;
+    }
+
+    // Calculamos el promedio de las calificaciones
+    const averageRating =
+      ratings.reduce((total, item) => total + item.rating, 0) / ratings.length;
+
+    // Devolvemos el promedio con dos decimales
+    return Number(averageRating.toFixed(2));
+  }, [ratings]); // Asegúrate de incluir todas las dependencias
+
   return (
     <Card className="w-[300px]  lg:rounded overflow-hidden shadow-md shadow-white">
       <CardHeader className="bg-gray-800 text-white p-4">
@@ -50,7 +63,7 @@ const CardBook: React.FC<CardBookProps> = ({
         <div className="flex gap-5  flex-row justify-center w-full">
           <div className="flex items-center  w-full  justify-center">
             <Image
-              src={img.length ? img : "/default.webp"}
+              src={img && img.length ? img : "/default.webp"}
               alt="book_image"
               width={100}
               height={100}
@@ -70,7 +83,9 @@ const CardBook: React.FC<CardBookProps> = ({
                 {categories && categories.length > 0 ? (
                   categories.slice(0, 1).map((item, index) => (
                     <Badge className="bg-gray-700" key={index}>
-                      {item.length > 10 ? item.slice(0, 5).concat("...") : item}
+                      {item.name.length > 10
+                        ? item.name.slice(0, 5).concat("...")
+                        : item.name}
                     </Badge>
                   ))
                 ) : (
@@ -79,17 +94,16 @@ const CardBook: React.FC<CardBookProps> = ({
               </span>
             </p>
 
-            {/* Status or return date */}
             <p className="text-gray-700 text-base text-nowrap">
-              Rating: {rating} / 5
+              Rating: {ratingMedia} / 5
             </p>
-            {status ? (
+            {price ? (
               <p className="text-gray-700 text-base text-nowrap">
-                Status: {status == BookStatus.IN_STOCK ? "Avaible" : "Taken"}
+                Bail: $ {parseFloat(price).toFixed(2)}
               </p>
-            ) : return_date ? (
+            ) : returnDate ? (
               <p className="text-gray-700 text-base text-nowrap ">
-                Return: {format(new Date(return_date), "yyyy-MM-dd")}
+                Return: {format(new Date(returnDate), "yyyy-MM-dd")}
               </p>
             ) : null}
           </div>

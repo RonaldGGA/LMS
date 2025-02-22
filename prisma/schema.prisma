@@ -5,6 +5,30 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 // Prisma schema  
 // Prisma schema  
+// . User → UserAccount
+// Nombre sugerido: UserAccount
+// Explicación: Representa una cuenta de usuario en el sistema.
+// 2. Rating → BookRating
+// Nombre sugerido: BookRating
+// Explicación: Indica que los ratings están asociados a libros.
+// 3. Book → BookCopy (para copias físicas)
+// Nombre sugerido: BookCopy
+// Explicación: Representa una copia física de un libro (ejemplo: una copia en stock).
+// 4. Author → BookAuthor
+// Nombre sugerido: BookAuthor
+// Explicación: Autor de un libro, para distinguir de otros tipos de autores.
+// 5. IssuedBook → BookLoan
+// Nombre sugerido: BookLoan
+// Explicación: Registro de un préstamo de libro.
+// 6. Bail → BookSecurityDeposit
+// Nombre sugerido: BookSecurityDeposit
+// Explicación: Depósito o garantía asociada al préstamo de un libro.
+// 7. IssueRequest → bookLoanRequest
+// Nombre sugerido: bookLoanRequest
+// Explicación: Solicitud o reserva de un libro.
+// 8. CategoryBook → BookCategory
+// Nombre sugerido: BookCategory
+// Explicación: Categoría o género de un libro (ejemplo: "Ficción", "No Ficción", etc.).
 
 generator client {
   provider = "prisma-client-js"
@@ -15,86 +39,179 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum BookStatus {
-  IN_STOCK
-  ISSUED
+enum Role {
+  MEMBER
+  SUPERADMIN
+  LIBRARIAN
 }
 
-model User {
-  id          String       @id @default(cuid())
-  username    String       @unique
-  password    String
-  DNI         String       @unique
-  issuedBooks IssuedBook[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  ratings     Rating[]
-
-  @@index([username])
-}
-
-model Admin {
+model UserAccount {
   id       String @id @default(cuid())
-  name     String @unique
+  username String @unique
   password String
+  dni      String @unique
+
+  bookLoans            BookLoan[]
+  bookRatings          BookRating[]
+  bookLoanRequests     BookLoanRequest[]
+  bookSecurityDeposits BookSecurityDeposit[]
+
+  role Role @default(MEMBER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  img String?
 }
 
-model Rating {
-  rating Int    @default(0)
-  userId String
-  bookId String
+model BookRating {
+  id          String @id @default(cuid())
+  rating      Int    @default(0)
+  userId      String
+  bookTitleId String
 
-  User User @relation(fields: [userId], references: [id])
-  Book Book @relation(fields: [bookId], references: [id])
+  user      UserAccount @relation(fields: [userId], references: [id])
+  bookTitle BookTitle   @relation(fields: [bookTitleId], references: [id])
 
-  @@id([bookId, userId])
+  @@map("book_ratings")
 }
 
-model Book {
-  id          String         @id @default(cuid())
-  book_name   String         @unique
-  book_status BookStatus     @default(IN_STOCK)
+model BookTitle {
+  id          String @id @default(cuid())
+  title       String @unique
   description String
-  author_id   String
-  book_price  String         @default("0")
-  ratings     Rating[]
-  issuedBooks IssuedBook[]
-  categories  CatgeoryBook[]
-  author      Author         @relation(fields: [author_id], references: [id])
-  img         String
+
+  authorId String
+  author   BookAuthor @relation(fields: [authorId], references: [id])
+
+  book_price String @default("0")
+  stock      Int    @default(1)
+
+  bookRatings BookRating[]
+  bookCopies  BookCopy[]
+  categories  BookCategory[]
+  img         String?
+
+  @@index([title, authorId])
+}
+
+model BookCopy {
+  id String @id @default(cuid())
+
+  bookTitleId String
+  bookTitle   BookTitle @relation(fields: [bookTitleId], references: [id])
+
+  copy_number Int @default(1)
+
+  bookLoans            BookLoan[]
+  bookSecurityDeposits BookSecurityDeposit[]
+  bookLoanRequests     BookLoanRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model IssuedBook {
-  id          String     @id @default(cuid())
-  book_id     String
-  user_id     String
-  issued_date DateTime
-  return_date DateTime
-  status      BookStatus @default(ISSUED)
-  user        User       @relation(fields: [user_id], references: [id])
-  book        Book       @relation(fields: [book_id], references: [id])
+model BookAuthor {
+  id          String      @id @default(cuid())
+  author_name String      @unique
+  bookTitles  BookTitle[]
 }
 
-model Author {
-  id          String @id @default(cuid())
-  author_name String
-  books       Book[]
+enum BookLoanStatus {
+  REQUESTED
+  IN_STOCK
+  ISSUED
 }
 
-model Category {
-  id       String         @id @default(cuid())
-  cat_type String         @db.VarChar(100)
-  books    CatgeoryBook[]
+model BookLoan {
+  id         String @id @default(cuid())
+  bookCopyId String
+  userId     String
+
+  status BookLoanStatus @default(ISSUED)
+
+  user     UserAccount @relation(fields: [userId], references: [id])
+  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id])
+
+  loanDate   DateTime  @default(now())
+  returnDate DateTime?
 }
 
-model CatgeoryBook {
-  bookId     String
-  categoryId String
-  book       Book     @relation(fields: [bookId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
+model BookCategory {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  bookTitles BookTitle[]
 
-  @@id([bookId, categoryId]) // Composite primary key  
+  @@index([name])
+}
+
+enum BookLoanRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model BookLoanRequest {
+  id         String   @id @default(cuid())
+  bookCopyId String
+  bookCopy   BookCopy @relation(fields: [bookCopyId], references: [id])
+
+  userId String
+  user   UserAccount @relation(fields: [userId], references: [id])
+
+  status BookLoanRequestStatus @default(PENDING)
+
+  requestDate    DateTime  @default(now())
+  acceptanceDate DateTime?
+
+  description String?
+
+  bookSecurityDepositId String              @unique
+  bookSecurityDeposit   BookSecurityDeposit @relation(name: "bookLoanToSecurityDeposit", fields: [bookSecurityDepositId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
+enum BookSecurityDepositState {
+  ACTIVE
+  UNACTIVE
+}
+
+enum BookPaymentMethod {
+  CASH
+  TRANSFER
+  DIGITAL
+}
+
+model BookSecurityDeposit {
+  id         String @id @default(cuid())
+  userId     String
+  bookCopyId String
+  amount     String @default("0")
+
+  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id])
+  user     UserAccount @relation(fields: [userId], references: [id])
+
+  refundDate     DateTime?
+  refundedAmount String    @default("0")
+
+  depositDate DateTime @default(now())
+
+  paidDate   DateTime?
+  returnDate DateTime?
+
+  state BookSecurityDepositState @default(ACTIVE)
+
+  paymentMethod    BookPaymentMethod @default(CASH)
+  paymentReference String? // Reference number for bank transfers  
+
+  bookLoanRequest BookLoanRequest? @relation(name: "bookLoanToSecurityDeposit")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  userId    String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

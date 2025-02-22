@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "./components/navbar";
 
 export const metadata: Metadata = {
   title: "LMS auth",
@@ -11,10 +10,5 @@ export default function AuthLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div>
-      <Navbar />
-      {children}
-    </div>
-  );
+  return <div>{children}</div>;
 }

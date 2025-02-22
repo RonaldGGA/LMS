@@ -1,87 +1,127 @@
-import { getIssuedBooks } from "@/data/getIssuedBooks";
-import React from "react";
+"use client";
 
+import { useEffect, useState } from "react";
+import { getBorrowedBooksByUser } from "@/data/getBorrowedBooks";
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
+  TableHeader,
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useUserSession } from "@/app/hooks/useUserSession";
+import { userBorrowedBooks } from "@/types";
 
-interface IssuedBooksProps {
+interface borrowedBooksProps {
   params: {
     user_id: string;
   };
 }
-const IssuedBooks: React.FC<IssuedBooksProps> = async ({ params }) => {
-  const searchedBooks = await getIssuedBooks(params.user_id);
-  console.log({ SEARCHED: searchedBooks });
+
+const BorrowedBooks: React.FC<borrowedBooksProps> = ({ params }) => {
+  const [userBorrowedBooks, setUserBorrowedBooks] = useState<
+    userBorrowedBooks[]
+  >([]);
+  const userId = useUserSession()?.id;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const borrowedBooks = await getBorrowedBooksByUser(
+        userId || params.user_id
+      );
+      if (borrowedBooks?.data && borrowedBooks.data.length > 0) {
+        setUserBorrowedBooks(borrowedBooks.data);
+      }
+    };
+
+    fetchData();
+  }, [params.user_id, userId]);
+
+  const calculateDaysLeft = (limitDate: Date) => {
+    const now = new Date();
+    const differenceInMs = limitDate.getTime() - now.getTime();
+    const differenceInDays = Math.floor(differenceInMs / (1000 * 60 * 60 * 24));
+    return differenceInDays;
+    console.log(differenceInDays); // This will give you the number of days
+  };
 
   return (
-    <Table className="overflow-hidden scroll-m-0 max-w-[95%] p-4 mx-auto mt-10 bg-white rounded text-black">
-      <TableCaption>A list of your issued books.</TableCaption>
-      <TableHeader>
-        <TableRow className="">
-          <TableHead className="w-[100px]">Title</TableHead>
-          <TableHead>Rating</TableHead>
-          <TableHead>Actual Status</TableHead>
-          <TableHead>Issued Date</TableHead>
-          <TableHead>Return Date</TableHead>
-          <TableHead>Fine ($USD)</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody className="">
-        {searchedBooks?.success &&
-        searchedBooks.data &&
-        searchedBooks?.data?.length > 0 ? (
-          searchedBooks?.data?.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">
-                {item.book.book_name && item.book.book_name.length > 10
-                  ? item.book.book_name.split("").slice(0, 15).join("").trim() +
-                    "..."
-                  : item.book.book_name}
-              </TableCell>
-              <TableCell className="">
-                {item.book.ratings.reduce(
-                  (total, value) => total + value.rating,
-                  0
-                ) / item.book.ratings.length}
-                /5
-              </TableCell>
-              <TableCell>{item.status}</TableCell>
-              <TableCell className="">
-                {format(new Date(item.issued_date), "yyy.MM.dd")}
-              </TableCell>
-              <TableCell className="">
-                {format(new Date(item.return_date), "yyy.MM.dd")}
-              </TableCell>
-              <TableCell className="text-center">
-                {item.book.book_price}
-              </TableCell>
-              <TableCell className="text-center">
-                <Link
-                  href={`/book/${item.book.id}`}
-                  className="bg-blue-50 hover:bg-blue-100 text-gray-600 font-bold p-2 transition-colors  rounded"
-                >
-                  More
-                </Link>
+    <div className="max-w-6xl mx-auto p-4 bg-gray-800 text-gray-100">
+      <Table>
+        <TableCaption className="text-lg font-semibold">
+          List of Issued Books
+        </TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[200px]">Title</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Loan Date</TableHead>
+            <TableHead>Return Date</TableHead>
+            <TableHead>Time-left (days)</TableHead>
+
+            <TableHead className="text-center">Fine ($USD)</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="">
+          {userBorrowedBooks && userBorrowedBooks.length > 0 ? (
+            userBorrowedBooks.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  {item.bookCopy.bookTitle.title.length > 30
+                    ? item.bookCopy.bookTitle.title.slice(0, 30) + "..."
+                    : item.bookCopy.bookTitle.title}
+                </TableCell>
+                <TableCell>{item.status}</TableCell>
+                <TableCell>
+                  {format(new Date(item.loanDate), "yyyy.MM.dd")}
+                </TableCell>
+                <TableCell>
+                  {item.returnDate &&
+                    format(
+                      new Date(item.returnDate || "Not defined"),
+                      "yyyy.MM.dd"
+                    )}
+                </TableCell>
+                <TableCell>
+                  {item.returnDate && item.returnDate > new Date(Date.now())
+                    ? `${calculateDaysLeft(item.returnDate)}`
+                    : item.returnDate?.getDay() == new Date(Date.now()).getDay()
+                    ? "Today"
+                    : "Completed"}
+                </TableCell>
+                <TableCell className="text-center">
+                  ${parseFloat(item.bookCopy.bookTitle.book_price).toFixed(2)}
+                </TableCell>
+                <TableCell className="text-center ">
+                  <Link
+                    href={`/book/${item.bookCopy.bookTitle.id}`}
+                    className="bg-blue-300 hover:bg-blue-200 text-gray-800 px-2 py-1 rounded-md transition-colors"
+                  >
+                    More
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8">
+                {userBorrowedBooks === null ? (
+                  <div className="text-xl">No books issued so far!</div>
+                ) : (
+                  <div className="text-xl">Loading...</div>
+                )}
               </TableCell>
             </TableRow>
-          ))
-        ) : searchedBooks?.success && searchedBooks.data?.length === 0 ? (
-          <div className="w-[250px] text-lg p-3">No books issued so far !</div>
-        ) : (
-          <div className="text-xl text-center ">Loading...</div>
-        )}
-      </TableBody>
-    </Table>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
-export default IssuedBooks;
+export default BorrowedBooks;

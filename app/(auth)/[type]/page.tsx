@@ -1,20 +1,22 @@
 "use client";
 
 import React from "react";
-import Formulary from "../components/formulary";
-import LoginLeft from "../components/login-left";
+import Formulary from "./components/formulary";
+import LoginLeft from "./components/login-left";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
 const UserAuth = () => {
-  const params = useSearchParams();
-  const type = params.get("type") || "login";
+  const { type } = useParams();
   const router = useRouter();
+  const authType =
+    type == "login" ? "login" : type == "register" ? "register" : "";
 
-  if (!["login", "register"].includes(type)) {
+  if (!type) {
     // If the type is invalid, redirect or handle the error as needed
-    router.push("/auth/user?type=login");
+    router.push("/login");
+    return;
   }
 
   return (
@@ -29,10 +31,8 @@ const UserAuth = () => {
       <div className="text-gray-100  md:flex-row-reverse items-center justify-center flex gap-5 flex-col backdrop-blur-md rounded-md lg:rounded-l-none lg:rounded-r-md max-w-[95%]">
         {/* Área de formulario */}
         <Formulary
-          type={type}
-          footerLink={`/auth/user?type=${
-            type == "login" ? "register" : "login"
-          }`}
+          type={authType}
+          footerLink={`/${type == "login" ? "register" : "login"}`}
         />
         <div className="hidden lg:block h-[600px] border w-0"></div>
         {/* Sección de la cita */}

@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -25,18 +26,41 @@ export const registerSchema = z.object({
     message: "Password must be at least 8 characters long",
     //add more constraints
   }),
-  DNI: z.string().min(11, {
+  dni: z.string().min(11, {
     message: "11 characters min",
   }),
+  role: z.custom<Role>().optional(),
 });
-
 export const updateProfileSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  DNI: z.string().min(11, {
-    message: "11 characters min",
-  }),
+  username: z
+    .string()
+    .min(2, {
+      message: "Username must be at least 2 characters.",
+    })
+    .optional(),
+  profileImg: z
+    .string()
+    .optional()
+    .transform((val) => (val === "" ? undefined : val))
+    .nullable(),
+
+  DNI: z
+    .string()
+    .min(11, {
+      message: "11 characters min",
+    })
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? undefined : val)),
+
+  oldPassword: z
+    .string()
+    .optional()
+    .transform((val) => (val === "" ? undefined : val)),
+  newPassword: z
+    .string()
+    .optional()
+    .transform((val) => (val === "" ? undefined : val)),
 });
 
 export const bookSchema = z.object({
@@ -65,7 +89,7 @@ export const bookSchema = z.object({
 });
 
 export const searchSchema = z.object({
-  book_name: z.string().min(1, "Book name is required"),
+  title: z.string().min(1, "Book name is required"),
 });
 
 export const ratingSchema = z.object({

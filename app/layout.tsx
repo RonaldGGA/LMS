@@ -29,25 +29,22 @@ export default async function RootLayout({
   let dbUser = null;
   if (session?.user?.id) {
     dbUser = await getUserById(session.user.id);
-    // console.log("Fetched dbUser:", dbUser);
   }
-  // else {
-  //   console.log("User session does not exist or userId is missing.");
-  // }
-  console.log(dbUser);
+
   return (
     <html lang="en">
       <body className={` overflow-y-scroll ${andika.className} antialiased`}>
+        {/* <NotificationsComponent /> */}
         <SessionProvider session={session}>
           {dbUser && (
             <div className="bgCustomized min-h-screen">
               <HomeNavbar user={dbUser} />
               <div className="w-full container mx-auto max-w-[1250px] relative">
                 {children}
-                {dbUser && dbUser.issuedBooks.length > 0 && (
+                {dbUser && dbUser.bookLoans.length > 0 && (
                   <IssuedBooksSpan
                     user_id={dbUser.id}
-                    userIssuedBooks={dbUser.issuedBooks}
+                    userBorrowedBooks={dbUser.bookLoans}
                   />
                 )}
               </div>

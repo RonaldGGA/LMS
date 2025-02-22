@@ -4,79 +4,150 @@ import { auth } from "@/auth";
 import { getBookById } from "@/data/getBook";
 import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
-import { BookStatus } from "@prisma/client";
-import { format } from "date-fns";
-import { date } from "zod";
+import {
+  BookLoanRequestStatus,
+  BookLoanStatus,
+  BookSecurityDepositState,
+} from "@prisma/client";
+
 export const returnBook = async (bookId: string) => {
-  try {
-    //get the book from the db
-    const dbBook = await getBookById(bookId);
-    if (!dbBook?.success) {
-      return createErrorResponse(`Invalid book with id ${bookId}`);
-    }
+  const result = await db.$transaction(
+    async (tx) => {
+      try {
+        //get the book from the db
+        const dbBook = await getBookById(bookId);
+        if (!dbBook?.success || !dbBook.data) {
+          throw new Error(`Invalid book with id ${bookId}`);
+        }
 
-    //check if the book is used or not
-    if (dbBook?.data?.book_status !== BookStatus.ISSUED) {
-      return createErrorResponse(`Book isnt issued rigtht now`);
-    }
+        //get the actual user
+        const session = await auth();
+        const userId = session?.user?.id;
+        if (!userId) {
+          return createErrorResponse("User not authenticated");
+        }
 
-    //get the actual user
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) {
-      return createErrorResponse(`User not authenticated`);
-    }
+        const book = await tx.bookTitle.findUnique({
+          where: {
+            id: bookId,
+          },
+          select: {
+            book_price: true,
 
-    //search if there is an issue book in the issue table with a return date after now
-    const issuedBookData = await db.issuedBook.findFirst({
-      where: {
-        book: {
-          id: bookId,
-        },
-        user: {
-          id: userId,
-        },
-        return_date: {
-          gte: new Date(), // Buscar donde la fecha de retorno es mayor o igual a la fecha actual
-        },
-      },
-    });
+            bookCopies: {
+              select: {
+                id: true,
+                bookLoans: {
+                  select: { status: true, userId: true, id: true },
+                },
+              },
+            },
+          },
+        });
+        if (!book || !book.bookCopies || book.bookCopies.length === 0) {
+          return createErrorResponse(
+            `Book with the id ${bookId} has no copies available`
+          );
+        }
+        const activeLoan = book.bookCopies
+          .flatMap((copy) => copy.bookLoans)
+          .filter(
+            (loan) =>
+              loan.status === BookLoanStatus.ISSUED && loan.userId === userId
+          );
+        if (activeLoan.length > 1) {
+          return createErrorResponse(
+            "There are 2 copies or more borrowed by the same user "
+          );
+        }
+        if (activeLoan.length === 0) {
+          return createErrorResponse("There is not copy borrowed at all");
+        }
 
-    if (!issuedBookData) {
-      return createErrorResponse(`Error searching the book, no book return `);
-    }
+        if (parseFloat(book.book_price) > 0) {
+          const BookLoanRequest = await db.bookLoanRequest.findFirst({
+            where: {
+              bookCopy: {
+                bookTitleId: bookId,
+              },
+              status: BookLoanRequestStatus.ACCEPTED,
+              userId,
+              bookSecurityDeposit: {
+                state: BookSecurityDepositState.ACTIVE,
+              },
+            },
+            include: {
+              bookSecurityDeposit: {
+                select: {
+                  amount: true,
+                },
+              },
+            },
+            orderBy: {
+              acceptanceDate: "asc",
+            },
+          });
 
-    // Update the returned date of the book to now and the avaibility in the issue table
-    const issueResult = await db.issuedBook.update({
-      where: {
-        id: issuedBookData.id,
-      },
-      data: {
-        status: BookStatus.IN_STOCK,
-        return_date: new Date(),
-      },
-    });
-    if (!issueResult) {
-      return createErrorResponse(
-        `Error updating the status of the book in the issue table`
-      );
-    }
+          if (!BookLoanRequest) {
+            return createErrorResponse(
+              `No se encontró una solicitud de préstamo aceptada para el usuario ${userId} y la copia del libro con el id:${bookId}`
+            );
+          }
+          const securityDepositRefund = await tx.bookSecurityDeposit.update({
+            where: {
+              id: BookLoanRequest.bookSecurityDepositId,
+            },
+            data: {
+              returnDate: new Date(Date.now()),
+              refundDate: new Date(Date.now()),
+              refundedAmount: BookLoanRequest.bookSecurityDeposit.amount,
+              state: BookSecurityDepositState.UNACTIVE,
+            },
+          });
+          if (!securityDepositRefund) {
+            return createErrorResponse("Error updating the security code");
+          }
+        }
 
-    // Update the book to stock status
-    const result = await db.book.update({
-      where: {
-        id: bookId,
-      },
-      data: {
-        book_status: BookStatus.IN_STOCK,
-      },
-    });
-    if (!result) {
-      return createErrorResponse(`Error updating the status of the book`);
+        // Update the returned date of the book to now and the avaibility in the issue table
+        const updateLoanResult = await tx.bookLoan.update({
+          where: {
+            id: activeLoan[0].id,
+          },
+          data: {
+            status: BookLoanStatus.IN_STOCK,
+            returnDate: new Date(Date.now()),
+          },
+        });
+        if (!updateLoanResult) {
+          return createErrorResponse(
+            `Error updating the status of the book in the loan table`
+          );
+        }
+        // Update the book stock status
+        const updateStockResult = await tx.bookTitle.update({
+          where: {
+            id: bookId,
+          },
+          data: {
+            stock: dbBook && dbBook.data.stock + 1,
+          },
+        });
+        if (!updateStockResult) {
+          return createErrorResponse("Error updating the stock of the book");
+        }
+
+        // We should handle the amount as the user inputs it, maybe next year xd
+
+        return { success: true, error: null, data: updateStockResult };
+      } catch (error) {
+        console.log(error);
+        return createErrorResponse(`Internal server error`);
+      }
+    },
+    {
+      timeout: 30000,
     }
-    return { success: true, error: null, data: issuedBookData };
-  } catch (error) {
-    console.log(error);
-    return createErrorResponse(`Internal server error`);
-  }
+  );
+  return result;
 };

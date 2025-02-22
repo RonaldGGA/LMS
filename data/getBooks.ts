@@ -9,9 +9,9 @@ export const getLiveBooksName = async (partial_name: string) => {
   }
 
   try {
-    const books = await db.book.findMany({
+    const books = await db.bookTitle.findMany({
       where: {
-        book_name: {
+        title: {
           contains: partial_name,
           mode: "insensitive",
         },
@@ -24,7 +24,49 @@ export const getLiveBooksName = async (partial_name: string) => {
           },
         },
         id: true,
-        book_name: true,
+        title: true,
+      },
+      distinct: ["title", "authorId"],
+    });
+
+    return {
+      success: true,
+      error: null,
+      data: books,
+    };
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return createErrorResponse("Server side error");
+  }
+};
+export const getDefaultBooks = async (quantity: number) => {
+  if (!quantity) {
+    return createErrorResponse("no specified quantity");
+  }
+
+  try {
+    const books = await db.bookTitle.findMany({
+      take: 10,
+      select: {
+        id: true,
+        title: true,
+        img: true,
+        book_price: true,
+        bookRatings: {
+          select: {
+            rating: true,
+          },
+        },
+        author: {
+          select: {
+            author_name: true,
+          },
+        },
+        categories: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -39,42 +81,45 @@ export const getLiveBooksName = async (partial_name: string) => {
   }
 };
 
-export const getBooksByName = async (book_name: string) => {
+export const getBooksByName = async (
+  title: string | undefined,
+  quantity: number | undefined
+) => {
   try {
-    // check book name
-    console.log({ THIS: book_name });
-    if (!book_name) {
-      return { success: false, error: "Invalid book name", data: null };
+    if (!title && title !== undefined) {
+      return createErrorResponse("Invalid book name");
     }
-    // get all the books in the library that includes that name
-    const books = await db.book.findMany({
+
+    const books = await db.bookTitle.findMany({
       where: {
-        book_name: {
-          contains: book_name,
+        title: {
+          contains: title,
           mode: "insensitive",
         },
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        img: true,
+        book_price: true,
+        bookRatings: {
+          select: {
+            rating: true,
+          },
+        },
+
         author: {
           select: {
             author_name: true,
           },
         },
-        ratings: {
-          select: {
-            rating: true,
-          },
-        },
         categories: {
           select: {
-            category: {
-              select: {
-                cat_type: true,
-              },
-            },
+            name: true,
           },
         },
       },
+      take: quantity,
     });
 
     // return those books id and name
@@ -86,11 +131,7 @@ export const getBooksByName = async (book_name: string) => {
   } catch (err) {
     if (err) {
       console.error(err);
-      return {
-        success: false,
-        error: "An unexpected error occurred",
-        data: null,
-      };
+      return createErrorResponse("Internal server error finding books by name");
     }
   }
 };
