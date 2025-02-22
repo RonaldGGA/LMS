@@ -1,7 +1,5 @@
 import Credentials from "next-auth/providers/credentials";
-
 import { loginUser } from "./actions/auth-user";
-import { CredentialsSignin } from "next-auth";
 
 const authConfig = {
   providers: [
@@ -9,7 +7,7 @@ const authConfig = {
       async authorize(credentials) {
         try {
           if (!credentials?.username || !credentials?.password) {
-            return new CredentialsSignin("Username and password are required");
+            throw new Error("Username and password are required");
           }
 
           const result = await loginUser({
@@ -20,38 +18,26 @@ const authConfig = {
           if (!result.success) {
             if (result.error) {
               // Handle specific error cases if available
-              switch (result.error) {
-                case "User not found":
-                  return new CredentialsSignin(
-                    "User not found. Please check your username."
-                  );
-                case "Invalid password":
-                  return new CredentialsSignin("Invalid password.");
-                case "Account locked":
-                  return new CredentialsSignin(
-                    "Your account is temporarily locked."
-                  );
-                default:
-                  return new CredentialsSignin(
-                    result.error || "Sign in failed"
-                  );
-              }
+              console.log(result.error);
             }
-            return new CredentialsSignin("Sign in failed");
+            return null;
           }
-          if (result.data) {
+
+          if (result.data && !result.error && result.success) {
             return result.data;
           }
 
-          return new CredentialsSignin("No user data received");
+          return null;
         } catch (error) {
           console.error("Credentials authorization error:", error);
-          return new CredentialsSignin(
-            "An unexpected error occurred during sign in"
-          );
+          if (error instanceof Error) {
+            throw new Error("Error in the server");
+          }
+          throw new Error("An unexpected error occurred during sign in");
         }
       },
     }),
   ],
 };
+
 export default authConfig;

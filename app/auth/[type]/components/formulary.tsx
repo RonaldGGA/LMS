@@ -20,8 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import { registerUser } from "@/actions/auth-user";
-import { signIn } from "next-auth/react";
 import { Eye, EyeClosed } from "lucide-react";
+import { authenticate } from "@/actions/sign-in";
+import { useFormState, useFormStatus } from "react-dom";
 
 interface FormularyProps {
   type: string;
@@ -29,6 +30,7 @@ interface FormularyProps {
 }
 
 const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
+  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleShowPassword = () => {
@@ -48,91 +50,42 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
   });
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    toast("loading");
-
     if (isLogin) {
-      const result = loginSchema.safeParse(values);
-      if (!result.success) {
-        toast("Invalid values");
-        return;
-      }
-      const signInResponse = await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        redirect: false,
-      });
-
-      if (signInResponse?.error) {
-        switch (signInResponse.error) {
-          case "Invalid username/password":
-            toast.error(
-              `Invalid username or password. Please check your credentials. `
-            );
-            break;
-          case "Network Error":
-            toast.error(
-              "Unable to connect to the server. Please check your internet connection."
-            );
-            break;
-          case "User not found":
-            toast.error("User not found. Please check your username.");
-            break;
-          case "Account locked":
-            toast.error(
-              "Your account is temporarily locked. Please try again later."
-            );
-            break;
-          case "Server Error":
-            toast.error(
-              "An unexpected server error occurred. Please try again later."
-            );
-            break;
-          case "Validation Error":
-            toast.error(
-              "One or more fields do not meet the required criteria."
-            );
-            break;
-          case "Configuration":
-            toast.error(
-              `There's a configuration issue. Please contact support for assistance. error:${signInResponse.error}`
-            );
-            break;
-          default:
-            toast.error(
-              signInResponse.error || "An unexpected error occurred."
-            );
-        }
-        return;
-      }
-      toast.success("User logged in succesfully");
-      window.location.reload();
-      return;
-    }
-    if (!registerSchema.safeParse(values).success) {
-      toast("Invalid values");
-      return;
-    }
-    //Register the user
-    const result = await registerUser(values);
-    if (result?.success) {
-      toast.success("User Registered Succesfully");
-      const signInResponse = await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        redirect: false,
-      });
-      if (signInResponse?.error) {
-        toast.error(signInResponse?.error);
-        return;
-      }
-      window.location.reload();
-
-      toast.success("User logged in succesfully");
+      dispatch({ username: values.username, password: values.password });
     } else {
-      toast.error(result!.error);
+      if (!registerSchema.safeParse(values).success) {
+        toast.error("Invalid values");
+        return;
+      }
+      // Register the user
+      const result = await registerUser(values);
+      if (result?.success) {
+        toast.success("User Registered Successfully");
+
+        dispatch({ username: values.username, password: values.password });
+      } else {
+        toast.error(result!.error);
+      }
     }
+    toast.success("User logged in successfully");
+
     return;
   }
+
+  function LoginButton() {
+    const { pending } = useFormStatus();
+    return (
+      <Button
+        variant={"outline"}
+        className="p-5"
+        aria-disabled={pending}
+        type="submit"
+      >
+        Get In
+      </Button>
+    );
+  }
+
   return (
     <AuthCard type={type} footerLink={footerLink}>
       <Form {...form}>
@@ -198,13 +151,9 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
             />
           )}
 
-          <div className="flex justify-center text-black">
-            <Button variant={"outline"} className="p-5">
-              Get In
-            </Button>
-          </div>
+          <div className="flex justify-center text-black">{LoginButton()}</div>
           <p className=" text-gray-400 max-w-[380px]text-sm ">
-            By accesing this system, you accept the{" "}
+            By accessing this system, you accept the{" "}
             <Link
               href="#"
               className="hover:text-gray-600 transition-colors underline underline-offset-2"
@@ -223,6 +172,11 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
       >
         Forgot your password?
       </Link> */}
+      {errorMessage && (
+        <>
+          <p className="text-sm text-red-500">{errorMessage}</p>
+        </>
+      )}
     </AuthCard>
   );
 };

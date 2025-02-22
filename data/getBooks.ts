@@ -122,6 +122,16 @@ export const getBooksByName = async (
       take: quantity,
     });
 
+    if (!books) {
+      return createErrorResponse("Somthing happened");
+    }
+    if (books && books.length === 0) {
+      if (title) {
+        return createErrorResponse("No matches");
+      }
+      return createErrorResponse("Empty");
+    }
+
     // return those books id and name
     return {
       success: true,

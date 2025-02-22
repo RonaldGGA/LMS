@@ -29,7 +29,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!userId) {
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [userId, router]);
 
@@ -71,15 +71,22 @@ const Home = () => {
 
   const debouncedSearchValue = useDebounce(searchValue, 300);
 
+  const [errorMesasge, setErrorMessage] = useState("");
   useEffect(() => {
     const searchDefaultBooks = async () => {
       const result = await getBooksByName(undefined, quantity);
+      console.log(result);
       if (!result?.success) {
-        if (result?.error) {
-          toast.error(result.error);
+        if (result?.error && result.error === "Empty") {
+          setErrorMessage("No books in the library");
+          setSearchedBooks([]);
+          return;
+        } else {
+          toast.error("Something happened searching the books");
+          setSearchedBooks([]);
+
           return;
         }
-        return;
       }
       setSearchedBooks(result.data);
     };
@@ -129,8 +136,18 @@ const Home = () => {
       const results = await getBooksByName(values.title, undefined);
       if (results?.success && results.data) {
         setSearchedBooks(results.data);
+        console.log(results.data);
         setSuggestionBooks(null);
+      } else {
+        if (results?.error === "No matches") {
+          setSuggestionBooks(null);
+          setSearchedBooks([]);
+          setErrorMessage("No book matches your query");
+        } else {
+          setErrorMessage("Internal server error, please contact support");
+        }
       }
+
       toast.success("searched");
       console.log(searchedBooks);
     } catch (error) {
@@ -222,9 +239,7 @@ const Home = () => {
             />
           ))}
         {searchedBooks && searchedBooks.length === 0 && (
-          <div className="text-lg text-white">
-            No Book matchs your input, please try something else
-          </div>
+          <div className="text-lg text-white">{errorMesasge}</div>
         )}
         {loading && (
           <div className="flex gap- flex-col md:flex-row">
