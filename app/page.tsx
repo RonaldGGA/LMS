@@ -13,7 +13,6 @@ import { useDebounce } from "@uidotdev/usehooks";
 import z from "zod";
 import { SkeletonDemo } from "./components/skeleton-demo";
 import { searchedBooks } from "@/types";
-import { useRouter } from "next/navigation";
 
 const Home = () => {
   const [searchValue, setSearchValue] = useState<string>("");
