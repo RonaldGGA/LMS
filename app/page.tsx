@@ -6,32 +6,21 @@ import { Search, SearchIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getBooksByName, getLiveBooksName } from "@/data/getBooks";
 import CardBook from "./components/card-book";
 import { useDebounce } from "@uidotdev/usehooks";
 import z from "zod";
-import { useUserSession } from "./hooks/useUserSession";
 import { SkeletonDemo } from "./components/skeleton-demo";
 import { searchedBooks } from "@/types";
 
 const Home = () => {
-  const router = useRouter();
-  const userId = useUserSession()?.id;
-
   const [searchValue, setSearchValue] = useState<string>("");
   const [quantity] = useState(10);
   const [searchedBooks, setSearchedBooks] = useState<searchedBooks[] | null>(
     null
   );
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!userId) {
-      router.push("/auth/login");
-    }
-  }, [userId, router]);
 
   const [suggestionBooks, setSuggestionBooks] = useState<
     { id: string; title: string; author: { author_name: string } }[] | null
