@@ -1,40 +1,61 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { Role } from "@prisma/client";
 
-import { NextRequest } from "next/server";
-
-export async function middleware(req: NextRequest) {
-  const { nextUrl } = req;
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+export async function middleware(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET,
+  });
   const isLoggedIn = !!token;
+  const { pathname } = new URL(request.url);
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
-  const isApiRoute = nextUrl.pathname.startsWith("/api");
-
-  if (isApiRoute) {
+  // 1. Always allow API routes without authentication
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  // If not logged in
-  if (!isLoggedIn && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/auth/login", nextUrl));
+  // 2. Handle authentication routes
+  if (pathname.startsWith("/auth")) {
+    // Extract the type from the URL
+    const authType = pathname.split("/auth/")[1]?.split("/")[0] || "";
+
+    // Only allow /auth/login and /auth/register
+    if (!["login", "register"].includes(authType)) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    // If the user is already authenticated, redirect to the dashboard
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    // Allow access to login and register pages
+    return NextResponse.next();
   }
 
-  // If logged in
-  if (isLoggedIn && isAuthRoute) {
-    const user = token;
-    if (
-      user &&
-      (user.role === Role.LIBRARIAN || user.role === Role.SUPERADMIN)
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
-    }
-    return NextResponse.redirect(new URL("/", nextUrl));
+  // 3. All other routes require authentication
+  if (!isLoggedIn) {
+    // Redirect unauthenticated users to the login page
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
+
+  // 4. Optionally, protect specific routes based on roles
+  if (pathname.startsWith("/dashboard")) {
+    // Only allow access to admins
+    if (token?.role === Role.MEMBER) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  // 5. Allow all other authenticated access
+  return NextResponse.next();
 }
+
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest).*)",
   ],
 };
