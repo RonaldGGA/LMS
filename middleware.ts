@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const isLoggedIn = !!token;
 
-  const authRoutes = ["/login", "/register"];
+  const authRoutes = ["/auth/login", "/auth/register"];
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isApiRoute = nextUrl.pathname.startsWith("/api");
 
@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
 
   // If not logged in
   if (!isLoggedIn && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+    return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
   // If logged in
