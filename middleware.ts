@@ -1,42 +1,51 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-// import { Role } from "@prisma/client";
 
-import { NextRequest } from "next/server";
+export default async function middleware(request: NextRequest) {
+  const session = await getToken({ req: request });
+  const { pathname } = new URL(request.url);
 
-export async function middleware(req: NextRequest) {
-  const { nextUrl } = req;
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  const isLoggedIn = !!token;
-
-  // const authRoutes = ["/auth/login", "/auth/register"];
-  // const isAuthRoute = authRoutes.includes(nextUrl.pathname);
-  const isApiRoute = nextUrl.pathname.startsWith("/api");
-
-  if (isApiRoute) {
+  // 1. Siempre permitir las rutas de API
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  if (isLoggedIn) {
+  // 2. Rutas de autenticación (/auth/[type])
+  if (pathname.startsWith("/auth")) {
+    const type = pathname.split("/auth/")[1]?.split("/")[0] || "";
+
+    // Permitir solo /auth/login y /auth/register
+    if (!["login", "register"].includes(type)) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    // Si el usuario ya está autenticado, redirigir al dashboard
+    if (session) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
     return NextResponse.next();
   }
 
-  // // If not logged in
-  // if (!isLoggedIn && !isAuthRoute) {
-  //   return NextResponse.redirect(new URL("/auth/login", nextUrl));
-  // }
+  // 3. Rutas protegidas (dashboard y siguientes)
+  if (pathname.startsWith("/dashboard") || pathname === "/") {
+    // Si el usuario no está autenticado, redirigir a login
+    if (!session) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
 
-  // // If logged in
-  // if (isLoggedIn && isAuthRoute) {
-  //   const user = token;
-  //   if (
-  //     user &&
-  //     (user.role === Role.LIBRARIAN || user.role === Role.SUPERADMIN)
-  //   ) {
-  //     return NextResponse.redirect(new URL("/dashboard", nextUrl));
-  //   }
-  //   return NextResponse.redirect(new URL("/", nextUrl));
-  // }
+    // Verificar si el usuario es admin
+    if (
+      (session as unknown as { user: { role: string } }).user.role !==
+      "SUPERADMIN"
+    ) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  // Si no coincide con ninguna condición, seguir con la solicitud
   return NextResponse.next();
 }
 export const config = {
