@@ -7,7 +7,11 @@ import { NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET || "fallback_secret", // ✅ Agrega fallback
+    secureCookie: process.env.NODE_ENV === "production", // ✅ Cookie segura en prod
+  });
   const isLoggedIn = !!token;
   const isAdminRoute = nextUrl.pathname.startsWith("/dashboard");
   const isAuthRoute = ["/auth/login", "/auth/register"].includes(
@@ -24,7 +28,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
-  console.log(isAuthRoute);
   // If logged in
   if (isLoggedIn) {
     // handle auth routes
@@ -46,12 +49,12 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
-
   return NextResponse.next();
 }
 
+// middleware.ts
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|auth|public).*)", // ✅ Mejor cobertura
   ],
 };
