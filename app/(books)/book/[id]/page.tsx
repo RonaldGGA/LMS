@@ -62,7 +62,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   useEffect(() => {
     setUserId(userSession?.id);
     setUserRole(userSession?.role);
-  }, []);
+  }, [userSession?.id, userSession?.role]);
   console.log(params);
 
   const getBook = useCallback(async () => {

@@ -38,6 +38,7 @@ const FormBooks = () => {
   const [selectedCategories, setSelectedCategories] = useState<CategoryPlus[]>(
     []
   );
+  const [currentSelectValue, setCurrentSelectValue] = useState("");
   const [authorValue, setAuthorValue] = useState("");
 
   const form = useForm<z.infer<typeof bookSchema>>({
@@ -74,7 +75,7 @@ const FormBooks = () => {
   useEffect(() => {
     const searchCategories = async () => {
       try {
-        const res = await getCategories();
+        const res = await getCategories(currentSelectValue);
         if (res?.success && res.data) {
           const data = res.data.map((item) => ({ ...item, isNew: false }));
           setCategories(data);
@@ -84,13 +85,12 @@ const FormBooks = () => {
           }
           return;
         }
-        console.log({ CATEGORIES: categories });
       } catch (error) {
         console.log(error);
       }
     };
     searchCategories();
-  }, []);
+  }, [currentSelectValue]);
 
   const onSubmit = async (values: z.infer<typeof bookSchema>) => {
     values.categories = selectedCategories.map((item) => item.id);
@@ -134,7 +134,6 @@ const FormBooks = () => {
   const handleSelectClick = () => {
     setShow(true);
   };
-  const [currentSelectValue, setCurrentSelectValue] = useState("");
   const handleCategoryWrite = (value: string) => {
     setCurrentSelectValue(value);
   };
@@ -241,6 +240,7 @@ const FormBooks = () => {
               </FormItem>
             )}
           />
+
           <AuthorInput
             bookValue={bookValue}
             form={form}
