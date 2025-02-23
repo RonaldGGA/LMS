@@ -51,7 +51,12 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     if (isLogin) {
-      dispatch({ username: values.username, password: values.password });
+      try {
+        dispatch({ username: values.username, password: values.password });
+      } catch (error) {
+        console.log(error);
+        return;
+      }
     } else {
       if (!registerSchema.safeParse(values).success) {
         toast.error("Invalid values");
@@ -68,7 +73,9 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
         return;
       }
     }
-    toast.success("User logged in successfully");
+    if (!errorMessage) {
+      toast.success("User logged in successfully");
+    }
 
     return;
   }

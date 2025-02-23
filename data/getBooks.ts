@@ -68,6 +68,9 @@ export const getDefaultBooks = async (quantity: number) => {
           },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return {

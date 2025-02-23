@@ -141,7 +141,6 @@ const AuthorInput: React.FC<AuthorInputProps> = ({
                   onChange={handleChange}
                   value={authorValue}
                   autoComplete="off"
-                  onFocusCapture={() => setAuthorValue("")}
                   {...field}
                 />
                 {suggestions.length > 0 && showSuggestions && (

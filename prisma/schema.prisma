@@ -92,6 +92,9 @@ model BookTitle {
   categories  BookCategory[]
   img         String?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([title, authorId])
 }
 

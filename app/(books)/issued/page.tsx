@@ -27,14 +27,22 @@ const BorrowedBooks: React.FC<borrowedBooksProps> = ({ params }) => {
     userBorrowedBooks[]
   >([]);
   const userId = useUserSession()?.id;
+  const [loading, setloading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const borrowedBooks = await getBorrowedBooksByUser(
-        userId || params.user_id
-      );
-      if (borrowedBooks?.data && borrowedBooks.data.length > 0) {
-        setUserBorrowedBooks(borrowedBooks.data);
+      try {
+        setloading(true);
+        const borrowedBooks = await getBorrowedBooksByUser(
+          userId || params.user_id
+        );
+        if (borrowedBooks?.data && borrowedBooks.data.length > 0) {
+          setUserBorrowedBooks(borrowedBooks.data);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setloading(false);
       }
     };
 
@@ -110,10 +118,10 @@ const BorrowedBooks: React.FC<borrowedBooksProps> = ({ params }) => {
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center py-8">
-                {userBorrowedBooks === null ? (
-                  <div className="text-xl">No books issued so far!</div>
-                ) : (
+                {loading ? (
                   <div className="text-xl">Loading...</div>
+                ) : (
+                  <div className="text-xl">No Books Issued So far :C</div>
                 )}
               </TableCell>
             </TableRow>
