@@ -24,6 +24,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
+  console.log(isAuthRoute);
   // If logged in
   if (isLoggedIn) {
     // handle auth routes
@@ -45,6 +46,7 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
+
   return NextResponse.next();
 }
 
