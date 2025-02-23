@@ -30,7 +30,10 @@ const UserAuth = () => {
       />
       <div className="text-gray-100  md:flex-row-reverse items-center justify-center flex gap-5 flex-col backdrop-blur-md rounded-md lg:rounded-l-none lg:rounded-r-md max-w-[95%]">
         {/* Área de formulario */}
-        <Formulary type={authType} footerLink={`/auth/${authType}`} />
+        <Formulary
+          type={authType}
+          footerLink={`/auth/${authType == "login" ? "register" : "login"}`}
+        />
         <div className="hidden lg:block h-[600px] border w-0"></div>
         {/* Sección de la cita */}
         <LoginLeft />
