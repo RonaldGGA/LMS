@@ -164,7 +164,10 @@ const EditProfile: React.FC<EditProfileProps> = ({
                     </div>
                   ) : (
                     <CldUploadWidget
-                      signatureEndpoint="/api/sign-cloudinary-params"
+                      uploadPreset={
+                        process.env.NEXT_PUBLIC_CLOUDINARY_PRESET_NAME
+                      }
+                      // signatureEndpoint="/api/sign-cloudinary-params"
                       onSuccess={(result, { widget }) => {
                         if (result.info && typeof result.info !== "string") {
                           const info =

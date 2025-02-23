@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
+  env: {
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "dp0btetfq",
+    NEXT_PUBLIC_CLOUDINARY_PRESET_NAME: "LMSUploadPreset",
+  },
   images: {
     remotePatterns: [
       {
