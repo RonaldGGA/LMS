@@ -46,6 +46,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log(pathname);
     const getUserCount = async () => {
       const countResponse = await getUserNotificationsCount(user.id);
       if (countResponse.success) {
