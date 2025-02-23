@@ -47,9 +47,7 @@ const Profile = () => {
         toast.error("Failed to fetch user data.");
       }
     };
-    if (!userId) {
-      router.push("/auth/login");
-    } else {
+    if (userId) {
       getUserDb(userId);
     }
   }, [userId, router]);
