@@ -205,10 +205,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
 
         if (response?.success) {
           // IF user is admin, issue the book accepting the request and not sending a notification
-          if (
-            userDb?.role === Role.SUPERADMIN ||
-            userDb?.role === Role.LIBRARIAN
-          ) {
+          if (userRole === Role.SUPERADMIN || userRole === Role.LIBRARIAN) {
             const result = await issueBook(
               params.id,
               userId,
@@ -226,6 +223,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               "Book requested, please wait for the admin for confirmation"
             );
             setReload(!reload);
+            window.location.reload();
             return;
           }
         } else {

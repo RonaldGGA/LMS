@@ -22,7 +22,7 @@ const UserAuth = () => {
   return (
     <div className="bgCustomized flex items-center justify-center min-h-screen py-10 bg-cover bg-center relative text-gray-100 ">
       <Image
-        className="absolute inset-0 brightness-[30%] bg-cover bg-center"
+        className="absolute inset-0 brightness-[30%] bg-cover bg-center "
         src={"/register.jpg "}
         fill
         alt="bg-image"
