@@ -10,7 +10,6 @@ import { acceptLoanRequest } from "./accept-issue-request";
 
 export const issueBook = async (
   id: string,
-  allowed: boolean,
   providedUserId?: string,
   requestId?: string,
   role?: Role
@@ -32,7 +31,8 @@ export const issueBook = async (
         } else {
           userId = providedUserId;
         }
-        const userRole = session?.user?.role as Role;
+        const userRole = session?.user?.role;
+        let allowed = false;
 
         if (userRole === Role.LIBRARIAN || userRole == Role.SUPERADMIN) {
           allowed = true;

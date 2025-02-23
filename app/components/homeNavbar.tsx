@@ -23,7 +23,7 @@ import {
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface HomeNavbarProps {
@@ -44,6 +44,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
   const [userNotificationsCount, setUserNotificationsCount] = useState(0);
   const [adminNotificationsCount, setAdminNotificationsCount] = useState(0);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     console.log(pathname);
@@ -63,8 +64,15 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
         setAdminNotificationsCount(countResponse.data ? countResponse.data : 0);
       }
     };
+
     getAdminCount();
-  }, []);
+    console.log();
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    await signOut(); // Assuming you're using next-auth
+    router.push("/auth/login");
+  };
 
   return (
     <div className="max-w-[97%] mx-auto h-[90px] flex items-center justify-center ">
@@ -152,7 +160,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
                 ))}
 
               <DropdownMenuItem
-                onClick={() => signOut()}
+                onClick={handleLogout}
                 className="flex items-center  gap-1"
               >
                 <LogOut /> Logout

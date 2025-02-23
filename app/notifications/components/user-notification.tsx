@@ -13,7 +13,7 @@ function UserNotification({
   createdAt,
 }: UserNotificationProps) {
   return (
-    <div className="flex items-center justify-between p-2 max-w-[900px] w-[95%] rounded-md shadow-sm shadow-black bg-white ">
+    <div className="flex  flex-col md:flex-row items-center justify-between p-2 max-w-[1250px] w-[95%] rounded-md shadow-sm shadow-black bg-white ">
       <div className="flex-col">
         <div className="flex justify-between items-center p-1 ml-4">
           <p className="text-lg font-semibold ">System Notification</p>

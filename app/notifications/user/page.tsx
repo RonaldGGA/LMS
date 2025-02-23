@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useUserSession } from "../../hooks/useUserSession";
 import { getUserPendingNotifications } from "@/data/getNotifications";
-import UserNotification from "./components/user-notification";
 import { readNotification } from "@/actions/read-notification";
+import UserNotification from "../components/user-notification";
 
 export type UserPendingNotification = {
   id: string;
@@ -49,7 +49,7 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="flex flex-col flex-gap-2 items-center ">
+    <div className="flex flex-col gap-2 items-center ">
       {notifications && notifications.length > 0 ? (
         notifications.map((item) => (
           <UserNotification

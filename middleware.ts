@@ -20,7 +20,7 @@ export async function middleware(req: NextRequest) {
   const isApiRoute = nextUrl.pathname.startsWith("/api");
 
   if (isApiRoute) {
-    return NextResponse.next();
+    NextResponse.next();
   }
 
   // If not logged in
@@ -43,18 +43,19 @@ export async function middleware(req: NextRequest) {
     // handle admin routes
     if (isAdminRoute) {
       if (token && token.role === Role.MEMBER) {
-        return NextResponse.redirect(new URL("/", nextUrl));
+        NextResponse.redirect(new URL("/", nextUrl));
       }
-      return NextResponse.next();
     }
-    return NextResponse.next();
   }
-  return NextResponse.next();
+  NextResponse.next();
 }
 
 // middleware.ts
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|auth|public).*)", // ✅ Mejor cobertura
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 };

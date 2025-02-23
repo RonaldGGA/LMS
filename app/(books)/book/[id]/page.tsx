@@ -57,6 +57,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   const [userId, setUserId] = useState<string | undefined>("");
 
   const [userDb, setUserDb] = useState<BigUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setUserId(userSession?.id);
@@ -66,6 +67,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
 
   const getBook = useCallback(async () => {
     try {
+      setLoading(true);
       console.log(`getting book with id ${params.id}`);
       const result = await getBookById(params.id);
 
@@ -83,13 +85,22 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
       console.log("Got the book");
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
 
     //TODO: handle this more properly
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, reload]); // Dependency on params.id
   useEffect(() => {
-    getBook();
+    try {
+      setLoading(true);
+      getBook();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   }, [getBook, reload]);
 
   useEffect(() => {
@@ -99,54 +110,70 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         setUserDb(userDb.data);
       }
     }
-    if (userId) {
-      getUserFromDb();
+    try {
+      setLoading(true);
+      if (userId) {
+        getUserFromDb();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something happened");
+    } finally {
+      setLoading(false);
     }
   }, [userId, reload, router]);
 
   useEffect(() => {
-    if (bookInfo && userId) {
-      const date = new Date().toLocaleDateString(); // Date placeholder
+    try {
+      setLoading(true);
+      if (bookInfo && userId) {
+        const date = new Date().toLocaleDateString(); // Date placeholder
 
-      // Check if book is already issued by the user
-      const isIssued = userDb?.bookLoans.some(
-        (item) =>
-          item.userId === userId &&
-          item.status === "ISSUED" &&
-          item.bookCopy.bookTitleId === params.id
-      );
-
-      if (isIssued) {
-        setIssuedByUser(isIssued);
-        return;
-      }
-      // Check if user has a pending request with the book
-      const hasPendingRequest = userDb?.bookLoanRequests.some(
-        (item) =>
-          item.bookCopy.bookTitleId === bookInfo.id &&
-          item.status === BookLoanRequestStatus.PENDING
-      );
-
-      if (hasPendingRequest) {
-        setPendingRequest(`Requested by you on ${date}`);
-        return;
-      }
-      // Check if someone else has a pending request
-      const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) => {
-        const result = item.bookLoanRequests.some(
+        // Check if book is already issued by the user
+        const isIssued = userDb?.bookLoans.some(
           (item) =>
-            item.userId !== userId &&
+            item.userId === userId &&
+            item.status === "ISSUED" &&
+            item.bookCopy.bookTitleId === params.id
+        );
+
+        if (isIssued) {
+          setIssuedByUser(isIssued);
+          return;
+        }
+        // Check if user has a pending request with the book
+        const hasPendingRequest = userDb?.bookLoanRequests.some(
+          (item) =>
+            item.bookCopy.bookTitleId === bookInfo.id &&
             item.status === BookLoanRequestStatus.PENDING
         );
-        return result;
-      });
 
-      if (hasPendingRequestFromOthers && bookInfo.stock === 1) {
-        setPendingRequest(`Requested by another user`);
-      } else {
-        setIssuedByUser(false);
-        setPendingRequest("");
+        if (hasPendingRequest) {
+          setPendingRequest(`Requested by you on ${date}`);
+          return;
+        }
+        // Check if someone else has a pending request
+        const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) => {
+          const result = item.bookLoanRequests.some(
+            (item) =>
+              item.userId !== userId &&
+              item.status === BookLoanRequestStatus.PENDING
+          );
+          return result;
+        });
+
+        if (hasPendingRequestFromOthers && bookInfo.stock === 1) {
+          setPendingRequest(`Requested by another user`);
+        } else {
+          setIssuedByUser(false);
+          setPendingRequest("");
+        }
       }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something happened");
+    } finally {
+      setLoading(false);
     }
   }, [
     bookInfo,
@@ -157,53 +184,73 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     params.id,
   ]); // Only run this effect when bookInfo or userId changes
 
-  if (!userId || !userDb) {
-    return null;
-  }
-  if (!userId) {
-    return null;
-  }
   const handleBorrowBook = async (
     paymentMethod: BookPaymentMethod,
     paymentReference: string | undefined
   ) => {
-    // Logic for issuing the book, e.g., updating the status in the database
-    if (bookInfo && parseFloat(bookInfo?.book_price) > 0) {
-      toast("Payment required");
+    // Logic if the book is paid
+    setLoading(true);
+    try {
+      if (bookInfo && parseFloat(bookInfo?.book_price) > 0) {
+        // toast("Payment required");
 
-      const response = await requestIssueBook({
-        id: bookInfo.id,
-        author: bookInfo.authorId,
-        name: bookInfo.title,
-        price: bookInfo.book_price,
-        paymentMethod,
-        paymentReference,
-      });
-      // save the response in a global variable
-      if (response?.success) {
-        toast.success(
-          "Book requested, please wait for the admin for confirmation"
-        );
+        const response = await requestIssueBook({
+          id: bookInfo.id,
+          author: bookInfo.authorId,
+          name: bookInfo.title,
+          price: bookInfo.book_price,
+          paymentMethod,
+          paymentReference,
+        });
+
+        if (response?.success) {
+          // IF user is admin, issue the book accepting the request and not sending a notification
+          if (
+            userDb?.role === Role.SUPERADMIN ||
+            userDb?.role === Role.LIBRARIAN
+          ) {
+            const result = await issueBook(
+              params.id,
+              userId,
+              response.data?.id,
+              Role.SUPERADMIN //less data to the function
+            );
+            if (result.success) {
+              toast.success("Book Issued successfully");
+              setReload(!reload);
+              return;
+            }
+          } else {
+            // save the response in a global variable
+            toast.success(
+              "Book requested, please wait for the admin for confirmation"
+            );
+            setReload(!reload);
+            return;
+          }
+        } else {
+          console.log(response?.error);
+          toast.error("Something happened");
+          setReload(!reload);
+        }
+      }
+      // If the book is not paid just issue it
+      console.log("Issuing the book...");
+      toast(`Issuing the book with the id ${params.id}`);
+      const result = await issueBook(params.id);
+      if (result?.success) {
+        toast.success("Book issued succesfully");
         setReload(!reload);
+        window.location.reload();
       } else {
-        console.log(response?.error);
-        toast.error("Something happened");
+        toast.error(result.error);
         setReload(!reload);
       }
-      if (userDb.role === Role.MEMBER) {
-        return;
-      }
-    }
-
-    console.log("Issuing the book...");
-    toast(`Issuing the book with the id ${params.id}`);
-    const allowed = !(userDb.role === Role.MEMBER);
-    const result = await issueBook(params.id, allowed);
-    if (result?.success) {
-      toast.success("Book issued succesfully");
-      window.location.reload();
-    } else {
-      toast.error(result.error);
+    } catch (error) {
+      console.log(error);
+      toast.error("Something happened");
+    } finally {
+      setLoading(false);
     }
   };
   const handleReturnBook = async () => {
@@ -230,6 +277,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
       if (result.error) {
         console.log(result.error);
         toast.error("Error happened creating the copy");
+        setReload(!true);
         return;
       }
       console.log(result.data);
@@ -240,11 +288,12 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
       toast.error(
         "Couldnt add the copy of the book, check the console for mor details"
       );
+      setReload(!true);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 w-full">
       <div className="shadow-lg rounded-lg w-full flex flex-col lg:flex-row p-8 bg-white">
         <div className="flex-shrink-0">
           <Image
@@ -279,11 +328,14 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
           <p className="text-lg font-semibold text-green-600">
             Fine-Price: ${parseFloat(bookInfo.book_price).toFixed(2)}
           </p>
-          <Rating
-            bookInfo={bookInfo}
-            setReload={() => setReload(!reload)}
-            userId={userId}
-          />
+          {userId && (
+            <Rating
+              bookInfo={bookInfo}
+              setReload={() => setReload(!reload)}
+              userId={userId}
+            />
+          )}
+
           <p className="mt-2 text-gray-700">{bookInfo.description}</p>
           <p
             className={`mt-2 font-semibold ${
@@ -305,14 +357,17 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             }
           </p>
           <div className="flex items-center gap-4">
-            {bookInfo.stock > 0 && !pendingRequest && !issuedByUser && (
-              <Confirmation
-                type={"STOCK"}
-                price={bookInfo.book_price}
-                handleBorrowBook={handleBorrowBook}
-              />
-            )}
-            {issuedByUser && (
+            {bookInfo.stock > 0 &&
+              !pendingRequest &&
+              !issuedByUser &&
+              !loading && (
+                <Confirmation
+                  type={"STOCK"}
+                  price={bookInfo.book_price}
+                  handleBorrowBook={handleBorrowBook}
+                />
+              )}
+            {issuedByUser && !loading && (
               <Confirmation
                 type={BookLoanStatus.ISSUED}
                 price={bookInfo.book_price}
@@ -320,8 +375,8 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               />
             )}
             {/* TOOD: CONFIRMATION OF COPYING THE BOOK */}
-            {(userRole && userRole === Role.LIBRARIAN) ||
-              (userRole === Role.SUPERADMIN && (
+            {!loading &&
+              (userRole === Role.LIBRARIAN || userRole === Role.SUPERADMIN) && (
                 <Button
                   className="p-5 mt-3"
                   variant={"outline"}
@@ -329,7 +384,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                 >
                   Add copy
                 </Button>
-              ))}
+              )}
           </div>
         </div>
       </div>

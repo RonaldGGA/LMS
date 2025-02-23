@@ -65,6 +65,7 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
         dispatch({ username: values.username, password: values.password });
       } else {
         toast.error(result!.error);
+        return;
       }
     }
     toast.success("User logged in successfully");
