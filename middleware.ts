@@ -20,9 +20,9 @@ export async function middleware(req: NextRequest) {
 
   // Handle API routes
   if (isApiRoute) {
-    if (!isLoggedIn) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    // if (!isLoggedIn) {
+    //   return new NextResponse("Unauthorized", { status: 401 });
+    // }
     return NextResponse.next();
   }
 
@@ -33,7 +33,9 @@ export async function middleware(req: NextRequest) {
   // Redirect logic
   if (!isLoggedIn) {
     if (isAuthRoute) return NextResponse.next();
-    return NextResponse.redirect(new URL("/auth/login", nextUrl));
+    return NextResponse.next();
+
+    // return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
   if (isLoggedIn && isAuthRoute) {
