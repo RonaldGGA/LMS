@@ -3,7 +3,6 @@
 import { signIn } from "@/auth";
 import { loginSchema } from "@/zod-schemas";
 import { AuthError } from "next-auth";
-import { redirect } from "next/dist/server/api-utils";
 
 type SignInData = {
   username: string;
