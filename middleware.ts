@@ -13,7 +13,16 @@ export async function middleware(req: NextRequest) {
   const isApiRoute = nextUrl.pathname.startsWith("/api");
   const isErrorPage = nextUrl.pathname.startsWith("/error");
 
+  // Allow public routes and static files
+  if (nextUrl.pathname.startsWith("/_next")) {
+    return NextResponse.next();
+  }
+
+  // Handle API routes
   if (isApiRoute) {
+    if (!isLoggedIn) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
     return NextResponse.next();
   }
 
@@ -21,32 +30,25 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // If not logged in
-  if (!isLoggedIn && !isAuthRoute) {
+  // Redirect logic
+  if (!isLoggedIn) {
+    if (isAuthRoute) return NextResponse.next();
     return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
-  // If logged in
   if (isLoggedIn && isAuthRoute) {
-    const user = token;
-    if (
-      user &&
-      (user.role === Role.LIBRARIAN || user.role === Role.SUPERADMIN)
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
-    }
-    return NextResponse.redirect(new URL("/", nextUrl));
+    return NextResponse.redirect(
+      new URL(token.role === Role.MEMBER ? "/" : "/dashboard", nextUrl)
+    );
   }
+
   return NextResponse.next();
 }
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    "^/((?!_next|static|public|[^?]*\\.(?:html?|css|js|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)$)).*",
-    // Always run middleware for API and TRPC routes
-    "/(api|trpc)(/.*)?",
-    // Optionally, add any additional routes you want to enforce
-    "/auth/(.*)",
-    "/admin/(.*)",
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 };
