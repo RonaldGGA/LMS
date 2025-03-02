@@ -18,20 +18,22 @@ const authConfig = {
           if (!result.success) {
             if (result.error) {
               // Handle specific error cases if available
-              console.log(result.error);
+              throw new Error(result.error);
             }
-            return null;
+            throw new Error("Sign in failed");
           }
 
           if (result.data && !result.error && result.success) {
             return result.data;
           }
 
-          return null;
+          throw new Error("No user data received");
         } catch (error) {
           console.error("Credentials authorization error:", error);
           if (error instanceof Error) {
-            throw new Error("Error in the server");
+            throw new Error(
+              error.message || "An unexpected error occurred during sign in"
+            );
           }
           throw new Error("An unexpected error occurred during sign in");
         }

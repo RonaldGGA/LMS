@@ -3,12 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useUserSession } from "../hooks/useUserSession";
 import { useRouter } from "next/navigation";
 import { getUserForProfile } from "@/data/getUser";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 
 import toast from "react-hot-toast";
 import EditProfile from "./components/edit-profile";
@@ -27,6 +21,7 @@ const Profile = () => {
   const [dbUserData, setDbUserData] = useState<UserProfile | null>(null);
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch user data from the database
@@ -45,6 +40,8 @@ const Profile = () => {
       } catch (error) {
         console.error(error);
         toast.error("Failed to fetch user data.");
+      } finally {
+        setLoading(false);
       }
     };
     if (userId) {
@@ -52,41 +49,35 @@ const Profile = () => {
     }
   }, [userId, router]);
 
+  if (loading) {
+    return <>LOADING....</>;
+  }
+
   if (!dbUserData) {
     return <>User not found</>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-bold">
-            {isEditing ? "Edit Profile" : "Profile Information"}
-          </h2>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4">
-            {isEditing ? (
-              <EditProfile
-                username={dbUserData.username}
-                DNI={dbUserData.dni}
-                profileImg={dbUserData.img}
-                oldPassword={dbUserData.password}
-                toggleEdit={() => setIsEditing(false)}
-              />
-            ) : (
-              <ShowProfile
-                toogleEdit={() => setIsEditing(true)}
-                isEditing={isEditing}
-                username={dbUserData.username}
-                createdAt={dbUserData.createdAt}
-                DNI={dbUserData.dni}
-              />
-            )}
-          </div>
-        </CardContent>
-        <CardFooter></CardFooter>
-      </Card>
+    <div className="container w-full p-4">
+      <div className="grid grid-cols-1 gap-4 flex-1">
+        {isEditing ? (
+          <EditProfile
+            username={dbUserData.username}
+            DNI={dbUserData.dni}
+            profileImg={dbUserData.img}
+            oldPassword={dbUserData.password}
+            toggleEdit={() => setIsEditing(false)}
+          />
+        ) : (
+          <ShowProfile
+            toogleEdit={() => setIsEditing(true)}
+            isEditing={isEditing}
+            username={dbUserData.username}
+            createdAt={dbUserData.createdAt}
+            DNI={dbUserData.dni}
+          />
+        )}
+      </div>
     </div>
   );
 };

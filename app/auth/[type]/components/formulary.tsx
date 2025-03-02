@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import AuthCard from "./authCard";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,9 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import { registerUser } from "@/actions/auth-user";
-import { Eye, EyeClosed } from "lucide-react";
+import { AlertCircle, Eye, EyeClosed, Loader2 } from "lucide-react";
 import { authenticate } from "@/actions/sign-in";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormState } from "react-dom";
+import { ServiceError } from "@/types";
+import { ERROR_CODES } from "@/lib/utils";
 
 interface FormularyProps {
   type: string;
@@ -30,11 +30,34 @@ interface FormularyProps {
 }
 
 const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
-  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
+  const [loading, setLoading] = useState(false);
+  const [registerErrorMessage, setRegisterErrorMessage] = useState("");
+
+  const [buttonMessage, setButtonMessage] = useState("");
+
+  useEffect(() => {
+    setButtonMessage(
+      type === "login"
+        ? loading
+          ? "Signing In..."
+          : "Sign In"
+        : loading
+        ? "Creating Account..."
+        : "Create Account"
+    );
+  }, [loading, type]);
+
+  useEffect(() => {
+    if (errorMessage !== undefined) {
+      setLoading(false);
+      form.reset();
+    }
+  }, [errorMessage]);
 
   const handleShowPassword = () => {
-    setShowPassword((prev) => !prev); // Cambia el estado a su opuesto
+    setShowPassword((prev) => !prev);
   };
   const isLogin = type === "login";
 
@@ -49,143 +72,206 @@ const Formulary: React.FC<FormularyProps> = ({ type, footerLink }) => {
     },
   });
 
+  const handleRegistrationError = (error?: ServiceError) => {
+    const defaultError = ERROR_CODES.UNKNOWN;
+    const errorCode = error?.code || defaultError.code;
+
+    const errorMap: Record<string, string> = {
+      [ERROR_CODES.DNI_TAKEN.code]: "DNI already taken",
+      [ERROR_CODES.VALIDATION.code]:
+        error?.userMessage || defaultError.userMessage,
+      [ERROR_CODES.DNI_INVALID.code]: "Please enter a valid ID number",
+      [ERROR_CODES.USER_EXISTS.code]: "Username already exists",
+      [ERROR_CODES.PASSWORD_HASH.code]: "Registration failed. Try again",
+      [ERROR_CODES.DATABASE.code]: "Service unavailable. Try again later",
+    };
+
+    setRegisterErrorMessage(errorMap[errorCode] || defaultError.userMessage);
+
+    if (error?.developerMessage) {
+      console.error(
+        `Registration Error [${errorCode}]:`,
+        error.developerMessage
+      );
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof schema>) {
+    setLoading(true);
+    if (!values.username) {
+      form.trigger("username", {
+        shouldFocus: true,
+      });
+      return;
+    }
+    if (!values.password) {
+      form.trigger("password", {
+        shouldFocus: true,
+      });
+      return;
+    }
+
     if (isLogin) {
-      try {
-        dispatch({ username: values.username, password: values.password });
-      } catch (error) {
-        console.log(error);
-        return;
-      }
-    } else {
-      if (!registerSchema.safeParse(values).success) {
-        toast.error("Invalid values");
-        return;
-      }
-      // Register the user
-      const result = await registerUser(values);
-      if (result?.success) {
-        toast.success("User Registered Successfully");
+      dispatch({
+        username: values.username,
+        password: values.password,
+      });
+      setTimeout(() => {
+        if (errorMessage) {
+          setLoading(false);
+        }
+      }, 3000);
 
-        dispatch({ username: values.username, password: values.password });
+      return;
+    }
+    try {
+      const result = await registerUser({
+        username: values.username,
+        password: values.password!,
+      });
+
+      if (result.success) {
+        toast.success("Registration successful!");
+
+        dispatch({
+          username: values.username,
+          password: values.password!,
+        });
       } else {
-        toast.error(result!.error);
-        return;
+        handleRegistrationError(result.error);
       }
+    } catch (error) {
+      console.log(error);
+      handleRegistrationError({
+        code: "client_error",
+        userMessage: "Connection problem. Check your internet",
+        developerMessage: "Network error",
+      });
+    } finally {
+      setLoading(false);
     }
-    if (!errorMessage) {
-      toast.success("User logged in successfully");
-    }
-
-    return;
-  }
-
-  function LoginButton() {
-    const { pending } = useFormStatus();
-    return (
-      <Button
-        variant={"outline"}
-        className="p-5"
-        aria-disabled={pending}
-        type="submit"
-      >
-        Get In
-      </Button>
-    );
   }
 
   return (
-    <AuthCard type={type} footerLink={footerLink}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ricardo" {...field} />
-                </FormControl>
-                <FormDescription>
-                  This is your public display name.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="flex relative">
-                    <Input
-                      className="password-input "
-                      placeholder="---"
-                      type={showPassword ? "text" : "password"}
-                      {...field}
-                    />
-
-                    <div
-                      className="absolute flex items-center justify-center right-0 inset-y-0  w-10 h-10"
-                      onClick={handleShowPassword}
-                    >
-                      {showPassword ? <EyeClosed /> : <Eye />}
-                    </div>
-                  </div>
-                </FormControl>
-
-                {/* <FormDescription>Type your password</FormDescription> */}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {type == "register" && (
-            <FormField
-              name="dni"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>DNI</FormLabel>
-                  <FormControl>
-                    <Input placeholder="06061232434" type="text" {...field} />
-                  </FormControl>
-                  <FormDescription>Type your DNI number</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-700 font-medium">
+                Username
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter your username"
+                  className="h-12 rounded-lg"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
 
-          <div className="flex justify-center text-black">{LoginButton()}</div>
-          <p className=" text-gray-400 max-w-[380px]text-sm ">
-            By accessing this system, you accept the{" "}
-            <Link
-              href="#"
-              className="hover:text-gray-600 transition-colors underline underline-offset-2"
-            >
-              Terms & Conditions
-            </Link>
-            .
-          </p>
-        </form>
-      </Form>
+        {/* Campo Password */}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-700 font-medium">
+                Password
+              </FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    placeholder="••••••••"
+                    type={showPassword ? "text" : "password"}
+                    className="h-12 rounded-lg pr-12"
+                    {...field}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-10 w-10"
+                    onClick={handleShowPassword}
+                  >
+                    {showPassword ? (
+                      <EyeClosed className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div className="mt-5 w-[300px] mb-2 h-[0px] border border-gray-300 mx-auto"></div>
-      {/* <Link
-        href={"#"}
-        className="block  text-center text-base underline underline-offset-2"
-      >
-        Forgot your password?
-      </Link> */}
-      {errorMessage && (
-        <>
-          <p className="text-sm text-red-500">{errorMessage}</p>
-        </>
-      )}
-    </AuthCard>
+        {/* Campo DNI para registro */}
+        {type === "register" && (
+          <FormField
+            name="dni"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 font-medium">DNI</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your DNI"
+                    className="h-12 rounded-lg"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium relative"
+        >
+          {loading && (
+            <div className="absolute left-4 top-3.5">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          )}
+          {buttonMessage}
+        </Button>
+
+        {errorMessage && (
+          <div className="bg-red-50 p-3 rounded-lg flex items-center gap-2 text-red-700">
+            <AlertCircle className="h-5 w-5" />
+            <span className="text-sm">{errorMessage}</span>
+          </div>
+        )}
+
+        {registerErrorMessage && (
+          <div className="bg-red-50 p-3 rounded-lg flex items-center gap-2 text-red-700">
+            <AlertCircle className="h-5 w-5" />
+            <span className="text-sm">{registerErrorMessage}</span>
+          </div>
+        )}
+
+        <p className="text-center text-sm text-gray-600">
+          {type === "login"
+            ? "Don't have an account?"
+            : "Already have an account?"}{" "}
+          <Link
+            href={footerLink}
+            className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
+          >
+            {type === "login" ? "Register" : "Login"}
+          </Link>
+        </p>
+      </form>
+    </Form>
   );
 };
 

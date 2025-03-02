@@ -1,123 +1,144 @@
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useMemo } from "react";
+import { Star, Bookmark, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface CardBookProps {
-  type?: "ISSUE" | "BOOK";
   id: string;
   title: string;
-  img: string | null;
+  img?: string | null;
   author?: string;
   categories?: { name: string }[];
   ratings?: { rating: number }[];
-  issued_date?: Date;
+  price?: string;
   returnDate?: Date;
-  price: string;
+  popularity?: number;
+  limitedOffer?: boolean;
 }
 
 const CardBook: React.FC<CardBookProps> = ({
-  // type,
   id,
   title,
   img = "",
-  author = "unknown",
+  author = "Unknown Author",
   categories = [],
   ratings = [],
   price,
-  // issued_date = "",
-  returnDate = "",
+  returnDate,
+  popularity = 0,
+  limitedOffer = false,
 }) => {
-  // Improve this further
+  const ratingAverage = useMemo(() => {
+    if (!ratings?.length) return 0;
+    const average =
+      ratings.reduce((acc, { rating }) => acc + rating, 0) / ratings.length;
+    return Number(average.toFixed(1));
+  }, [ratings]);
 
-  const ratingMedia = useMemo(() => {
-    // Verificamos que bookInfo y bookInfo.ratings existan y tengan elementos
-    if (!ratings || ratings.length === 0) {
-      return 0;
-    }
+  const statusText = useMemo(() => {
+    if (price) return `Deposit: $${parseFloat(price).toFixed(2)}`;
+    if (returnDate)
+      return `Due: ${format(new Date(returnDate), "MMM dd, yyyy")}`;
+    return "Available Now";
+  }, [price, returnDate]);
 
-    // Calculamos el promedio de las calificaciones
-    const averageRating =
-      ratings.reduce((total, item) => total + item.rating, 0) / ratings.length;
-
-    // Devolvemos el promedio con dos decimales
-    return Number(averageRating.toFixed(2));
-  }, [ratings]); // Asegúrate de incluir todas las dependencias
+  const popularityPercentage = useMemo(() => {
+    return Math.min(Math.floor((popularity / 100) * 100), 100);
+  }, [popularity]);
 
   return (
-    <Card className="w-[300px]  lg:rounded overflow-hidden shadow-md shadow-white">
-      <CardHeader className="bg-gray-800 text-white p-4">
-        <CardTitle className="text-xl font-bold text-clip  text-nowrap">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 flex ">
-        <div className="flex gap-5  flex-row justify-center w-full">
-          <div className="flex items-center  w-full  justify-center">
-            <Image
-              src={img && img.length ? img : "/default.webp"}
-              alt="book_image"
-              width={100}
-              height={100}
-              className="rounded"
-            />
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className="relative group bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all"
+    >
+      <Card className="overflow-hidden">
+        {/* Promo Badge */}
+        {limitedOffer && (
+          <div className="absolute top-3 right-3 bg-blue-600 text-white px-2.5 py-1 text-xs font-medium rounded-full z-10 flex items-center">
+            <Zap size={12} className="mr-1" />
+            Limited
           </div>
+        )}
 
-          <div className="text-wrap ">
-            <p className="text-gray-700 text-base text-nowrap overflow-hidden whitespace-nowrap overflow-ellipsis max-w-[170px]">
-              Author: {author}
-            </p>
-
-            <p className="text-gray-700 text-base text-nowrap  overflow-hidden flex ">
-              Category:{" "}
-              <span className="flex gap-1 flex-nowrap">
-                {" "}
-                {categories && categories.length > 0 ? (
-                  categories.slice(0, 1).map((item, index) => (
-                    <Badge className="bg-gray-700" key={index}>
-                      {item.name.length > 10
-                        ? item.name.slice(0, 5).concat("...")
-                        : item.name}
-                    </Badge>
-                  ))
-                ) : (
-                  <span>No categories</span>
-                )}
+        {/* Image Section */}
+        <div className="relative aspect-[6/4] max-h-[300px] bg-gray-50">
+          <Image
+            src={img || "/default-book.webp"}
+            alt={title}
+            fill
+            className="object-cover transition-opacity group-hover:opacity-90 max-h-[300px]"
+            sizes="(max-width: 768px) 100vw, 320px"
+          />
+          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-white">
+                {popularityPercentage}% Popular
               </span>
-            </p>
-
-            <p className="text-gray-700 text-base text-nowrap">
-              Rating: {ratingMedia} / 5
-            </p>
-            {price ? (
-              <p className="text-gray-700 text-base text-nowrap">
-                Bail: $ {parseFloat(price).toFixed(2)}
-              </p>
-            ) : returnDate ? (
-              <p className="text-gray-700 text-base text-nowrap ">
-                Return: {format(new Date(returnDate), "yyyy-MM-dd")}
-              </p>
-            ) : null}
+              <Badge variant="secondary" className="text-xs bg-white/90">
+                {statusText}
+              </Badge>
+            </div>
           </div>
         </div>
-      </CardContent>
-      <CardFooter className="bg-gray-100 p-4">
-        <Link
-          href={`/book/${id}`}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Read More
-        </Link>
-      </CardFooter>
-    </Card>
+
+        {/* Content Section */}
+        <div className="p-4">
+          <div className="mb-3">
+            <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">
+              {title}
+            </h3>
+            <p className="text-sm text-gray-500 truncate">{author}</p>
+          </div>
+
+          {/* Rating & Categories */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  size={16}
+                  className={`${
+                    i < Math.floor(ratingAverage)
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300 fill-gray-300"
+                  }`}
+                />
+              ))}
+              <span className="text-sm text-gray-500 ml-1">
+                ({ratings.length})
+              </span>
+            </div>
+
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {categories.slice(0, 2).map(({ name }, i) => (
+                  <span
+                    key={i}
+                    className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Action Button */}
+          <Link
+            href={`/book/${id}`}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-md text-sm font-medium transition-colors"
+          >
+            <Bookmark size={14} />
+            Reserve Now
+          </Link>
+        </div>
+      </Card>
+    </motion.div>
   );
 };
 

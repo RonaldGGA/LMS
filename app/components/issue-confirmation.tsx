@@ -25,9 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { ArrowLeftCircle, Loader2 } from "lucide-react";
 
 interface ConfirmationProps {
   price: string;
+  loading: boolean;
   handleBorrowBook?: (
     paymentMethod: BookPaymentMethod,
     paymentReference?: string
@@ -40,6 +42,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
   price,
   handleBorrowBook,
   handleReturnBook,
+  loading,
   type = "IN_STOCK",
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<BookPaymentMethod>(
@@ -49,17 +52,21 @@ const Confirmation: React.FC<ConfirmationProps> = ({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        {type == "ISSUED" ? (
-          <Button className="p-5 mt-4 bg-blue-500">Return book</Button>
+      <AlertDialogTrigger className="w-full">
+        {loading ? (
+          <Button disabled className="w-full">
+            <Loader2 className="animate-spin mr-2" />
+            Processing...
+          </Button>
+        ) : type == "ISSUED" ? (
+          <Button className="w-full bg-red-600 hover:bg-red-700" size="lg">
+            <ArrowLeftCircle className="mr-2 h-5 w-5" />
+            Return Book
+          </Button>
         ) : (
-          <Button
-            //   Fix this disabled, doesnt work
-            className={`mt-4 p-5  rounded-md text-white   text-sm `}
-            disabled={type == "ISSUED"}
-            // Disable button if book is already issued
-          >
-            {type === "ISSUED" ? "Already Issued by you" : "Issue Book"}
+          <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+            <ArrowLeftCircle className="mr-2 h-5 w-5" />
+            Borrow Book
           </Button>
         )}
       </AlertDialogTrigger>

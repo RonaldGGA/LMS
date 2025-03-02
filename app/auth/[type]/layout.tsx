@@ -15,7 +15,6 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (session) {
-      // User is authenticated
       if (
         session?.role === Role.SUPERADMIN ||
         session?.role === Role.LIBRARIAN
@@ -28,8 +27,8 @@ export default function AuthLayout({
   }, [session, router]);
 
   if (session) {
-    return null; // Prevent rendering of auth pages if user is logged in
+    return null;
   }
 
-  return <div>{children}</div>; // Render auth pages if not authenticated
+  return <div>{children}</div>;
 }

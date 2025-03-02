@@ -1,18 +1,15 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import CardBooks from "./card-books";
 import { useForm } from "react-hook-form";
 import { bookSchema } from "@/zod-schemas";
 import { Input } from "@/components/ui/input";
@@ -25,12 +22,21 @@ import { getCategories } from "@/data/getCategories";
 import AuthorInput from "./author-input";
 import z from "zod";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { BookOpen, DollarSign, Tags, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { Separator } from "@/components/ui/separator";
 import { CategoryPlus } from "@/types";
 import Image from "next/image";
-const FormBooks = () => {
+import { dashboardBook } from "../dashboard/books/page";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { ImageUpload } from "./image-upload";
+
+interface FormBooksProps {
+  book?: dashboardBook;
+  onSuccess?: () => void;
+}
+
+const FormBooks: React.FC<FormBooksProps> = ({ book, onSuccess }) => {
   const ulRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -41,24 +47,38 @@ const FormBooks = () => {
   const [currentSelectValue, setCurrentSelectValue] = useState("");
   const [authorValue, setAuthorValue] = useState("");
 
-  const form = useForm<z.infer<typeof bookSchema>>({
-    resolver: zodResolver(bookSchema),
-    defaultValues: {
-      book_name: "",
-      author: "",
+  useEffect(() => {
+    if (book?.categories) {
+      setSelectedCategories(
+        book.categories.map((item) => ({ ...item, isNew: false }))
+      );
+    }
+    if (book?.author.author_name) {
+      setAuthorValue(book.author.author_name);
+    }
+  }, [book]);
+  const defaultValues = useMemo(() => {
+    return {
+      book_name: book?.title || "",
+      author: book?.author.author_name || "",
       categories: [],
-      price: "0",
+      price: book?.book_price,
       img: "",
       description: "",
-    },
+    };
+  }, [book]);
+
+  const form = useForm<z.infer<typeof bookSchema>>({
+    resolver: zodResolver(bookSchema),
+    defaultValues: defaultValues,
   });
 
   useEffect(() => {
     const checkUlClick = (e: MouseEvent) => {
       if (ulRef.current && inputRef.current) {
         if (
-          (e.target as HTMLElement).id !== ulRef.current.id &&
-          (e.target as HTMLElement).id !== inputRef.current.id
+          (e.target as HTMLElement) !== ulRef.current &&
+          (e.target as HTMLElement) !== inputRef.current
         ) {
           setShow(false);
         }
@@ -66,11 +86,11 @@ const FormBooks = () => {
     };
 
     document.addEventListener("click", checkUlClick);
-
+    console.log("clicked");
     return () => {
       document.removeEventListener("click", checkUlClick);
     };
-  }, []);
+  });
 
   useEffect(() => {
     const searchCategories = async () => {
@@ -104,16 +124,42 @@ const FormBooks = () => {
     toast("Clicked");
 
     // IMPROVE THE COPIES MANAGEMENT; MORE lESS NAME-AUTHOR SPECIFIC
-
-    const res = await createBook(values, selectedCategories);
-    if (res?.success) {
-      router.refresh();
-      toast.success("Book added correctly");
-      router.push("/");
+    if (!book) {
+      const res = await createBook(values, selectedCategories);
+      if (res?.success) {
+        router.refresh();
+        toast.success("Book added correctly");
+        if (onSuccess) {
+          onSuccess();
+        } else router.push("/");
+      } else {
+        toast.error(res?.error || "Something happened creting the book");
+        console.log(res?.error);
+        router.refresh();
+      }
     } else {
-      toast.error(res?.error || "Something happened creting the book");
-      console.log(res?.error);
-      router.refresh();
+      const res = await fetch(`/api/books/${book.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: values.book_name,
+          author: values.author,
+          img: values.img,
+          price: values.price,
+          categories: selectedCategories,
+        }),
+      });
+      const data = await res.json();
+      console.log({ DATA: data });
+
+      if (!res.ok) {
+        console.log(res);
+        toast.error("Error updating the book");
+      } else {
+        toast.success("Book updated");
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
     }
   };
 
@@ -127,13 +173,11 @@ const FormBooks = () => {
       return;
     }
     setSelectedCategories((prev) => [...prev, value]);
+    setShow(false);
   };
 
   const [show, setShow] = useState(false);
 
-  const handleSelectClick = () => {
-    setShow(true);
-  };
   const handleCategoryWrite = (value: string) => {
     setCurrentSelectValue(value);
   };
@@ -169,199 +213,199 @@ const FormBooks = () => {
   };
 
   return (
-    <CardBooks
-      type="add"
-      footerText="Please, the book must be in the physical library"
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="book_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Book name*</FormLabel>
-                <FormControl>
-                  <Input placeholder="Harry Potter ..." {...field} />
-                </FormControl>
-                <FormDescription></FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Card className="max-w-3xl mx-auto bg-white shadow-sm border border-gray-100 w-full">
+      <CardHeader className="border-b border-gray-100">
+        <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-blue-600" />
+          {book ? "Edit Book" : "Add New Book"}
+        </CardTitle>
+      </CardHeader>
 
-          <FormField
-            control={form.control}
-            name="img"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image*</FormLabel>
-                <FormControl>
-                  <>
-                    {/* Vista previa de la imagen */}
-                    {field.value && (
-                      <div className="relative h-48 w-48">
-                        <Image
-                          src={field.value}
-                          alt="Preview"
-                          fill
-                          className="rounded-md object-cover"
-                        />
-                      </div>
-                    )}
-                    <CldUploadWidget
-                      uploadPreset={
-                        process.env.NEXT_PUBLIC_CLOUDINARY_PRESET_NAME
-                      }
-                      // signatureEndpoint="/api/sign-cloudinary-params"
-                      onSuccess={(result, { widget }) => {
-                        if (result.info && typeof result.info !== "string") {
-                          const info =
-                            result.info as CloudinaryUploadWidgetInfo;
-                          form.setValue("img", info.secure_url);
-                        }
-                        widget.close();
-                      }}
-                    >
-                      {({ open }) => (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => open()}
-                        >
-                          Subir imagen
-                        </Button>
-                      )}
-                    </CldUploadWidget>
-                  </>
-                </FormControl>
-                <FormDescription></FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <AuthorInput
-            bookValue={bookValue}
-            form={form}
-            authorValue={authorValue}
-            setAuthorValue={setAuthorValue}
-          />
-
-          <div className="flex items-end gap-2">
+      <CardContent className="pt-6 space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Book Name */}
             <FormField
-              name="categories"
-              render={() => (
-                <>
-                  <FormItem>
-                    <FormControl>
-                      <div>
-                        {/* SELECTED CATEGORIES */}
-                        <ul
-                          className="flex items-center  gap-1 max-w-[250px] overflow-auto p-2 "
-                          onClick={handleSelectClick}
-                        >
-                          {selectedCategories &&
-                            selectedCategories.map((item) => (
-                              <li
-                                key={item.id}
-                                className="cursor-pointer"
-                                onClick={() => handleRemoveCategory(item)}
-                              >
-                                <Badge className="p-1 gap-1 text-xs tracking-wider text-gray-300">
-                                  {item.name} <X width={15} height={15} />
-                                </Badge>
-                              </li>
-                            ))}
-                        </ul>
-                        {/* INPUT TO HOLD THE VALUES AND WRITE THE NEW ONE */}
-                        <div className="flex items-center gap-2">
-                          <Input
-                            className="border border-gray-400"
-                            autoComplete="off"
-                            id="category-input"
-                            ref={inputRef}
-                            value={currentSelectValue}
-                            onChange={(e) =>
-                              handleCategoryWrite(e.target.value)
-                            }
-                            placeholder="select categories..."
-                            onFocus={() => setShow(true)}
-                          />
-                          <Button
-                            variant={"secondary"}
-                            className="border border-blue-500 hover:bg-blue-100 transition hover:border-black"
-                            onClick={() => addNewCategory(currentSelectValue)}
-                            type="button"
-                          >
-                            Add
-                          </Button>
-                        </div>
-
-                        {/* CATEGORIES OPTIONS TO CLICK AND ADD */}
-                        {show && (
-                          <ul
-                            id="category-suggestions"
-                            ref={ulRef}
-                            className="absolute mt-2 bg-gray-100 max-h-[200px] w-[215px] overflow-auto shadow rounded shadow-gray-400"
-                          >
-                            {categories &&
-                              categories
-                                .filter(
-                                  (item) =>
-                                    !selectedCategories.find(
-                                      (singleCategory) =>
-                                        singleCategory.id == item.id ||
-                                        singleCategory.name.toLowerCase() ==
-                                          item.name.toLowerCase()
-                                    )
-                                )
-                                .map((category) => (
-                                  <>
-                                    <li
-                                      className="p-2 hover:border-l hover:border-l-blue-500 border-l border-l-white cursor-pointer hover:bg-gray-200 transition-all"
-                                      onClick={() =>
-                                        handleCategoriesChange(category)
-                                      }
-                                      key={category.id}
-                                    >
-                                      {category.name}
-                                    </li>
-                                    <Separator />
-                                  </>
-                                ))}
-                          </ul>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription></FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                </>
+              control={form.control}
+              name="book_name"
+              render={({ field }) => (
+                <FormItem>
+                  <Label className="text-gray-700">Book Title *</Label>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="h-12 rounded-lg"
+                      placeholder="Harry Potter and the Philosopher's Stone"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500 text-sm" />
+                </FormItem>
               )}
             />
-          </div>
 
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price $USD</FormLabel>
-                <FormControl>
-                  <Input placeholder="0" {...field} />
-                </FormControl>
-                <FormDescription></FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" variant={"outline"}>
-            Add book
-          </Button>
-        </form>
-      </Form>
-    </CardBooks>
+            {/* Image Upload */}
+            <FormField
+              control={form.control}
+              name="img"
+              render={({ field }) => (
+                <FormItem>
+                  <Label className="text-gray-700">Cover Image *</Label>
+                  <FormControl>
+                    <div className="flex flex-col gap-4">
+                      {field.value && (
+                        <div className="relative group w-48 h-48 rounded-xl overflow-hidden border-2 border-dashed border-gray-200">
+                          <Image
+                            src={field.value}
+                            alt="Book cover"
+                            fill
+                            className="object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => form.setValue("img", "")}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
+                      <ImageUpload
+                        onSuccess={(url) => {
+                          form.setValue("img", url);
+                          form.clearErrors("img");
+                        }}
+                        isValue={!!field.value}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-500 text-sm" />
+                </FormItem>
+              )}
+            />
+
+            {/* Author Input */}
+            <AuthorInput
+              bookValue={bookValue}
+              form={form}
+              authorValue={authorValue}
+              setAuthorValue={setAuthorValue}
+            />
+
+            {/* Categories */}
+            <div className="space-y-3">
+              <Label className="text-gray-700 flex items-center gap-2">
+                <Tags className="w-5 h-5 text-blue-600" />
+                Categories *
+              </Label>
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {selectedCategories.map((category) => (
+                    <Badge
+                      key={category.id}
+                      variant="secondary"
+                      className="pl-3 pr-1 py-1 rounded-lg"
+                    >
+                      {category.name}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCategory(category)}
+                        className="ml-2 p-1 hover:bg-gray-100 rounded-full"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      ref={inputRef}
+                      value={currentSelectValue}
+                      onChange={(e) => handleCategoryWrite(e.target.value)}
+                      placeholder="Search or add categories..."
+                      className="h-12 rounded-lg"
+                      onFocus={() => setShow(true)}
+                    />
+
+                    {show && (
+                      <ul
+                        ref={ulRef}
+                        className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                      >
+                        {categories.length === 0 ? (
+                          <li className="p-3 text-gray-500 text-sm">
+                            No categories found
+                          </li>
+                        ) : (
+                          categories
+                            .filter(
+                              (category) =>
+                                !selectedCategories.some(
+                                  (item) => item.id === category.id
+                                )
+                            )
+                            .map((category) => (
+                              <li
+                                key={category.id}
+                                onClick={() => handleCategoriesChange(category)}
+                                className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                              >
+                                {category.name}
+                              </li>
+                            ))
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 px-4 border-blue-600 text-blue-600 hover:bg-blue-50"
+                    onClick={() => addNewCategory(currentSelectValue)}
+                  >
+                    Add New
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Price */}
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <Label className="text-gray-700 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-blue-600" />
+                    Price (USD)
+                  </Label>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="h-12 rounded-lg"
+                      placeholder="19.99"
+                      type="number"
+                      step="0.01"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500 text-sm" />
+                </FormItem>
+              )}
+            />
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            >
+              {book ? "Update Book" : "Add Book"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

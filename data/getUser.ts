@@ -110,6 +110,7 @@ export const getBigUser = async (id: string) => {
           select: {
             status: true,
             userId: true,
+            requestDate: true,
             bookCopy: {
               select: {
                 bookTitleId: true,

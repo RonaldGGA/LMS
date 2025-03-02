@@ -14,12 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { updateProfile } from "@/actions/update-profile";
 import { debounce } from "lodash-es";
-import { X } from "lucide-react";
+import { Lock, User, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ImageUpload } from "@/app/components/image-upload";
 
 interface EditProfileProps {
   username: string;
@@ -29,13 +30,12 @@ interface EditProfileProps {
   toggleEdit: () => void;
 }
 export interface FormValues {
-  username?: string | "";
-  DNI?: string | "";
-  profileImg?: string | null | "";
-  oldPassword?: string | "";
-  newPassword?: string | "";
+  username: string;
+  DNI: string;
+  profileImg: string | null;
+  oldPassword: string | undefined;
+  newPassword: string | undefined;
 }
-
 const EditProfile: React.FC<EditProfileProps> = ({
   username,
   DNI,
@@ -50,8 +50,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
       username: username,
       DNI: DNI,
       profileImg: profileImg || null,
-      oldPassword: "",
-      newPassword: "",
+      oldPassword: undefined,
+      newPassword: undefined,
     }),
     [DNI, profileImg, username]
   );
@@ -64,24 +64,27 @@ const EditProfile: React.FC<EditProfileProps> = ({
 
   // handle any change in the values, allow submit button
   useEffect(() => {
-    const debouncedHandleChange = debounce((currentValues: FormValues) => {
-      // Comparación de valores para determinar si el formulario ha cambiado
-      const isFormDirty = Object.keys(currentValues).some((key) => {
-        const keyTyped = key as keyof FormValues;
+    const debouncedHandleChange = debounce(
+      (currentValues: Partial<FormValues>) => {
+        // Comparación de valores para determinar si el formulario ha cambiado
+        const isFormDirty = Object.keys(currentValues).some((key) => {
+          const keyTyped = key as keyof FormValues;
 
-        // Excluir oldPassword y newPassword de la comparación si están vacíos
-        if (keyTyped === "oldPassword" || keyTyped === "newPassword") {
-          return !!currentValues[keyTyped];
-        }
+          // Excluir oldPassword y newPassword de la comparación si están vacíos
+          if (keyTyped === "oldPassword" || keyTyped === "newPassword") {
+            return !!currentValues[keyTyped];
+          }
 
-        // Comparación con los valores iniciales
-        return currentValues[keyTyped] !== defaultFormValues[keyTyped];
-      });
+          // Comparación con los valores iniciales
+          return currentValues[keyTyped] !== defaultFormValues[keyTyped];
+        });
 
-      setIsDirty(isFormDirty);
-    }, 300); // Ajusta el tiempo de debounce según tus necesidades
+        setIsDirty(isFormDirty);
+      },
+      300
+    ); // Ajusta el tiempo de debounce según tus necesidades
 
-    const subscription = form.watch((currentValues) => {
+    const subscription = form.watch((currentValues: Partial<FormValues>) => {
       debouncedHandleChange(currentValues);
     });
 
@@ -137,148 +140,163 @@ const EditProfile: React.FC<EditProfileProps> = ({
   };
 
   return (
-    <Form {...form}>
-      <form id="profileCredentials" onSubmit={form.handleSubmit(onSubmit)}>
-        <FormField
-          control={form.control}
-          name="profileImg"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <>
-                  {/* Vista previa de la imagen */}
-                  {field.value ? (
-                    <div className="relative h-48 w-48">
-                      <X
-                        width={40}
-                        height={40}
-                        className="z-10 bg-black text-gray-300 absolute top-o right-0 p-2 rounded-lg cursor-pointer hover:scale-95 transition-transform"
-                        onClick={() => form.setValue("profileImg", null)}
-                      />
-                      <Image
-                        src={profileImg || field.value}
-                        alt="Preview"
-                        fill
-                        className="rounded-md object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <CldUploadWidget
-                      uploadPreset={
-                        process.env.NEXT_PUBLIC_CLOUDINARY_PRESET_NAME
-                      }
-                      // signatureEndpoint="/api/sign-cloudinary-params"
-                      onSuccess={(result, { widget }) => {
-                        if (result.info && typeof result.info !== "string") {
-                          const info =
-                            result.info as CloudinaryUploadWidgetInfo;
-                          form.setValue("profileImg", info.secure_url);
-                        }
-                        widget.close();
-                      }}
-                    >
-                      {({ open }) => (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => open()}
-                        >
-                          + Profile Picture
-                        </Button>
+    <Card className="w-full max-w-2xl bg-white shadow-sm border border-gray-100 mx-auto">
+      <CardHeader className="pb-2">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <User className="w-6 h-6 text-blue-600" />
+          Edit Profile
+        </h2>
+      </CardHeader>
+
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Sección de Imagen */}
+            <FormField
+              control={form.control}
+              name="profileImg"
+              render={({ field }) => (
+                <FormItem className="flex flex-col items-center">
+                  <div className="relative group">
+                    <div className="relative h-32 w-32 rounded-full border-4 border-white shadow-lg">
+                      {field.value ? (
+                        <>
+                          <Image
+                            src={field.value}
+                            alt="Profile"
+                            fill
+                            className="rounded-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => form.setValue("profileImg", null)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                          >
+                            <XCircle className="w-6 h-6" />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="h-full w-full bg-gray-100 rounded-full flex items-center justify-center">
+                          <ImageUpload
+                            onSuccess={(url) => {
+                              form.setValue("profileImg", url);
+                              form.clearErrors("profileImg");
+                            }}
+                            isValue={!!field.value}
+                            type="user"
+                          />
+                        </div>
                       )}
-                    </CldUploadWidget>
-                  )}
-                </>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your username" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="DNI"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>DNI</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your DNI" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="oldPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Old Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="********" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="newPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="********" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div>
-          {isDirty ? (
-            <Button
-              variant="outline"
-              className="mr-2 w-20"
-              type="button"
-              onClick={reset}
-            >
-              Cancel
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              className="mr-2 w-20"
-              type="button"
-              onClick={toggleEdit}
-            >
-              Back
-            </Button>
-          )}
+            {/* Campos del Formulario */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700">Username</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="h-12 rounded-lg"
+                        placeholder="JohnDoe123"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500 text-sm" />
+                  </FormItem>
+                )}
+              />
 
-          <Button
-            form="profileCredentials"
-            disabled={!isDirty}
-            type="submit"
-            className="lg:max-w-[100px] w-[100px] mr-auto mt-7"
-          >
-            Save
-          </Button>
-        </div>
-      </form>
-    </Form>
+              <FormField
+                name="DNI"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700">DNI</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="h-12 rounded-lg"
+                        placeholder="001-1234567-8"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500 text-sm" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                name="oldPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 flex items-center gap-2">
+                      <Lock className="w-4 h-4" />
+                      Current Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ? field.value : ""}
+                        type="password"
+                        className="h-12 rounded-lg"
+                        placeholder="••••••••"
+                        onBlur={() => form.trigger("oldPassword")}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500 text-sm" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 flex items-center gap-2">
+                      <Lock className="w-4 h-4" />
+                      New Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ? field.value : ""}
+                        type="password"
+                        className="h-12 rounded-lg"
+                        placeholder="••••••••"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500 text-sm" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Botones de Acción */}
+            <div className="flex flex-col md:flex-row gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full md:w-32"
+                onClick={isDirty ? reset : toggleEdit}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="h-12 w-full md:w-32 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!isDirty}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

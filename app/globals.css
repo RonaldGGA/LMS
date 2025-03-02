@@ -3,6 +3,37 @@
 @tailwind utilities;
 @layer base {
   :root {
+        --color-primary: hsl(222.2, 47.4%, 11.2%);
+        --color-primary-hover: hsl(222.2, 47.4%, 15.4%);
+        --color-secondary: hsl(210, 40%, 98%);
+        --color-secondary-hover: hsl(210, 40%, 95%);
+        --color-error: hsl(0, 100%, 50%);
+        --color-error-hover: hsl(0, 100%, 45%);
+        --color-success: hsl(143.8, 85.6%, 50%);
+        --color-success-hover: hsl(143.8, 85.6%, 45%);
+    
+        --color-surface-100: hsl(0, 0%, 100%);
+        --color-surface-200: hsl(0, 0%, 98%);
+        --color-surface-300: hsl(0, 0%, 95%);
+        --color-surface-400: hsl(0, 0%, 90%);
+        --color-surface-500: hsl(0, 0%, 80%);
+    
+        --color-gray-100: hsl(0, 0%, 90%);
+        --color-gray-200: hsl(0, 0%, 80%);
+        --color-gray-300: hsl(0, 0%, 70%);
+        --color-gray-400: hsl(0, 0%, 50%);
+        --color-gray-500: hsl(0, 0%, 30%);
+        --color-gray-600: hsl(0, 0%, 20%);
+        --color-gray-700: hsl(0, 0%, 10%);
+        --color-gray-800: hsl(0, 0%, 5%);
+        --color-gray-900: hsl(0, 0%, 0%);
+    
+        --color-blue-600: hsl(222.2, 47.4%, 11.2%);
+        --color-blue-700: hsl(222.2, 47.4%, 15.4%);
+        --color-green-100: hsl(143.8, 85.6%, 50%);
+        --color-green-800: hsl(143.8, 85.6%, 45%);
+        --color-red-100: hsl(0, 100%, 50%);
+        --color-red-800: hsl(0, 100%, 45%);
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -28,7 +59,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem
-  }
+  ;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%}
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -54,8 +93,17 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%
-  }
+  ;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%}
 }
+
 
  .bgCustomized {
   background-color: #1f2122;
@@ -66,10 +114,56 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
   }
 }
 
+
+@keyframes book-flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+
+  50% {
+    transform: rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes pulse-opacity {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-book-flip {
+  animation: book-flip 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse-opacity 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}

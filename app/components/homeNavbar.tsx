@@ -15,6 +15,7 @@ import {
   Bell,
   BookIcon,
   ChevronDown,
+  CircuitBoard,
   LogOut,
   Plus,
   Search,
@@ -27,17 +28,20 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface HomeNavbarProps {
-  user: {
-    id: string;
-    role: Role;
-    img: string | null;
-    username: string;
-    password: string;
-    bookLoans: {
-      status: BookLoanStatus;
-      returnDate: Date | null;
-    }[];
-  };
+  user:
+    | {
+        id: string;
+        role: Role;
+        img: string | null;
+        username: string;
+        password: string;
+        bookLoans: {
+          status: BookLoanStatus;
+          returnDate: Date | null;
+        }[];
+      }
+    | null
+    | undefined;
 }
 
 const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
@@ -48,14 +52,19 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
 
   useEffect(() => {
     console.log(pathname);
+
     const getUserCount = async () => {
-      const countResponse = await getUserNotificationsCount(user.id);
-      if (countResponse.success) {
-        setUserNotificationsCount(countResponse.data ? countResponse.data : 0);
+      if (user) {
+        const countResponse = await getUserNotificationsCount(user.id);
+        if (countResponse.success) {
+          setUserNotificationsCount(
+            countResponse.data ? countResponse.data : 0
+          );
+        }
       }
     };
     getUserCount();
-  }, [user.id, pathname]);
+  }, [user?.id, pathname]);
 
   useEffect(() => {
     const getAdminCount = async () => {
@@ -73,103 +82,141 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
     await signOut(); // Assuming you're using next-auth
     router.push("/auth/login");
   };
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="max-w-[97%] mx-auto h-[90px] flex items-center justify-center ">
-      <div className="max-w-[1240px] w-full flex items-center justify-between p-4 shadow gap-5 bg-gray-100 rounded">
-        <Link href="/" className=" relative flex items-center gap-2">
-          <Image src="/bookIcon.svg" alt="logo" width={45} height={45} />
-          <p className="font-medium text-2xl tracking-wide"> LMS</p>
-        </Link>
-
-        <div className="flex items-center gap-1 md:gap-4">
-          <Link href={"/"}>
-            <Search />
+    <nav className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 ">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Left Section */}
+        <div className="flex items-center space-x-8">
+          <Link href="/" className="flex items-center space-x-2">
+            <BookIcon className="w-8 h-8 text-blue-600" />
+            <span className="text-xl font-bold text-gray-900 tracking-tight">
+              LibraryHub
+            </span>
           </Link>
-          {user.role === Role.MEMBER ? (
-            <Link className="relative" href={"/notifications/user"}>
-              <Bell />
-              {userNotificationsCount > 0 &&
-                pathname !== "/notifications/user" && (
-                  <div className="absolute -top-1 right-0 rounded-full w-3 h-3  bg-red-500"></div>
-                )}
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            {(user.role === Role.LIBRARIAN ||
+              user.role === Role.SUPERADMIN) && (
+              <>
+                <Link
+                  href="/add"
+                  className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Book
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1"
+                >
+                  <CircuitBoard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
+          {/* Search Icon */}
+          <Link
+            href="/search"
+            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+          >
+            <Search className="w-5 h-5" />
+          </Link>
+
+          {/* Notifications */}
+          <div className="relative">
+            <Link
+              href={
+                user.role === Role.MEMBER
+                  ? "/notifications/user"
+                  : "/notifications/admin"
+              }
+              className="p-2 text-gray-500 hover:text-blue-600 transition-colors relative"
+            >
+              <Bell className="w-5 h-5" />
+              {((userNotificationsCount > 0 && user.role == Role.MEMBER) ||
+                (adminNotificationsCount > 0 &&
+                  ["SUPERADMIN", "LIBRARIAN"].includes(user.role))) && (
+                <div className="absolute top-5 -right-5 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></div>
+              )}
             </Link>
-          ) : (
-            user.role === Role.LIBRARIAN ||
-            (user.role === Role.SUPERADMIN && (
-              <Link className="relative" href={"/notifications/admin"}>
-                <Bell />
-                {adminNotificationsCount > 0 &&
-                  pathname !== "/notifications/admin" && (
-                    <div className="absolute -top-1 right-0 rounded-full w-3 h-3  bg-red-500"></div>
-                  )}
-              </Link>
-            ))
-          )}
+          </div>
 
-          {user.role === Role.LIBRARIAN ||
-            (user.role === Role.SUPERADMIN && (
-              <Link
-                className="text-sm font-semibold hover:underline underline-offset-4 transition hidden md:block"
-                href="/add"
-              >
-                Add book
-              </Link>
-            ))}
-
+          {/* User Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 border  rounded-md">
-              {user.img && user.img !== null ? (
+            <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none group w-ful">
+              {user.img ? (
                 <Image
-                  alt="user-img"
                   src={user.img}
+                  alt="Profile"
                   width={40}
                   height={40}
-                  className="rounded-full bg-center"
+                  className="rounded-full aspect-[1] object-cover border-2 border-transparent group-hover:border-blue-100 transition-colors"
                 />
               ) : (
-                <>
-                  <p>
-                    {user.username.length > 10
-                      ? user.username.slice(0, 10).concat("...")
-                      : user.username}{" "}
-                  </p>
-                </>
+                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                  {user.username[0].toUpperCase()}
+                </div>
               )}
-              <ChevronDown />
+              <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-blue-600 transition-colors" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="flex flex-col left-0 top-full">
+
+            <DropdownMenuContent className="w-48 mt-2 shadow-lg border border-gray-100 rounded-lg">
               <Link href="/profile">
-                <DropdownMenuItem className="flex items-center  gap-1">
-                  <Settings /> Edit Profile
+                <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                  <Settings className="w-4 h-4 text-gray-600" />
+                  <span className="text-gray-700">Profile</span>
                 </DropdownMenuItem>
               </Link>
+
               <Link href="/issued">
-                <DropdownMenuItem className="flex items-center  gap-1">
-                  <BookIcon /> Your issued Books
+                <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                  <BookIcon className="w-4 h-4 text-gray-600" />
+                  <span className="text-gray-700">My Books</span>
                 </DropdownMenuItem>
               </Link>
-              {user.role === Role.LIBRARIAN ||
-                (user.role === Role.SUPERADMIN && (
-                  <Link className="md:hidden" href="/add">
-                    <DropdownMenuItem className="flex items-center  gap-1">
-                      <Plus />
-                      Add book
+
+              {(user.role === Role.LIBRARIAN ||
+                user.role === Role.SUPERADMIN) && (
+                <div className="md:hidden border-t border-gray-100">
+                  <Link href="/add">
+                    <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                      <Plus className="w-4 h-4 text-gray-600" />
+                      <span className="text-gray-700">Add Book</span>
                     </DropdownMenuItem>
                   </Link>
-                ))}
+                  <Link href="/dashboard">
+                    <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                      <CircuitBoard className="w-4 h-4 text-gray-600" />
+                      <span className="text-gray-700">Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
+                </div>
+              )}
 
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="flex items-center  gap-1"
-              >
-                <LogOut /> Logout
-              </DropdownMenuItem>
+              <div className="border-t border-gray-100">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-red-600"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-    </div>
+    </nav>
   );
 };
 

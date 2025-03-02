@@ -11,6 +11,17 @@ declare global {
 }
 
 ///////////////
+type ServiceError = {
+  code: string;
+  userMessage: string;
+  developerMessage?: string;
+};
+
+type ServiceResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: ServiceError;
+};
 
 export type BigBook = {
   stock: number;

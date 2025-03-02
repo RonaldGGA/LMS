@@ -24,3 +24,35 @@ export const createErrorResponse = (message: string) => ({
   error: message,
   data: null,
 });
+
+// error-codes.ts
+export const ERROR_CODES = {
+  VALIDATION: {
+    code: "validation_error",
+    userMessage: "Please check your information",
+  },
+  DNI_TAKEN: {
+    code: "dni_already_exists",
+    userMessage: "This dni is already in use",
+  },
+  DNI_INVALID: {
+    code: "invalid_dni_format",
+    userMessage: "The ID number is invalid",
+  },
+  USER_EXISTS: {
+    code: "user_already_exists",
+    userMessage: "This username is already registered",
+  },
+  PASSWORD_HASH: {
+    code: "password_hashing_error",
+    userMessage: "Registration failed. Please try again",
+  },
+  DATABASE: {
+    code: "database_error",
+    userMessage: "Service unavailable. Try again later",
+  },
+  UNKNOWN: {
+    code: "unknown_error",
+    userMessage: "An unexpected error occurred",
+  },
+};

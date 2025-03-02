@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { searchSchema } from "@/zod-schemas";
-import { Search, SearchIcon, X } from "lucide-react";
+import { BookOpenIcon, Search, SearchIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +20,7 @@ const Home = () => {
   const [searchedBooks, setSearchedBooks] = useState<searchedBooks[] | null>(
     null
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [suggestionBooks, setSuggestionBooks] = useState<
     { id: string; title: string; author: { author_name: string } }[] | null
@@ -67,21 +67,27 @@ const Home = () => {
   const [errorMesasge, setErrorMessage] = useState("");
   useEffect(() => {
     const searchDefaultBooks = async () => {
-      const result = await getBooksByName(undefined, quantity);
-      console.log(result);
-      if (!result?.success) {
-        if (result?.error && result.error === "Empty") {
-          setErrorMessage("No books in the library");
-          setSearchedBooks([]);
-          return;
-        } else {
-          toast.error("Something happened searching the books");
-          setSearchedBooks([]);
+      try {
+        const result = await getBooksByName(undefined, quantity);
+        console.log(result);
+        if (!result?.success) {
+          if (result?.error && result.error === "Empty") {
+            setErrorMessage("No books in the library");
+            setSearchedBooks([]);
+            return;
+          } else {
+            toast.error("Something happened searching the books");
+            setSearchedBooks([]);
 
-          return;
+            return;
+          }
         }
+        setSearchedBooks(result.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
       }
-      setSearchedBooks(result.data);
     };
     searchDefaultBooks();
   }, [quantity, counter]);
@@ -156,91 +162,113 @@ const Home = () => {
   };
 
   return (
-    <div className="flex items-center flex-col gap-5 mt-7 max-w-[1400px] justify-center">
-      <div className="mb-10 bg-gray-100 rounded-md focus-within:block relative  focus-within:shadow focus-within:shadow-black focus-within:rounded-b-none transition-shadow max-w-[90%] lg:w-[500px]">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="">
-          <div className="bg-gray-100 flex  items-center  focus-within:border-none rounded-sm mx-auto  p-0 w-full">
-            <div className=" h-full  rounded-l-none border-r border-l-gray-300 flex items-center justify-center p-2 px-3 ">
-              <Search width={20} height={20} />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Search Section */}
+        <div className="flex flex-col items-center mb-16">
+          <h1 className="text-4xl font-bold text-slate-800 mb-6 text-center">
+            Discover Your Next Read
+          </h1>
+
+          <div className="w-full max-w-2xl relative">
+            <div className="relative group">
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="flex items-center bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200">
+                  <div className="pl-4 pr-2">
+                    <Search className="w-6 h-6 text-slate-400" />
+                  </div>
+
+                  <Input
+                    {...form.register("title")}
+                    onChange={(e) => {
+                      setSearchValue(e.currentTarget.value);
+                      form.setValue("title", e.currentTarget.value);
+                    }}
+                    autoFocus
+                    autoComplete="off"
+                    type="text"
+                    value={searchValue || ""}
+                    className="h-14 text-lg border-0 ring-0 focus-visible:ring-0 shadow-none placeholder:text-slate-400"
+                    placeholder="Search by title, author, or category..."
+                  />
+
+                  <div className="pr-4">
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className={`p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors ${
+                        searchValue ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
+                      <X className="w-5 h-5 text-slate-600" />
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Suggestions Dropdown */}
+              {suggestionBooks && suggestionBooks.length > 0 && (
+                <div className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xl overflow-hidden">
+                  {suggestionBooks.map((book) => (
+                    <div
+                      key={book.id}
+                      onClick={() => handleSuggestionClick(book.title)}
+                      className="flex items-center p-3 hover:bg-blue-50 cursor-pointer transition-colors border-b last:border-0 border-slate-100"
+                    >
+                      <SearchIcon className="w-5 h-5 text-slate-400 mr-3" />
+                      <div>
+                        <p className="font-medium text-slate-800">
+                          {capitalize(book.title)}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {book.author.author_name}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="relative flex-1">
-              <Input
-                {...form.register("title")} // Registra el campo
-                onChange={(e) => {
-                  setSearchValue(e.currentTarget.value);
-                  form.setValue("title", e.currentTarget.value); // Actualiza el valor en react-hook-form
-                }}
-                autoFocus
-                autoComplete="off"
-                type="text"
-                value={searchValue || ""}
-                className="text-lg md:text-lg lg:text-lg h-10 rounded-none focus-visible:ring-0 outline-none border-none focus:border-none focus:outline-none"
-                placeholder="Search any book..."
-              />
-              <div className="absolute right-3 top-0 h-10 flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className={`bg-gray-400 hover:bg-gray-100 hover:text-black text-gray-100 cursor-pointer text-center border border-gray-400 rounded-full transition w-7 h-7 flex items-center justify-center ${
-                    searchValue ? "block" : "hidden"
-                  }`}
-                >
-                  <X className="text-xs w-3" />
-                </button>
+          </div>
+        </div>
+
+        {/* Results Section */}
+        <div className="space-y-8">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <SkeletonDemo key={i} />
+              ))}
+            </div>
+          ) : searchedBooks && searchedBooks.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {searchedBooks.map((book) => (
+                <CardBook
+                  key={book.id}
+                  img={book.img}
+                  id={book.id}
+                  title={book.title}
+                  author={book.author.author_name}
+                  categories={book.categories}
+                  price={book.book_price}
+                  ratings={book.bookRatings}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <div className="max-w-md mx-auto">
+                <BookOpenIcon className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                  {errorMesasge || "No books found"}
+                </h3>
+                <p className="text-slate-600">
+                  Try searching for a different term or browse our categories
+                </p>
               </div>
             </div>
-          </div>
-        </form>{" "}
-        <div className="flex items-center absolute bg-gray-100 w-full rounded-b">
-          <ul className="w-full">
-            {suggestionBooks &&
-              suggestionBooks.length > 0 &&
-              suggestionBooks.map(
-                (book: {
-                  id: string;
-                  title: string;
-                  author: { author_name: string };
-                }) => (
-                  <li
-                    className="p-1 flex items-center cursor-pointer hover:bg-gray-200 gap-5 text-gray-600"
-                    onClick={() => handleSuggestionClick(book.title)}
-                    key={book.id}
-                  >
-                    <div className="ml-2">
-                      <SearchIcon width={20} height={20} color="#999999" />
-                    </div>
-                    {capitalize(book.title)} by {book.author.author_name}
-                  </li>
-                )
-              )}
-          </ul>
+          )}
         </div>
-      </div>
-      <div className="justify-center w-full  flex items-center gap-3 flex-wrap">
-        {searchedBooks &&
-          !loading &&
-          searchedBooks.map((book) => (
-            <CardBook
-              img={book.img}
-              id={book.id}
-              key={book.id}
-              title={book.title}
-              author={book.author.author_name}
-              categories={book.categories}
-              price={book.book_price}
-              ratings={book.bookRatings}
-            />
-          ))}
-        {searchedBooks && searchedBooks.length === 0 && (
-          <div className="text-lg text-white">{errorMesasge}</div>
-        )}
-        {loading && (
-          <div className="flex gap- flex-col md:flex-row">
-            {[...Array(3)].map((_, i) => (
-              <SkeletonDemo key={i} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

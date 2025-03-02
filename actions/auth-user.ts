@@ -1,13 +1,12 @@
 "use server";
 
 import db from "@/lib/prisma";
-import { createErrorResponse, hashPassword } from "@/lib/utils";
-import { Role } from "@prisma/client";
+import { createErrorResponse, ERROR_CODES, hashPassword } from "@/lib/utils";
+import { ServiceResponse } from "@/types";
+import { dniSchema } from "@/zod-schemas";
+import { Prisma, Role, UserAccount } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-//register a new user
-
-//get all the inputs
 interface registerUserProps {
   username: string;
   password: string;
@@ -15,97 +14,120 @@ interface registerUserProps {
   role?: Role;
 }
 
-export const registerUser = async (values: registerUserProps) => {
-  const result = await db.$transaction(
-    async (tx) => {
-      const { username, password, dni, role = Role.MEMBER } = values;
+const validateDNI = (dni: string) => {
+  const { success, error } = dniSchema.safeParse(dni);
 
-      // Validate input fields
-      if (!username || !password || !dni) {
-        return createErrorResponse("Missing required fields");
-      }
+  return { isValid: success, error: error?.message };
+};
 
-      // Validate DNI format
-      if (dni.length !== 11 || isNaN(Number(dni))) {
-        return { success: false, error: "Invalid DNI number" };
-      }
-
-      // Extract date parts from DNI
-      const datePart = dni.substring(0, 8); // Assuming date is in the first 8 digits
-
-      // Handle both DDMMYYYY and DDMMYY formats
-      let day, month, year;
-      if (datePart.length === 8) {
-        day = parseInt(datePart.substring(0, 2), 10);
-        month = parseInt(datePart.substring(2, 4), 10) - 1; // Months are 0-based in JavaScript
-        year = parseInt(datePart.substring(4, 8), 10);
-      } else if (datePart.length === 6) {
-        day = parseInt(datePart.substring(0, 2), 10);
-        month = parseInt(datePart.substring(2, 4), 10) - 1; // Months are 0-based in JavaScript
-        year = 2000 + parseInt(datePart.substring(4, 6), 10); // Assume years 00-99 as 2000-2099
-      } else {
-        return { success: false, error: "Invalid date format in DNI" };
-      }
-
-      // Validate date parts
-      if (isNaN(day) || isNaN(month) || isNaN(year)) {
-        return createErrorResponse("Invalid date in DNI");
-      }
-
-      if (day < 1 || day > 31 || month < 0 || month > 11) {
-        return createErrorResponse("Invalid date in DNI");
-      }
-
-      const date = new Date(year, month, day);
-      if (isNaN(date.getTime())) {
-        return createErrorResponse("Invalid date in DNI");
-      }
-
-      const hashedPassword = await hashPassword(password);
-      if (!hashedPassword) {
-        return createErrorResponse("Failted to hash the password");
-      }
-
-      try {
-        // Create new user
-        const newUser = await tx.userAccount.create({
-          data: {
-            username,
-            password: hashedPassword,
-            dni,
-            role: role || Role.MEMBER,
-          },
-        });
-
-        if (!newUser) {
-          return createErrorResponse("Failed to create the user");
-        }
-
-        console.log("User created successfully");
-        return { success: true, error: null, user: newUser };
-      } catch (error) {
-        console.error("Error during user registration:", error);
-        if (error instanceof Error) {
-          // TODO: handle each error separatly
-          if (
-            error.message.includes("duplicate") ||
-            error.message.includes("Unique constraint")
-          ) {
-            return createErrorResponse("User already exists");
-          }
-
-          return createErrorResponse(error.message);
-        } else {
-          return createErrorResponse("An unknown server error occurred");
-        }
-      }
-    },
-    {
-      timeout: 30000,
+export const registerUser = async (
+  values: registerUserProps
+): Promise<ServiceResponse<UserAccount>> => {
+  const { username, password, dni, role = Role.MEMBER } = values;
+  try {
+    // Validación de campos requeridos
+    if (!username || !password || !dni) {
+      return {
+        success: false,
+        error: {
+          ...ERROR_CODES.VALIDATION,
+          developerMessage:
+            "Missing required fields: " +
+            [
+              username ? "" : "username",
+              password ? "" : "password",
+              dni ? "" : "dni",
+            ]
+              .filter(Boolean)
+              .join(", "),
+        },
+      };
     }
-  );
 
-  return result;
+    // Validación de formato DNI
+    const dniValidation = validateDNI(dni);
+    if (!dniValidation.isValid) {
+      return {
+        success: false,
+        error: {
+          ...ERROR_CODES.DNI_INVALID,
+          developerMessage: `Invalid DNI structure: ${dniValidation.error}`,
+        },
+      };
+    }
+
+    const existingDNI = await db.userAccount.findUnique({
+      where: { dni },
+    });
+
+    if (existingDNI) {
+      return {
+        success: false,
+        error: ERROR_CODES.DNI_TAKEN,
+      };
+    }
+
+    // Verificar usuario existente
+    const existingUser = await db.userAccount.findUnique({
+      where: { username },
+    });
+    if (existingUser) {
+      return {
+        success: false,
+        error: ERROR_CODES.USER_EXISTS,
+      };
+    }
+
+    const hashedPassword = await hashPassword(password);
+    if (!hashedPassword) {
+      return {
+        success: false,
+        error: ERROR_CODES.PASSWORD_HASH,
+      };
+    }
+
+    // Creación de usuario
+    const newUser = await db.userAccount.create({
+      data: { username, password: hashedPassword, dni, role },
+    });
+
+    return { success: true, data: newUser };
+  } catch (error) {
+    console.error("Registration Error:", error);
+
+    //handle db errors
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return {
+          success: false,
+          error: {
+            ...ERROR_CODES.USER_EXISTS,
+            developerMessage:
+              "Database unique constrait violation: " + error.meta?.target,
+          },
+        };
+      }
+      return {
+        success: false,
+        error: {
+          ...ERROR_CODES.DATABASE,
+          developerMessage: `Database error: ${error.message}`,
+        },
+      };
+    }
+
+    // Error generic
+
+    return {
+      success: false,
+      error: {
+        ...ERROR_CODES.UNKNOWN,
+        developerMessage:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      },
+    };
+  }
 };
 
 //login a new user

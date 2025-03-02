@@ -1,199 +1,136 @@
 "use client";
 
 import { getBookById } from "@/data/getBook";
-import {
-  BookLoanRequestStatus,
-  BookLoanStatus,
-  BookPaymentMethod,
-  Role,
-} from "@prisma/client";
+import { BookLoanRequestStatus, BookPaymentMethod, Role } from "@prisma/client";
 import Image from "next/image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, memo } from "react";
 import toast from "react-hot-toast";
-
 import { issueBook } from "@/actions/issue-book";
 import { useUserSession } from "@/app/hooks/useUserSession";
 import Confirmation from "@/app/components/issue-confirmation";
 import { returnBook } from "@/actions/return-book";
 import { Badge } from "@/components/ui/badge";
-
 import { requestIssueBook } from "@/actions/request-issue-book";
 import Rating from "@/app/components/rating";
-
 import { Button } from "@/components/ui/button";
 import { addBookCopy } from "@/actions/add-book-copy";
 import { getBigUser } from "@/data/getUser";
 import { BigBook } from "@/types";
-import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, Clock, Plus } from "lucide-react";
+import BookSkeleton from "./components/Book-skeleton";
+import { format } from "date-fns";
 
 type BigUser = {
   role: Role;
   bookLoans: {
     userId: string;
     status: string;
-    bookCopy: {
-      bookTitleId: string;
-    };
+    bookCopy: { bookTitleId: string };
   }[];
   bookLoanRequests: {
+    requestDate: Date;
     userId: string;
     status: BookLoanRequestStatus;
-    bookCopy: {
-      bookTitleId: string;
-    };
+    bookCopy: { bookTitleId: string };
   }[];
 };
 
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
   const [reload, setReload] = useState(false);
-
-  const router = useRouter();
   const userSession = useUserSession();
-
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
   const [issuedByUser, setIssuedByUser] = useState(false);
   const [pendingRequest, setPendingRequest] = useState("");
   const [userRole, setUserRole] = useState<Role | undefined>(Role.MEMBER);
   const [userId, setUserId] = useState<string | undefined>("");
-
   const [userDb, setUserDb] = useState<BigUser | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setUserId(userSession?.id);
     setUserRole(userSession?.role);
   }, [userSession?.id, userSession?.role]);
-  console.log(params);
 
   const getBook = useCallback(async () => {
     try {
-      setLoading(true);
-      console.log(`getting book with id ${params.id}`);
+      setPageLoading(true);
       const result = await getBookById(params.id);
-
       if (!result?.success) {
         setBookInfo(null);
-        console.log({ BOOKID: result?.error });
+        console.error(result?.error);
         return;
       }
-
-      if (result.data) {
-        setBookInfo(result.data);
-      } else {
-        setBookInfo(null);
-      }
-      console.log("Got the book");
+      setBookInfo(result.data || null);
+      // console.log("Got the book");
     } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+      console.error(error);
     }
+  }, [params.id]);
 
-    //TODO: handle this more properly
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id, reload]); // Dependency on params.id
-  useEffect(() => {
-    try {
-      setLoading(true);
-      getBook();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+  // Definir getUserFromDb como función independiente
+  const getUserFromDb = useCallback(async () => {
+    const userDb = await getBigUser(userId as string);
+    if (userDb?.success && userDb.data) {
+      setUserDb(userDb.data);
     }
-  }, [getBook, reload]);
+  }, [userId]);
 
   useEffect(() => {
-    async function getUserFromDb() {
-      const userDb = await getBigUser(userId as string);
-      if (userDb?.success && userDb.data) {
-        setUserDb(userDb.data);
-      }
-    }
-    try {
-      setLoading(true);
-      if (userId) {
-        getUserFromDb();
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Something happened");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, reload, router]);
+    getUserFromDb();
+    getBook();
+    setPageLoading(false);
+    setLoading(false);
+  }, [getBook, getUserFromDb]);
 
   useEffect(() => {
-    try {
-      setLoading(true);
-      if (bookInfo && userId) {
-        const date = new Date().toLocaleDateString(); // Date placeholder
+    const updateStatus = async () => {
+      if (!bookInfo || !userId || !userDb) return;
 
-        // Check if book is already issued by the user
-        const isIssued = userDb?.bookLoans.some(
+      const isIssued = userDb?.bookLoans.some(
+        (item) =>
+          item.userId === userId &&
+          item.status === "ISSUED" &&
+          item.bookCopy.bookTitleId === params.id
+      );
+      const userPendingRequest = userDb?.bookLoanRequests.filter(
+        (item) =>
+          item.bookCopy.bookTitleId === bookInfo.id &&
+          item.status === BookLoanRequestStatus.PENDING
+      );
+      const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) =>
+        item.bookLoanRequests.some(
           (item) =>
-            item.userId === userId &&
-            item.status === "ISSUED" &&
-            item.bookCopy.bookTitleId === params.id
-        );
-
-        if (isIssued) {
-          setIssuedByUser(isIssued);
-          return;
-        }
-        // Check if user has a pending request with the book
-        const hasPendingRequest = userDb?.bookLoanRequests.some(
-          (item) =>
-            item.bookCopy.bookTitleId === bookInfo.id &&
+            item.userId !== userId &&
             item.status === BookLoanRequestStatus.PENDING
-        );
-
-        if (hasPendingRequest) {
-          setPendingRequest(`Requested by you on ${date}`);
-          return;
-        }
-        // Check if someone else has a pending request
-        const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) => {
-          const result = item.bookLoanRequests.some(
-            (item) =>
-              item.userId !== userId &&
-              item.status === BookLoanRequestStatus.PENDING
-          );
-          return result;
-        });
-
-        if (hasPendingRequestFromOthers && bookInfo.stock === 1) {
-          setPendingRequest(`Requested by another user`);
-        } else {
-          setIssuedByUser(false);
-          setPendingRequest("");
-        }
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Something happened");
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    bookInfo,
-    userId,
-    reload,
-    userDb?.bookLoans,
-    userDb?.bookLoanRequests,
-    params.id,
-  ]); // Only run this effect when bookInfo or userId changes
+        )
+      );
+      setIssuedByUser(isIssued);
+      setPendingRequest(
+        userPendingRequest
+          ? `Requested by you on ${format(new Date(Date.now()), "hh/dd/yyy")}`
+          : hasPendingRequestFromOthers && bookInfo.stock === 1
+          ? "Requested by another user"
+          : ""
+      );
+      setPageLoading(false);
+    };
+    updateStatus();
+  }, [bookInfo, userDb, params.id, userId]);
 
   const handleBorrowBook = async (
     paymentMethod: BookPaymentMethod,
     paymentReference: string | undefined
   ) => {
-    // Logic if the book is paid
-    setLoading(true);
     try {
-      if (bookInfo && parseFloat(bookInfo?.book_price) > 0) {
-        // toast("Payment required");
+      setLoading(true);
 
+      // Optimistic UI update
+      setIssuedByUser(true);
+      setPendingRequest("");
+
+      if (bookInfo && parseFloat(bookInfo.book_price) > 0) {
         const response = await requestIssueBook({
           id: bookInfo.id,
           author: bookInfo.authorId,
@@ -204,185 +141,228 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         });
 
         if (response?.success) {
-          // IF user is admin, issue the book accepting the request and not sending a notification
-          if (userRole === Role.SUPERADMIN || userRole === Role.LIBRARIAN) {
-            const result = await issueBook(
+          if (["SUPERADMIN", "LIBRARIAN"].includes(userRole!)) {
+            await issueBook(
               params.id,
               userId,
               response.data?.id,
-              Role.SUPERADMIN //less data to the function
+              Role.SUPERADMIN
             );
-            if (result.success) {
-              toast.success("Book Issued successfully");
-              setReload(!reload);
-              return;
-            }
-          } else {
-            // save the response in a global variable
-            toast.success(
-              "Book requested, please wait for the admin for confirmation"
-            );
-            setReload(!reload);
-            window.location.reload();
-            return;
           }
-        } else {
-          console.log(response?.error);
-          toast.error("Something happened");
-          setReload(!reload);
+
+          // Actualizar datos antes de cualquier redirección
+          await Promise.all([getBook(), getUserFromDb()]);
+
+          toast.success(
+            userRole === Role.MEMBER
+              ? "Book requested, please wait for admin confirmation"
+              : "Book Issued successfully"
+          );
+
+          setReload((prev) => !prev);
+          return;
         }
       }
-      // If the book is not paid just issue it
-      console.log("Issuing the book...");
-      toast(`Issuing the book with the id ${params.id}`);
-      const result = await issueBook(params.id);
-      if (result?.success) {
-        toast.success("Book issued succesfully");
-        setReload(!reload);
-        window.location.reload();
-      } else {
-        toast.error(result.error);
-        setReload(!reload);
-      }
+
+      // Actualizar datos incluso si no hay precio
+      await Promise.all([getBook(), getUserFromDb()]);
     } catch (error) {
-      console.log(error);
-      toast.error("Something happened");
+      // Revertir cambios si hay error
+      setIssuedByUser(false);
+      setPendingRequest("");
+      console.error(error);
+      toast.error("Error processing request");
     } finally {
       setLoading(false);
     }
   };
+
   const handleReturnBook = async () => {
-    console.log("Returning the book...");
-    toast(`Returning the book with the id ${params.id}`);
-    const result = await returnBook(params.id);
-    if (result?.success) {
-      toast.success("Book returned succesfully");
-      window.location.reload();
-    } else {
-      toast.error(result.error);
-      toast.error("Book coulnt be returned, something happpened");
+    try {
+      setLoading(true);
+      // Optimistic UI update
+      setIssuedByUser(false);
+
+      const result = await returnBook(params.id);
+      if (result?.success) {
+        await Promise.all([getBook(), getUserFromDb()]);
+        toast.success("Book returned successfully");
+      } else {
+        throw new Error(result.error || "Something went wrong");
+      }
+    } catch (error) {
+      // Revertir cambios si hay error
+      setIssuedByUser(true);
+      console.error(error);
+      toast.error("Error returning book");
+    } finally {
+      setLoading(false);
     }
   };
-  if (!bookInfo) {
-    return null;
-  }
-  console.log(bookInfo);
-
   const createBookCopy = async () => {
     try {
-      // TRADEOFF: CURRENT AND ACCURATE OR FASTER, FOR NOW THE FIRST
+      setLoading(true);
       const result = await addBookCopy(params.id);
       if (result.error) {
-        console.log(result.error);
-        toast.error("Error happened creating the copy");
-        setReload(!true);
+        console.error(result.error);
+        toast.error("Error creating the copy");
         return;
       }
-      console.log(result.data);
       toast.success("Copy created");
-      setReload(!reload);
+      await getBook();
     } catch (error) {
-      console.log(error);
-      toast.error(
-        "Couldnt add the copy of the book, check the console for mor details"
-      );
+      console.error(error);
+      toast.error("Couldn't add the copy, check console for details");
       setReload(!true);
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (pageLoading || !bookInfo) {
+    return <BookSkeleton />;
+  }
+
   return (
-    <div className="container mx-auto p-4 w-full">
-      <div className="shadow-lg rounded-lg w-full flex flex-col lg:flex-row p-8 bg-white">
-        <div className="flex-shrink-0">
-          <Image
-            width={200}
-            height={300}
-            alt={bookInfo?.title}
-            src={bookInfo?.img ? bookInfo.img : "/default.webp"}
-            className="rounded-lg"
-          />
-        </div>
-        <div className="flex-grow mt-4 lg:mt-0 lg:ml-6">
-          <h2 className="text-3xl font-bold capitalize">{bookInfo?.title}</h2>
-          <p className="text-gray-600">Author: {bookInfo.author.author_name}</p>
-          <div className="text-gray-600 my-2 flex-wrap flex items-center gap-1">
-            Categories:{" "}
-            {bookInfo?.categories && bookInfo.categories.length > 0 ? (
-              bookInfo.categories.map((item, index) => {
-                console.log(`your item is ${item.name}`);
-                return (
-                  <Badge
-                    className="p-2 tracking-widest bg-gray-700"
-                    key={index}
-                  >
-                    {item.name}{" "}
-                  </Badge>
-                );
-              })
-            ) : (
-              <span>No categories available</span>
-            )}
-          </div>
-          <p className="text-lg font-semibold text-green-600">
-            Fine-Price: ${parseFloat(bookInfo.book_price).toFixed(2)}
-          </p>
-          {userId && (
-            <Rating
-              bookInfo={bookInfo}
-              setReload={() => setReload(!reload)}
-              userId={userId}
-            />
-          )}
-
-          <p className="mt-2 text-gray-700">{bookInfo.description}</p>
-          <p
-            className={`mt-2 font-semibold ${
-              issuedByUser == true || pendingRequest || bookInfo.stock <= 0
-                ? "text-red-500"
-                : "text-green-500"
-            }`}
-          >
-            {
-              //TODO: ADD CANCEL REQUEST, not needed for mvp
-
-              issuedByUser
-                ? "Status: Borrowed by you"
-                : pendingRequest
-                ? pendingRequest
-                : bookInfo.stock <= 0
-                ? "Status: Out of stock"
-                : "Status: Avaible"
-            }
-          </p>
-          <div className="flex items-center gap-4">
-            {bookInfo.stock > 0 &&
-              !pendingRequest &&
-              !issuedByUser &&
-              !loading && (
-                <Confirmation
-                  type={"STOCK"}
-                  price={bookInfo.book_price}
-                  handleBorrowBook={handleBorrowBook}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+            {/* Sección de Imagen */}
+            <div className="relative aspect-[5/4] lg:aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden">
+              {pageLoading ? (
+                <Skeleton className="h-full w-full rounded-xl" />
+              ) : (
+                <Image
+                  src={bookInfo.img || "/default-book.webp"}
+                  alt={bookInfo.title}
+                  fill
+                  className="object-cover"
+                  priority
                 />
               )}
-            {issuedByUser && !loading && (
-              <Confirmation
-                type={BookLoanStatus.ISSUED}
-                price={bookInfo.book_price}
-                handleReturnBook={handleReturnBook}
-              />
-            )}
-            {/* TOOD: CONFIRMATION OF COPYING THE BOOK */}
-            {!loading &&
-              (userRole === Role.LIBRARIAN || userRole === Role.SUPERADMIN) && (
-                <Button
-                  className="p-5 mt-3"
-                  variant={"outline"}
-                  onClick={createBookCopy}
-                >
-                  Add copy
-                </Button>
-              )}
+            </div>
+
+            {/* Detalles del Libro */}
+            <div className="space-y-6">
+              {/* Cabecera */}
+              <div className="border-b border-gray-100 pb-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  {bookInfo.title}
+                </h1>
+                <p className="text-lg text-gray-600">
+                  by {bookInfo.author.author_name}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <Rating
+                    userId={userId!}
+                    bookInfo={bookInfo}
+                    setReload={() => setReload(!reload)}
+                  />
+                </div>
+              </div>
+
+              {/* Categorías */}
+              <div className="flex flex-wrap gap-2">
+                {bookInfo.categories?.map((category) => (
+                  <Badge
+                    key={category.name}
+                    variant="secondary"
+                    className="px-3 py-1 text-sm"
+                  >
+                    {category.name}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* Descripción */}
+              <div className="prose text-gray-600 leading-relaxed">
+                {bookInfo.description}
+              </div>
+
+              {/* Información de Precio y Stock */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-2xl font-bold text-blue-600">
+                      ${parseFloat(bookInfo.book_price).toFixed(2)}
+                    </span>
+                    <span className="block text-sm text-gray-600 mt-1">
+                      per loan period
+                    </span>
+                  </div>
+                  <Badge
+                    variant={bookInfo.stock > 0 ? "default" : "destructive"}
+                    className="px-4 py-2"
+                  >
+                    {bookInfo.stock > 0
+                      ? `${bookInfo.stock} in stock`
+                      : "Out of stock"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Estado y Acciones */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm">
+                  {issuedByUser ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle className="w-5 h-5" />
+                      <span>Currently borrowed by you</span>
+                    </div>
+                  ) : pendingRequest ? (
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <Clock className="w-5 h-5" />
+                      <span>{pendingRequest}</span>
+                    </div>
+                  ) : (
+                    <div className="text-gray-600">
+                      {bookInfo.stock > 0
+                        ? "Available for loan"
+                        : "Check back soon"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Botones de Acción */}
+                <div className="space-y-2">
+                  {issuedByUser && (
+                    <Confirmation
+                      loading={loading}
+                      type="ISSUED"
+                      price={bookInfo.book_price}
+                      handleReturnBook={handleReturnBook}
+                    />
+                  )}
+
+                  {bookInfo.stock > 0 &&
+                    !pendingRequest &&
+                    !issuedByUser &&
+                    !loading && (
+                      <Confirmation
+                        loading={loading}
+                        type="STOCK"
+                        price={bookInfo.book_price}
+                        handleBorrowBook={handleBorrowBook}
+                      />
+                    )}
+
+                  {(userRole === Role.LIBRARIAN ||
+                    userRole === Role.SUPERADMIN) &&
+                    !loading && (
+                      <Button
+                        onClick={createBookCopy}
+                        variant="outline"
+                        className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                        size="lg"
+                      >
+                        <Plus className="mr-2 h-5 w-5" />
+                        Add New Copy
+                      </Button>
+                    )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -390,4 +370,4 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   );
 };
 
-export default SingleBookPage;
+export default memo(SingleBookPage);

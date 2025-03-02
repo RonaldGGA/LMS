@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import { Toaster } from "react-hot-toast";
-
 import { Andika } from "next/font/google";
 
 import HomeNavbar from "./components/homeNavbar";
@@ -10,6 +8,8 @@ import { auth } from "@/auth";
 import { getUserById } from "@/data/getUser";
 import { SessionProvider } from "next-auth/react";
 import IssuedBooksSpan from "./components/issued-books-span";
+import { format } from "date-fns";
+import { Toaster } from "react-hot-toast";
 
 const andika = Andika({ weight: "400", subsets: ["latin"] });
 
@@ -32,29 +32,33 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className={` overflow-y-scroll ${andika.className} antialiased`}>
-        {/* <NotificationsComponent /> */}
-        <SessionProvider session={session}>
-          {dbUser && (
-            <div className="bgCustomized min-h-screen">
-              <HomeNavbar user={dbUser} />
-              <div className="w-full container mx-auto max-w-[1250px] relative">
-                {children}
-                {dbUser && dbUser.bookLoans.length > 0 && (
-                  <IssuedBooksSpan
-                    user_id={dbUser.id}
-                    userBorrowedBooks={dbUser.bookLoans}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-          {!dbUser && <> {children}</>}
-
+    <html>
+      <SessionProvider session={session}>
+        <body
+          className={`min-h-screen bg-gradient-to-b from-gray-50 to-white relative font-${andika}`}
+        >
           <Toaster />
-        </SessionProvider>
-      </body>
+          <HomeNavbar user={dbUser} />
+          <main className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8 pb-40">
+            {children}
+
+            {dbUser && dbUser.bookLoans.length > 0 && (
+              <IssuedBooksSpan
+                user_id={dbUser.id}
+                userBorrowedBooks={dbUser.bookLoans}
+              />
+            )}
+          </main>
+
+          {/* Footer Opcional */}
+          <footer className="border-t border-gray-200 mt-16 absolute bottom-0 left-0 w-full -z-10">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-sm text-gray-500">
+              © {format(new Date(Date.now()), "yyy")} LibraryHub. All rights
+              reserved.
+            </div>
+          </footer>
+        </body>
+      </SessionProvider>
     </html>
   );
 }

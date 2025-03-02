@@ -102,7 +102,7 @@ model BookCopy {
   id String @id @default(cuid())
 
   bookTitleId String
-  bookTitle   BookTitle @relation(fields: [bookTitleId], references: [id])
+  bookTitle   BookTitle @relation(fields: [bookTitleId], references: [id], onDelete: Cascade)
 
   copy_number Int @default(1)
 
@@ -134,7 +134,7 @@ model BookLoan {
   status BookLoanStatus @default(ISSUED)
 
   user     UserAccount @relation(fields: [userId], references: [id])
-  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id])
+  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id], onDelete: Cascade)
 
   loanDate   DateTime  @default(now())
   returnDate DateTime?
@@ -157,7 +157,7 @@ enum BookLoanRequestStatus {
 model BookLoanRequest {
   id         String   @id @default(cuid())
   bookCopyId String
-  bookCopy   BookCopy @relation(fields: [bookCopyId], references: [id])
+  bookCopy   BookCopy @relation(fields: [bookCopyId], references: [id], onDelete: Cascade)
 
   userId String
   user   UserAccount @relation(fields: [userId], references: [id])
@@ -192,7 +192,7 @@ model BookSecurityDeposit {
   bookCopyId String
   amount     String @default("0")
 
-  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id])
+  bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id], onDelete: Cascade)
   user     UserAccount @relation(fields: [userId], references: [id])
 
   refundDate     DateTime?
