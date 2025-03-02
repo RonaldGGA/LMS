@@ -7,6 +7,7 @@ import { getUserPendingNotifications } from "@/data/getNotifications";
 import { readNotification } from "@/actions/read-notification";
 import UserNotification from "../components/user-notification";
 import { UserNotificationSkeleton } from "../components/user-notification-skeleton";
+import NextImprovements from "@/app/components/next-improvements";
 
 export type UserPendingNotification = {
   id: string;
@@ -57,6 +58,15 @@ const NotificationsPage = () => {
     );
   };
 
+  const next = [
+    "Implement better loading states",
+    "Implement an infinite notifications scroll",
+    "Make this more real-time with no reload needed",
+    "Make the logic for the red button in the bell in the correct way",
+    "Implement real-time notifications, when a user is logged in and a book is accepted, he will get the notification in the page instantly",
+    "Combine in-page notifications with gmail",
+  ];
+
   if (pageLoading) {
     return (
       <div className="space-y-3 w-full">
@@ -83,6 +93,13 @@ const NotificationsPage = () => {
               No Notifications to see ...
             </div>
           )}
+      <NextImprovements className={"mt-10 space-y-5"}>
+        <ul className="space-y-2">
+          {next.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </NextImprovements>
     </div>
   );
 };

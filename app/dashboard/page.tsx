@@ -229,12 +229,13 @@ export default function DashboardPage() {
           </Button>
         </Link>
       </div>
-      <NextImprovements>
-        {next.map((item, index) => (
-          <li key={index}>
-            {index} - {item}
-          </li>
-        ))}
+
+      <NextImprovements className={"mt-10 space-y-5"}>
+        <ul className="space-y-2">
+          {next.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
       </NextImprovements>
     </div>
   );

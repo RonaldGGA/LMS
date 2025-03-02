@@ -13,6 +13,7 @@ import { useDebounce } from "@uidotdev/usehooks";
 import z from "zod";
 import { SkeletonDemo } from "./components/skeleton-demo";
 import { searchedBooks } from "@/types";
+import NextImprovements from "./components/next-improvements";
 
 const Home = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -161,6 +162,12 @@ const Home = () => {
     return book[0].toUpperCase().concat(book.slice(1));
   };
 
+  const next = [
+    "Implement search by category",
+    "Implement an endless book searching",
+    "Implement filter searching by deposit, category, states, popular",
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -270,6 +277,13 @@ const Home = () => {
           )}
         </div>
       </div>
+      <NextImprovements className={"mt-10 space-y-5"}>
+        <ul className="space-y-2">
+          {next.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </NextImprovements>
     </div>
   );
 };

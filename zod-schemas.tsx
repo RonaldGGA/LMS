@@ -127,14 +127,22 @@ export const passwordSchema = z
 
 export const loginSchema = z.object({
   username: usernameSchema,
-  password: passwordSchema,
+  password: z.string().min(1, "Password is required"),
 });
 
 export const registerSchema = z.object({
   username: usernameSchema,
-  password: passwordSchema,
+  password: z
+    .string()
+    .min(1, "Password is required") // Validar campo requerido
+    .min(8, "Password must be at least 8 characters")
+    .max(30, "Password cannot exceed 30 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>]).{8,}$/,
+      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character"
+    )
+    .transform((val) => val.trim()),
   dni: dniSchema,
-  role: z.custom<Role>().optional(),
 });
 
 export const adminUpdateProfileSchema = z.object({

@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Clock, Plus } from "lucide-react";
 import BookSkeleton from "./components/Book-skeleton";
 import { format } from "date-fns";
+import NextImprovements from "@/app/components/next-improvements";
 
 type BigUser = {
   role: Role;
@@ -223,6 +224,12 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     return <BookSkeleton />;
   }
 
+  const next = [
+    "Implement a better loading state and handling while changing from issued, pending, etc...",
+    "Implement popularity logic, add it to the database",
+    "Implement  better image optimization",
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -366,6 +373,13 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
           </div>
         </div>
       </div>
+      <NextImprovements className={"mt-10 space-y-5"}>
+        <ul className="space-y-2">
+          {next.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </NextImprovements>
     </div>
   );
 };
