@@ -3,6 +3,7 @@
 import { signIn } from "@/auth";
 import { loginSchema } from "@/zod-schemas";
 import { AuthError } from "next-auth";
+import { redirect } from "next/dist/server/api-utils";
 
 type SignInData = {
   username: string;
@@ -19,7 +20,9 @@ export async function authenticate(
     if (!response.success && response.error) {
       throw new Error(response.error.message);
     }
-    await signIn("credentials", formData);
+    await signIn("credentials", {
+      ...formData,
+    });
     return undefined;
   } catch (error) {
     if (error instanceof AuthError) {
@@ -32,7 +35,7 @@ export async function authenticate(
           return "You don't have permission to access this resource. Contact your administrator.";
 
         case "CallbackRouteError":
-          return "Authentication process failed. Please restart the login flow.";
+          return "Authentication process failed. Invalid Credentials";
 
         case "ErrorPageLoop":
           return "Configuration error detected. Our team has been notified.";

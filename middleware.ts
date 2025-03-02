@@ -11,8 +11,13 @@ export async function middleware(req: NextRequest) {
 
   const isAuthRoute = nextUrl.pathname.startsWith("/auth");
   const isApiRoute = nextUrl.pathname.startsWith("/api");
+  const isErrorPage = nextUrl.pathname.startsWith("/error");
 
   if (isApiRoute) {
+    return NextResponse.next();
+  }
+
+  if (isErrorPage) {
     return NextResponse.next();
   }
 
@@ -36,6 +41,9 @@ export async function middleware(req: NextRequest) {
 }
 export const config = {
   matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 };

@@ -27,6 +27,7 @@ const AuthPage = ({ params }: { params: { type: "login" | "register" } }) => {
                 fill
                 className="object-cover"
                 priority
+                sizes={""}
               />
             </div>
 
