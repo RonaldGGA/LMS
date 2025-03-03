@@ -9,19 +9,24 @@ type SignInData = {
   password: string;
 };
 
-export async function authenticate(
-  prevState: string | undefined,
-  formData: SignInData
-) {
+export async function authenticate(formData: SignInData) {
   try {
-    // This is a backend check of the credentials, it is checked before in the frontend
     const response = loginSchema.safeParse(formData);
-    if (!response.success && response.error) {
-      throw new Error(response.error.message);
+    if (!response.success) {
+      return (
+        "Invalid input: " +
+        response.error.errors.map((e) => e.message).join(", ")
+      );
     }
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       ...formData,
+      redirect: false, // Prevent automatic redirect
     });
+
+    if (result?.error) {
+      throw new AuthError(result.error);
+    }
+
     return undefined;
   } catch (error) {
     if (error instanceof AuthError) {
@@ -126,6 +131,6 @@ export async function authenticate(
       }
     }
 
-    throw error;
+    return "An unexpected error occurred.";
   }
 }

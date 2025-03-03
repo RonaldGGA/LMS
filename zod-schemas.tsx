@@ -142,6 +142,16 @@ export const registerSchema = z.object({
       "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character"
     )
     .transform((val) => val.trim()),
+  confirmPassword: z
+    .string()
+    .min(1, "Password is required") // Validar campo requerido
+    .min(8, "Password must be at least 8 characters")
+    .max(30, "Password cannot exceed 30 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>]).{8,}$/,
+      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character"
+    )
+    .transform((val) => val.trim()),
   dni: dniSchema,
 });
 

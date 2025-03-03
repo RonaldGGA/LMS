@@ -9,9 +9,12 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const isLoggedIn = !!token;
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
+  const isAuthRoute = ["/auth/login", "/auth/register"].includes(
+    nextUrl.pathname
+  );
   const isApiRoute = nextUrl.pathname.startsWith("/api");
   const isErrorPage = nextUrl.pathname.startsWith("/error");
+  const isAdminRoute = nextUrl.pathname.startsWith("/dashboard");
 
   // Allow public routes and static files
   if (nextUrl.pathname.startsWith("/_next")) {
@@ -20,9 +23,9 @@ export async function middleware(req: NextRequest) {
 
   // Handle API routes
   if (isApiRoute) {
-    // if (!isLoggedIn) {
-    //   return new NextResponse("Unauthorized", { status: 401 });
-    // }
+    if (!isLoggedIn) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
     return NextResponse.next();
   }
 
@@ -33,15 +36,20 @@ export async function middleware(req: NextRequest) {
   // Redirect logic
   if (!isLoggedIn) {
     if (isAuthRoute) return NextResponse.next();
-    return NextResponse.next();
-
-    // return NextResponse.redirect(new URL("/auth/login", nextUrl));
+    return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
   if (isLoggedIn && isAuthRoute) {
     return NextResponse.redirect(
       new URL(token.role === Role.MEMBER ? "/" : "/dashboard", nextUrl)
     );
+  }
+
+  if (isAdminRoute) {
+    if (token.role === Role.MEMBER) {
+      return NextResponse.redirect(new URL("/", nextUrl));
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();

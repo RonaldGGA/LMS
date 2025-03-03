@@ -3,7 +3,7 @@
 import db from "@/lib/prisma";
 import { createErrorResponse, ERROR_CODES, hashPassword } from "@/lib/utils";
 import { ServiceResponse } from "@/types";
-import { dniSchema } from "@/zod-schemas";
+import { dniSchema, loginSchema } from "@/zod-schemas";
 import { Prisma, Role, UserAccount } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -56,7 +56,7 @@ export const registerUser = async (
       };
     }
 
-    const existingDNI = await db.userAccount.findUnique({
+    const existingDNI = await db.userAccount.findFirst({
       where: { dni },
     });
 
@@ -68,7 +68,7 @@ export const registerUser = async (
     }
 
     // Verificar usuario existente
-    const existingUser = await db.userAccount.findUnique({
+    const existingUser = await db.userAccount.findFirst({
       where: { username },
     });
     if (existingUser) {
@@ -138,10 +138,10 @@ interface loginUserProps {
 export const loginUser = async (values: loginUserProps) => {
   try {
     const { username, password } = values;
-
+    const { success, error } = loginSchema.safeParse(values);
     // Input validation
-    if (!username || !password) {
-      return createErrorResponse("Username and password are required.");
+    if (!success) {
+      return createErrorResponse(error.message);
     }
 
     // Find user in database

@@ -1,15 +1,28 @@
-"use client";
-
-import React from "react";
-
 import Image from "next/image";
-import Formulary from "./components/formulary";
+import NextImprovements from "../components/next-improvements";
+import { auth } from "@/auth";
 
-const AuthPage = ({ params }: { params: { type: "login" | "register" } }) => {
-  const { type } = params;
+export default async function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+
+  if (session) {
+    return null;
+  }
+
+  const next = [
+    "Improve code logic for a better developer understanding",
+    "change the any line and actually implement a type",
+    "Make this page a little more beautiful",
+    "Improve Error total handling",
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden grid grid-cols-1 lg:grid-cols-2 p-2">
         {/* Sección de Imagen */}
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 hidden lg:flex flex-col items-center justify-center p-12 relative">
           <div className="text-white text-center space-y-8 max-w-md">
@@ -42,27 +55,19 @@ const AuthPage = ({ params }: { params: { type: "login" | "register" } }) => {
               </div>
             </div>
           </div>
-        </div>
+        </div>{" "}
         {/* Sección de Formulario */}
         <div className="p-8 sm:p-12 lg:p-16">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {type === "login" ? "Welcome Back" : "Get Started"}
-            </h1>
-            <p className="text-gray-600">
-              {type === "login"
-                ? "Sign in to your account"
-                : "Create a new account"}
-            </p>
-          </div>
-
-          <Formulary
-            type={type}
-            footerLink={`/auth/${type === "login" ? "register" : "login"}`}
-          />
+          {children}
+          <NextImprovements className={"mt-10 space-y-5"}>
+            <ul className="space-y-2">
+              {next.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </NextImprovements>
         </div>
       </div>
     </div>
   );
-};
-export default AuthPage;
+}
