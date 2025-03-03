@@ -32,8 +32,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html>
-      <SessionProvider session={session}>
+    <html lang="en">
+      <SessionProvider>
         <body
           className={`min-h-screen bg-gradient-to-b from-gray-50 to-white relative font-${andika}`}
         >

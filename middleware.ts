@@ -10,12 +10,20 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
     const isLoggedIn = !!token?.sub;
 
-    const isAuthRoute = ["/auth/login", "/auth/register"].includes(
-      nextUrl.pathname
-    );
+    const isAuthRoute = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/error",
+      "/auth/reset-password",
+    ].some((path) => nextUrl.pathname.startsWith(path));
     const isApiRoute = nextUrl.pathname.startsWith("/api");
     const isErrorPage = nextUrl.pathname.startsWith("/error");
     const isAdminRoute = nextUrl.pathname.startsWith("/dashboard");
+    const publicStaticRoutes = ["/terms", "/privacy", "/about"];
+
+    if (publicStaticRoutes.includes(nextUrl.pathname)) {
+      return NextResponse.next();
+    }
 
     // Allow public routes and static files
     if (nextUrl.pathname.startsWith("/_next")) {
@@ -64,5 +72,6 @@ export async function middleware(req: NextRequest) {
 }
 // auth.ts
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|auth).*)"],
+  // Skip all paths that should not be internationalized
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
