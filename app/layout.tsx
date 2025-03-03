@@ -33,7 +33,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <SessionProvider>
+      <SessionProvider refetchInterval={300} refetchOnWindowFocus={true}>
         <body
           className={`min-h-screen bg-gradient-to-b from-gray-50 to-white relative font-${andika}`}
         >

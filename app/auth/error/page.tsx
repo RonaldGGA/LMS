@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function ErrorPage() {
+export default function AuthErrorPage() {
   const params = useSearchParams();
   const errorCode = params.get("error");
 
