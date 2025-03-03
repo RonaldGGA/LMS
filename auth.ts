@@ -24,6 +24,17 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  logger: {
+    error(error) {
+      console.error(error);
+    },
+    warn(code) {
+      console.warn(code);
+    },
+    debug(code, metadata) {
+      console.debug({ code, metadata });
+    },
+  },
   callbacks: {
     async session({ token, session }) {
       if (token.username) {
@@ -61,12 +72,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
   },
+  cookies: {
+    sessionToken: {
+      name: "__Secure-next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+        domain:
+          process.env.NODE_ENV === "production" ? ".*vercel.appp" : undefined,
+      },
+    },
+  },
   adapter: PrismaAdapter(db),
-  debug: true,
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
+  debug: process.env.NODE_ENV === "development",
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
     signOut: "/auth/login",
+    error: "/api/auth/error",
   },
   ...authConfig,
 });
