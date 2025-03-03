@@ -17,11 +17,12 @@ const AuthGuard = ({
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!session) {
-      router.push(`/auth/login?callbackUrl=${pathname}`);
-    } else if (!admitedRoles.includes(session.role)) {
-      router.push("/");
-    }
+    // if (!session) {
+    //   router.push(`/auth/login?callbackUrl=${pathname}`);
+    // } else if (!admitedRoles.includes(session.role)) {
+    //   router.push("/");
+    // }
+    console.log("GUARDED");
   }, [session, admitedRoles, router, pathname]);
 
   return <>{children}</>;

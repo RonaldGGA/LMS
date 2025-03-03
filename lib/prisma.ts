@@ -1,10 +1,13 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/edge";
+import { withAccelerate } from "@prisma/extension-accelerate";
+
 //NOT PREVENTING HOT RELOAD
 // const prisma = new PrismaClient()
 
 //PREVENTING HOT RELOAD
 const GlobalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-const prisma = GlobalForPrisma.prisma || new PrismaClient();
+const prisma =
+  GlobalForPrisma.prisma || new PrismaClient().$extends(withAccelerate());
 
 if (process.env.NODE_ENV !== "production") GlobalForPrisma.prisma = prisma;
 
