@@ -46,10 +46,11 @@ export async function middleware(req: NextRequest) {
     if (!isLoggedIn) {
       if (isAuthRoute) {
         return NextResponse.next();
+      } else {
+        const url = new URL(`/auth/login`, nextUrl);
+        url.searchParams.set("callbackUrl", encodeURI(req.url));
+        return NextResponse.redirect(url);
       }
-      const url = new URL(`/auth/login`, nextUrl);
-      url.searchParams.set("callbackUrl", encodeURI(req.url));
-      return NextResponse.redirect(url);
     }
 
     if (isLoggedIn && isAuthRoute) {
