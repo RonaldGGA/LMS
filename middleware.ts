@@ -44,8 +44,12 @@ export async function middleware(req: NextRequest) {
 
     // Redirect logic
     if (!isLoggedIn) {
-      if (isAuthRoute) return NextResponse.next();
-      return NextResponse.redirect(new URL("/auth/login", nextUrl));
+      if (isAuthRoute) {
+        return NextResponse.next();
+      }
+      const url = new URL(`/auth/login`, nextUrl);
+      url.searchParams.set("callbackUrl", encodeURI(req.url));
+      return NextResponse.redirect(url);
     }
 
     if (isLoggedIn && isAuthRoute) {
@@ -70,8 +74,11 @@ export async function middleware(req: NextRequest) {
     );
   }
 }
-// auth.ts
 export const config = {
-  // Skip all paths that should not be internationalized
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+  ],
 };
