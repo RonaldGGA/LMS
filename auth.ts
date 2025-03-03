@@ -32,7 +32,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/login",
     signOut: "/auth/login",
-    error: "/api/auth/error",
+    error: "/auth/error",
+    newUser: "/auth/register", // Opcional: Para flujo de registro
+    verifyRequest: "/auth/verify-request", // Para verificación de email
   },
 
   logger: {
