@@ -130,7 +130,7 @@ const CardBook: React.FC<CardBookProps> = ({
 
           {/* Action Button */}
           <Link
-            href={`/book/${id}`}
+            href={`/books/book/${id}`}
             className="mt-4 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-md text-sm font-medium transition-colors"
           >
             <Bookmark size={14} />

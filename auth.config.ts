@@ -1,7 +1,8 @@
 import Credentials from "next-auth/providers/credentials";
 import { loginUser } from "./actions/auth-user";
+import type { NextAuthConfig } from "next-auth";
 
-const authConfig = {
+export default {
   providers: [
     Credentials({
       credentials: {
@@ -41,6 +42,4 @@ const authConfig = {
       },
     }),
   ],
-};
-
-export default authConfig;
+} satisfies NextAuthConfig;

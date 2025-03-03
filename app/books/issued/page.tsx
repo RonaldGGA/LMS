@@ -145,7 +145,7 @@ const BorrowedBooks: React.FC<borrowedBooksProps> = ({ params }) => {
                 </TableCell>
                 <TableCell className="text-center">
                   <Link
-                    href={`/book/${item.bookCopy.bookTitle.id}`}
+                    href={`/books/book/${item.bookCopy.bookTitle.id}`}
                     className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 rounded-lg transition-colors"
                   >
                     Details

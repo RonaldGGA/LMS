@@ -64,7 +64,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
       }
     };
     getUserCount();
-  }, [user?.id, pathname]);
+  }, [user?.id, pathname, user]);
 
   useEffect(() => {
     const getAdminCount = async () => {
@@ -79,7 +79,9 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
   }, [pathname]);
 
   const handleLogout = async () => {
-    await signOut(); // Assuming you're using next-auth
+    await signOut({
+      redirectTo: "/auth/login",
+    }); // Assuming you're using next-auth
     router.push("/auth/login");
   };
   if (!user) {
