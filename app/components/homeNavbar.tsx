@@ -106,7 +106,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
               user.role === Role.SUPERADMIN) && (
               <>
                 <Link
-                  href="/add"
+                  href="/books/add"
                   className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4" />
@@ -180,7 +180,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
                 </DropdownMenuItem>
               </Link>
 
-              <Link href="/issued">
+              <Link href="/books/issued">
                 <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
                   <BookIcon className="w-4 h-4 text-gray-600" />
                   <span className="text-gray-700">My Books</span>
@@ -190,7 +190,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
               {(user.role === Role.LIBRARIAN ||
                 user.role === Role.SUPERADMIN) && (
                 <div className="md:hidden border-t border-gray-100">
-                  <Link href="/add">
+                  <Link href="/books/add">
                     <DropdownMenuItem className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
                       <Plus className="w-4 h-4 text-gray-600" />
                       <span className="text-gray-700">Add Book</span>
