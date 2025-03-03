@@ -1,6 +1,8 @@
 import Image from "next/image";
 import NextImprovements from "../components/next-improvements";
 import { auth } from "@/auth";
+import { Role } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 export default async function AuthLayout({
   children,
@@ -9,8 +11,11 @@ export default async function AuthLayout({
 }) {
   const session = await auth();
 
-  if (session) {
-    return null;
+  const user = session?.user;
+
+  // Redirección server-side
+  if (user?.role) {
+    redirect(user.role === Role.MEMBER ? "/" : "/dashboard");
   }
 
   const next = [
