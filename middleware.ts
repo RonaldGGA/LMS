@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 import { NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-  const token = await getToken({ req });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const isLoggedIn = !!token;
 
   // 1. Manejo de rutas públicas
