@@ -168,7 +168,7 @@ export const loginUser = async (values: loginUserProps) => {
     const user = {
       id: dbUser.id,
       username: dbUser.username,
-      role: Role.MEMBER,
+      role: dbUser.role,
     };
 
     return { success: true, error: null, data: user };

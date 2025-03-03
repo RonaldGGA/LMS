@@ -24,6 +24,17 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
+  debug: process.env.NODE_ENV === "development",
+  session: { strategy: "jwt" },
+  pages: {
+    signIn: "/auth/login",
+    signOut: "/auth/login",
+    error: "/api/auth/error",
+  },
+
   logger: {
     error(error) {
       console.error(error);
@@ -71,29 +82,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return token;
     },
-  },
-  cookies: {
-    sessionToken: {
-      name: "__Secure-next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-        domain:
-          process.env.NODE_ENV === "production" ? ".*vercel.appp" : undefined,
-      },
-    },
-  },
-  adapter: PrismaAdapter(db),
-  secret: process.env.AUTH_SECRET,
-  trustHost: true,
-  debug: process.env.NODE_ENV === "development",
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/login",
-    signOut: "/auth/login",
-    error: "/api/auth/error",
   },
   ...authConfig,
 });
