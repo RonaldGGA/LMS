@@ -109,22 +109,22 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           title="Total Books"
-          value={data.stats.totalBooks}
+          value={data.stats.totalBooks || 0}
           description="Available titles"
         />
         <StatCard
           title="Active Loans"
-          value={data.stats.activeLoans}
+          value={data.stats.activeLoans || 0}
           description="Currently issued"
         />
         <StatCard
           title="Pending Requests"
-          value={data.stats.pendingRequests}
+          value={data.stats.pendingRequests || 0}
           description="Awaiting approval"
         />
         <StatCard
           title="Total Deposits"
-          value={`$${Number(data.stats.totalDeposits).toFixed(2)}`}
+          value={`$${Number(data.stats.totalDeposits).toFixed(2)}` || 0}
           description="Security holdings"
         />
       </div>
@@ -178,20 +178,24 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.recentLoans.map((loan) => (
-                <TableRow key={loan.id}>
-                  <TableCell>{loan.user.username}</TableCell>
-                  <TableCell>{loan.bookCopy.bookTitle.title}</TableCell>
-                  <TableCell>
-                    {new Date(loan.loanDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {data.recentLoans ? (
+                data.recentLoans.map((loan) => (
+                  <TableRow key={loan.id}>
+                    <TableCell>{loan.user.username}</TableCell>
+                    <TableCell>{loan.bookCopy.bookTitle.title}</TableCell>
+                    <TableCell>
+                      {new Date(loan.loanDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <>No recent Loans</>
+              )}
             </TableBody>
             <TableFooter>
               <TableRow>
