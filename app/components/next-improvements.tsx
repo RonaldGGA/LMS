@@ -1,3 +1,4 @@
+import { SparklesIcon } from "lucide-react";
 import React from "react";
 
 const NextImprovements = ({
@@ -9,10 +10,13 @@ const NextImprovements = ({
 }) => {
   return (
     <div
-      className={`p-5 shadow-md rounded-md bg-blue-200 w-[500px] mx-auto max-w-[95%] shadow-gray-400 ${className}`}
+      className={`bg-antique-white p-6 rounded-xl border border-antique-gold/20 shadow-library-inner ${className}`}
     >
-      <p className="font-bold">NEXT IMPROVEMENTS:</p>
-      {children}
+      <h3 className="font-serif text-xl text-library-dark mb-4 flex items-center">
+        <SparklesIcon className="h-6 w-6 mr-2 text-antique-gold" />
+        Próximas Actualizaciones
+      </h3>
+      <ul className="space-y-3">{children}</ul>
     </div>
   );
 };
