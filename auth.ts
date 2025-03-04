@@ -1,11 +1,12 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth, { Account, DefaultSession, User } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import db from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import authConfig from "./auth.config";
-import { AdapterUser } from "next-auth/adapters";
 import { Role } from "@prisma/client";
 
-interface CustomAdapterUser extends AdapterUser {
+import { type JWT } from "next-auth/jwt";
+
+interface CustomAdapterUser extends User {
   role?: Role;
 }
 
@@ -22,36 +23,25 @@ declare module "next-auth" {
     } & DefaultSession["user"];
   }
 }
-
+const adapter = PrismaAdapter(prisma);
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter,
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   debug: process.env.NODE_ENV === "development",
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 15 * 24 * 60 * 60 },
   pages: {
     signIn: "/auth/login",
     signOut: "/auth/login",
     error: "/auth/error",
-    newUser: "/auth/register", // Opcional: Para flujo de registro
-    verifyRequest: "/auth/verify-request", // Para verificación de email
+    newUser: "/auth/register",
+    verifyRequest: "/auth/verify-request",
   },
 
-  logger: {
-    error(error) {
-      console.error(error);
-    },
-    warn(code) {
-      console.warn(code);
-    },
-    debug(code, metadata) {
-      console.debug({ code, metadata });
-    },
-  },
   callbacks: {
     async session({ token, session }) {
       if (token.username) {
-        session.user.name = token.username as string; // Ensure we're setting the session username
+        session.user.name = token.name; // Ensure we're setting the session username
       }
       if (token.sub && session.user) {
         session.user.id = token.sub;
@@ -59,25 +49,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({
+      token,
+      account,
+      user,
+    }: {
+      token: JWT;
+      account: Account | null;
+      user: CustomAdapterUser;
+    }) {
       try {
-        if (user) {
-          const customUser = user as CustomAdapterUser;
-          token.username = customUser.name as string;
-          token.sub = customUser.id;
-          token.role = customUser.role || Role.MEMBER; // Assign the role to the token
+        if (account?.provider == "credentials") {
+          token.credentials = true;
+          token.name = user.name;
+          token.role = user.role || Role.MEMBER;
         }
-        // console.log({ USER: user });
-        if (!token.sub) return token;
-
-        const existingUser = await db.userAccount.findUnique({
-          where: { id: token.sub },
-        });
-
-        if (existingUser) {
-          token.username = existingUser.username;
-          token.role = existingUser.role;
-        }
+        return token;
       } catch (error) {
         console.error("Error fetching user data:", error);
       }

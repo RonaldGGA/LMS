@@ -1,85 +1,59 @@
+import {
+  DEFAULT_LOGIN_REDIRECT,
+  authRoutes,
+  publicRoutes,
+  apiAuthPrefix,
+  adminRoutes,
+} from "@/routes";
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { auth } from "./auth";
 import { Role } from "@prisma/client";
 
-import { NextRequest } from "next/server";
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
+  const session = req.auth;
 
-export async function middleware(req: NextRequest) {
-  const {
-    nextUrl: { pathname, origin },
-  } = req;
-
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
-  });
-
-  const isLoggedIn = !!token;
-  const userRole = token?.role || Role.MEMBER;
-
-  const publicRoutes = ["/", "/about", "/contact"];
-  const authRoutes = ["/auth/login", "/auth/register", "/auth/error"];
-  const adminRoutes = ["/dashboard", "/admin"];
-  const apiAuthRoutes = ["/api/auth"];
-
-  const isAuthRoute = ["/auth/login", "/auth/register", "/auth/error"].some(
-    (path) => pathname.startsWith(path)
+  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  const isAdminRoute = adminRoutes.some((path) =>
+    nextUrl.pathname.startsWith(path)
   );
-  // 3. Manejo de rutas de API
-  if (pathname.startsWith("/api")) {
-    if (!isLoggedIn && !apiAuthRoutes.some((r) => pathname.startsWith(r))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  //Awlays allow going to the apiauth
+  if (isApiAuthRoute) {
+    return NextResponse.next();
+  }
+  //allow to auth if not authenticated, if it is, dont allow
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
     return NextResponse.next();
   }
-
-  // If not logged in
-  if (!isLoggedIn && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/auth/login", origin));
-  }
-
-  // 4. Redirección para usuarios autenticados
-  if (isLoggedIn) {
-    if (authRoutes.some((r) => pathname.startsWith(r))) {
-      const redirectPath = ["LIBRARIAN", "SUPERADMIN"].includes(userRole)
-        ? "/dashboard"
-        : "/";
-      return NextResponse.redirect(new URL(redirectPath, origin));
+  //if is not public and isnt logged in dont allow going there
+  if (!isLoggedIn && !isPublicRoute) {
+    let callbackUrl = nextUrl.pathname;
+    console.log({ NEXT_URL: nextUrl.search });
+    if (nextUrl.search) {
+      console.log({ NEXT_SEARCH: nextUrl.search });
+      callbackUrl += nextUrl.search;
     }
-
-    if (
-      adminRoutes.some((r) => pathname.startsWith(r)) &&
-      userRole === Role.MEMBER
-    ) {
-      return NextResponse.redirect(new URL("/", origin));
-    }
+    const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+    return NextResponse.redirect(
+      new URL(`auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
+    );
   }
 
-  // 5. Protección de rutas privadas
-  if (
-    !isLoggedIn &&
-    !publicRoutes.includes(pathname) &&
-    !authRoutes.some((r) => pathname.startsWith(r))
-  ) {
-    const loginUrl = new URL("/auth/login", origin);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  if (isLoggedIn && isAdminRoute && session?.user.role === Role.MEMBER) {
+    const url = new URL("/error", req.url);
+    return NextResponse.redirect(url);
   }
+});
 
-  // 6. Headers de seguridad adicionales
-  const response = NextResponse.next();
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "DENY");
-
-  return response;
-}
-// middleware.ts
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
   ],
 };

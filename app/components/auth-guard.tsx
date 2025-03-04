@@ -1,29 +1,26 @@
-"use client";
+"use server";
 
-import React, { useEffect } from "react";
-import { useUserSession } from "../hooks/useUserSession";
-import { usePathname, useRouter } from "next/navigation";
+import React from "react";
+import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
+import { auth } from "@/auth";
 
-const AuthGuard = ({
+const AuthGuard = async ({
   children,
   admitedRoles = [Role.MEMBER, Role.LIBRARIAN, Role.SUPERADMIN],
 }: {
   children: React.ReactNode;
   admitedRoles?: Role[];
 }) => {
-  const session = useUserSession();
-  const router = useRouter();
-  const pathname = usePathname();
+  const session = await auth();
 
-  useEffect(() => {
-    // if (!session) {
-    //   router.push(`/auth/login?callbackUrl=${pathname}`);
-    // } else if (!admitedRoles.includes(session.role)) {
-    //   router.push("/");
-    // }
-    console.log("GUARDED");
-  }, [session, admitedRoles, router, pathname]);
+  if (!session) {
+    redirect("/auth/login");
+  }
+
+  if (!admitedRoles.includes(session.user.role)) {
+    redirect("/");
+  }
 
   return <>{children}</>;
 };

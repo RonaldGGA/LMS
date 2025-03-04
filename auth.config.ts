@@ -1,43 +1,57 @@
 import Credentials from "next-auth/providers/credentials";
-import { loginUser } from "./actions/auth-user";
-import type { NextAuthConfig } from "next-auth";
+import { AuthError, type NextAuthConfig } from "next-auth";
+import { loginSchema } from "./zod-schemas";
+import prisma from "./lib/prisma";
+import bcrypt from "bcryptjs";
 
 export default {
   providers: [
     Credentials({
       credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" },
+        username: {},
+        password: {},
       },
       async authorize(credentials) {
         try {
-          const result = await loginUser({
-            username: credentials.username as string,
-            password: credentials.password as string,
+          const { success, error, data } = loginSchema.safeParse(credentials);
+          // Input validation
+          if (!success) {
+            throw new Error(error.message);
+          }
+
+          // Find user in database
+          const dbUser = await prisma.userAccount.findFirst({
+            where: {
+              username: data.username || "",
+            },
           });
 
-          if (!result.data) {
-            // 🔥 Formato crítico para NextAuth
-            throw new Error(
-              JSON.stringify({
-                code: "INVALID_CREDENTIALS",
-                message: "Correo o contraseña incorrectos",
-              })
-            );
+          if (!dbUser) {
+            throw new Error("User not found");
           }
 
-          if (result.data && !result.error && result.success) {
-            return result.data;
-          }
-          return null;
-        } catch (error) {
-          throw new Error(
-            JSON.stringify({
-              code: "AUTH_ERROR",
-              message:
-                error instanceof Error ? error.message : "Error desconocido",
-            })
+          // Validate password
+          const validatePassword = await bcrypt.compare(
+            data.password,
+            dbUser.password
           );
+
+          if (!validatePassword) {
+            throw new Error("Invalid password");
+          }
+
+          const user = {
+            id: dbUser.id,
+            name: dbUser.username,
+            role: dbUser.role,
+          };
+
+          return user;
+        } catch (error) {
+          if (error instanceof AuthError) {
+            throw new Error(error.message);
+          }
+          throw new Error("Could not authorize the user");
         }
       },
     }),

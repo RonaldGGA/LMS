@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import EditProfile from "./components/edit-profile";
 import ShowProfile from "./components/show-profile";
 import NextImprovements from "../components/next-improvements";
-import AuthGuard from "../components/auth-guard";
 
 export type UserProfile = {
   username: string;
@@ -65,36 +64,34 @@ const Profile = () => {
   ];
 
   return (
-    <AuthGuard>
-      <div className="container w-full p-4">
-        <div className="grid grid-cols-1 gap-4 flex-1">
-          {isEditing ? (
-            <EditProfile
-              username={dbUserData.username}
-              DNI={dbUserData.dni}
-              profileImg={dbUserData.img}
-              oldPassword={dbUserData.password}
-              toggleEdit={() => setIsEditing(false)}
-            />
-          ) : (
-            <ShowProfile
-              toogleEdit={() => setIsEditing(true)}
-              isEditing={isEditing}
-              username={dbUserData.username}
-              createdAt={dbUserData.createdAt}
-              DNI={dbUserData.dni}
-            />
-          )}
-        </div>
-        <NextImprovements className={"mt-10 space-y-5"}>
-          <ul className="space-y-2">
-            {next.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </NextImprovements>
+    <div className="container w-full p-4">
+      <div className="grid grid-cols-1 gap-4 flex-1">
+        {isEditing ? (
+          <EditProfile
+            username={dbUserData.username}
+            DNI={dbUserData.dni}
+            profileImg={dbUserData.img}
+            oldPassword={dbUserData.password}
+            toggleEdit={() => setIsEditing(false)}
+          />
+        ) : (
+          <ShowProfile
+            toogleEdit={() => setIsEditing(true)}
+            isEditing={isEditing}
+            username={dbUserData.username}
+            createdAt={dbUserData.createdAt}
+            DNI={dbUserData.dni}
+          />
+        )}
       </div>
-    </AuthGuard>
+      <NextImprovements className={"mt-10 space-y-5"}>
+        <ul className="space-y-2">
+          {next.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </NextImprovements>
+    </div>
   );
 };
 

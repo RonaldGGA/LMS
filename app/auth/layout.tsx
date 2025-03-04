@@ -2,7 +2,7 @@ import NextImprovements from "../components/next-improvements";
 import { auth } from "@/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 
 export default async function AuthLayout({
   children,
@@ -39,7 +39,7 @@ export default async function AuthLayout({
             </div>
 
             <div className="relative w-full aspect-square rounded-xl overflow-hidden border-4 border-white/20">
-              <CldImage
+              <Image
                 src="/login.jpg"
                 alt="Library"
                 fill
