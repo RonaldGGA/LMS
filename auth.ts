@@ -9,6 +9,12 @@ interface CustomAdapterUser extends AdapterUser {
   role?: Role;
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    role: Role;
+  }
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -49,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       if (token.sub && session.user) {
         session.user.id = token.sub;
-        session.user.role = token.role as Role;
+        session.user.role = token.role;
       }
       return session;
     },

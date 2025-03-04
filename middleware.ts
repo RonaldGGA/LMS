@@ -5,51 +5,75 @@ import { Role } from "@prisma/client";
 import { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const { nextUrl } = req;
+  const {
+    nextUrl: { pathname, origin },
+  } = req;
 
   const token = await getToken({
     req,
-    secret: process.env.AUTH_SECRET || "fallback_secret", // ✅ Agrega fallback
-    secureCookie: process.env.NODE_ENV === "production", // ✅ Cookie segura en prod
+    secret: process.env.AUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === "production",
   });
-  const isLoggedIn = !!token;
-  const isAdminRoute = nextUrl.pathname.startsWith("/dashboard");
-  const isAuthRoute = ["/auth/login", "/auth/register", "/auth/error"].some(
-    (path) => nextUrl.pathname.startsWith(path)
-  );
-  const isApiRoute = nextUrl.pathname.startsWith("/api");
 
-  if (isApiRoute) {
-    NextResponse.next();
+  const isLoggedIn = !!token;
+  const userRole = token?.role || Role.MEMBER;
+
+  const publicRoutes = ["/", "/about", "/contact"];
+  const authRoutes = ["/auth/login", "/auth/register", "/auth/error"];
+  const adminRoutes = ["/dashboard", "/admin"];
+  const apiAuthRoutes = ["/api/auth"];
+
+  const isAuthRoute = ["/auth/login", "/auth/register", "/auth/error"].some(
+    (path) => pathname.startsWith(path)
+  );
+  // 3. Manejo de rutas de API
+  if (pathname.startsWith("/api")) {
+    if (!isLoggedIn && !apiAuthRoutes.some((r) => pathname.startsWith(r))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.next();
   }
 
   // If not logged in
   if (!isLoggedIn && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/auth/login", nextUrl.origin));
+    return NextResponse.redirect(new URL("/auth/login", origin));
   }
 
-  // If logged in
+  // 4. Redirección para usuarios autenticados
   if (isLoggedIn) {
-    // handle auth routes
-    if (isAuthRoute) {
-      if (
-        token &&
-        (token.role === Role.LIBRARIAN || token.role === Role.SUPERADMIN)
-      ) {
-        return NextResponse.redirect(new URL("/dashboard", nextUrl.origin));
-      }
-      return NextResponse.redirect(new URL("/", nextUrl));
+    if (authRoutes.some((r) => pathname.startsWith(r))) {
+      const redirectPath = ["LIBRARIAN", "SUPERADMIN"].includes(userRole)
+        ? "/dashboard"
+        : "/";
+      return NextResponse.redirect(new URL(redirectPath, origin));
     }
-    // handle admin routes
-    if (isAdminRoute) {
-      if (token && token.role === Role.MEMBER) {
-        NextResponse.redirect(new URL("/", nextUrl.origin));
-      }
+
+    if (
+      adminRoutes.some((r) => pathname.startsWith(r)) &&
+      userRole === Role.MEMBER
+    ) {
+      return NextResponse.redirect(new URL("/", origin));
     }
   }
-  NextResponse.next();
-}
 
+  // 5. Protección de rutas privadas
+  if (
+    !isLoggedIn &&
+    !publicRoutes.includes(pathname) &&
+    !authRoutes.some((r) => pathname.startsWith(r))
+  ) {
+    const loginUrl = new URL("/auth/login", origin);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // 6. Headers de seguridad adicionales
+  const response = NextResponse.next();
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+
+  return response;
+}
 // middleware.ts
 export const config = {
   matcher: [

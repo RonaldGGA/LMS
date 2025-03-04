@@ -1,11 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useMemo } from "react";
 import { Star, Bookmark, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { CldImage } from "next-cloudinary";
 
 interface CardBookProps {
   id: string;
@@ -67,7 +67,7 @@ const CardBook: React.FC<CardBookProps> = ({
 
         {/* Image Section */}
         <div className="relative aspect-[6/4] max-h-[300px] bg-gray-50">
-          <Image
+          <CldImage
             src={img || "/default-book.webp"}
             alt={title}
             fill
