@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UserCreationDialog from "./components/user-creation-dialog";
 import UserEditDialog from "./components/user-editing";
-import NextImprovements from "@/app/components/next-improvements";
+// import NextImprovements from "@/app/components/next-improvements";
 import {
   Tooltip,
   TooltipContent,
@@ -128,14 +128,14 @@ const UsersDashboardPage = () => {
     return <div className="p-6">Unauthorized access</div>;
   }
 
-  const next = [
-    "Implement user status handling online/offline",
-    "Implement unique user view page for the admin",
-    "Implement user loans and request handling",
-    "implement a better actions ui",
-    "Improve user creatin requirements, actually an admin can create invalid users",
-    "Implement pagination, table pagination and better mobile ux and ui",
-  ];
+  // const next = [
+  //   "Implement user status handling online/offline",
+  //   "Implement unique user view page for the admin",
+  //   "Implement user loans and request handling",
+  //   "implement a better actions ui",
+  //   "Improve user creatin requirements, actually an admin can create invalid users",
+  //   "Implement pagination, table pagination and better mobile ux and ui",
+  // ];
 
   return (
     <div className="p-6 space-y-6 bg-library-dark text-ivory-50 rounded-xl shadow-2xl border border-library-midnight">

@@ -7,7 +7,7 @@ import { getUserForProfile } from "@/data/getUser";
 import toast from "react-hot-toast";
 import EditProfile from "./components/edit-profile";
 import ShowProfile from "./components/show-profile";
-import NextImprovements from "../components/next-improvements";
+// import NextImprovements from "../components/next-improvements";
 
 export type UserProfile = {
   username: string;
@@ -61,11 +61,11 @@ const Profile = () => {
   if (!dbUserData) {
     return <>User not found</>;
   }
-  const next = [
-    "Make this page prettier",
-    "Show more information",
-    "Implement better loading states ",
-  ];
+  // const next = [
+  //   "Make this page prettier",
+  //   "Show more information",
+  //   "Implement better loading states ",
+  // ];
 
   return (
     <div className="container w-full p-4">

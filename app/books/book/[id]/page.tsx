@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Clock, Plus } from "lucide-react";
 import BookSkeleton from "./components/Book-skeleton";
 import { format } from "date-fns";
-import NextImprovements from "@/app/components/next-improvements";
+// import NextImprovements from "@/app/components/next-improvements";
 
 type BigUser = {
   role: Role;
@@ -228,11 +228,11 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     return <BookSkeleton />;
   }
 
-  const next = [
-    "Implement a better loading state and handling while changing from issued, pending, etc...",
-    "Implement popularity logic, add it to the database",
-    "Implement  better image optimization",
-  ];
+  // const next = [
+  //   "Implement a better loading state and handling while changing from issued, pending, etc...",
+  //   "Implement popularity logic, add it to the database",
+  //   "Implement  better image optimization",
+  // ];
 
   return (
     <div className="min-h-screen bg-ivory-50 py-8">

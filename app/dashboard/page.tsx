@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import NextImprovements from "../components/next-improvements";
+// import NextImprovements from "../components/next-improvements";
 
 type DashboardRecentLoans = {
   id: string;
@@ -60,14 +60,14 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const next = [
-    "Implement manage Loans",
-    "Implement manage requests",
-    "Implement manage deposits",
-    "Implement manage notifications",
-    "Implement system general settings ",
-    "Implement advanced reports ",
-  ];
+  // const next = [
+  //   "Implement manage Loans",
+  //   "Implement manage requests",
+  //   "Implement manage deposits",
+  //   "Implement manage notifications",
+  //   "Implement system general settings ",
+  //   "Implement advanced reports ",
+  // ];
 
   useEffect(() => {
     const fetchData = async () => {

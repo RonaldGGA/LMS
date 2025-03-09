@@ -7,7 +7,7 @@ import Head from "next/head"; // Import Head for metadata
 import CardBook from "./components/card-book";
 import { SkeletonDemo } from "./components/skeleton-demo";
 import { searchedBooks } from "@/types";
-import NextImprovements from "./components/next-improvements";
+// import NextImprovements from "./components/next-improvements";
 import Search from "./components/search";
 
 const Home = () => {
@@ -17,11 +17,11 @@ const Home = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const next = [
-    "Implement search by category",
-    "Implement an endless book searching",
-    "Implement filter searching by deposit, category, states, popular",
-  ];
+  // const next = [
+  //   "Implement search by category",
+  //   "Implement an endless book searching",
+  //   "Implement filter searching by deposit, category, states, popular",
+  // ];
 
   return (
     <>

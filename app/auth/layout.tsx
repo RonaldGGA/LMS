@@ -1,4 +1,4 @@
-import NextImprovements from "../components/next-improvements";
+// import NextImprovements from "../components/next-improvements";
 import { auth } from "@/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -19,12 +19,12 @@ export default async function AuthLayout({
     redirect(user.role === Role.MEMBER ? "/" : "/dashboard");
   }
 
-  const next = [
-    "Improve code logic for a better developer understanding",
-    "change the any line and actually implement a type",
-    "Make this page a little more beautiful",
-    "Improve Error total handling",
-  ];
+  // const next = [
+  //   "Improve code logic for a better developer understanding",
+  //   "change the any line and actually implement a type",
+  //   "Make this page a little more beautiful",
+  //   "Improve Error total handling",
+  // ];
 
   return (
     <div>
