@@ -2,6 +2,87 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { CategoryPlus } from "@/types";
 
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const currentBook = await prisma.bookTitle.findUnique({
+    where: {
+      id: params.id,
+    },
+
+    select: {
+      id: true,
+      authorId: true,
+      categories: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!currentBook) {
+    return new NextResponse("Book not found", { status: 404 });
+  }
+
+  // Recomendations by same author
+
+  const sameAuthor = await prisma.bookTitle.findMany({
+    where: {
+      authorId: currentBook.authorId,
+      NOT: { id: currentBook.id },
+    },
+    take: 3,
+    orderBy: [{ loanCount: "desc" }, { averageRating: "desc" }],
+  });
+
+  // Recomnendations by same categories
+
+  const categoryIds = currentBook.categories.map((cat) => cat.id);
+
+  const sameCategories = await prisma.bookTitle.findMany({
+    where: {
+      categories: {
+        some: {
+          id: {
+            in: categoryIds,
+          },
+        },
+      },
+      NOT: { id: currentBook.id },
+    },
+    take: 3,
+    orderBy: [{ loanCount: "desc" }, { averageRating: "desc" }],
+  });
+
+  // Recomendations by usually borrowed together books(VERY simple)
+
+  const frequentlyTogether = await prisma.bookTitle.findMany({
+    where: {
+      id: {
+        not: currentBook.id,
+      },
+      loanCount: {
+        gt: 5,
+      },
+    },
+    orderBy: [{ loanCount: "desc" }, { averageRating: "desc" }],
+    take: 3,
+  });
+
+  // Combine and unduplicate
+  const recommendations = [
+    ...sameAuthor,
+    ...sameCategories,
+    ...frequentlyTogether,
+  ]
+    .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+    .slice(0, 5);
+
+  return NextResponse.json(recommendations);
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }

@@ -16,7 +16,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { BookCopyIcon, DownloadIcon, FilterIcon, User } from "lucide-react";
-import LineChart from "./components/charts/line-chart";
 import {
   Pagination,
   PaginationContent,
@@ -128,28 +127,6 @@ export default function DashboardPage() {
           description="Security holdings"
         />
       </div>
-
-      {/* Charts Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Loan Activity Example</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center ">
-          <LineChart
-            data={{
-              labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-              datasets: [
-                {
-                  label: "Loans",
-                  data: [65, 59, 80, 81, 56, 55],
-                  borderColor: "rgb(59, 130, 246)",
-                  tension: 0.1,
-                },
-              ],
-            }}
-          />
-        </CardContent>
-      </Card>
 
       {/* Recent Loans Table */}
       <Card>

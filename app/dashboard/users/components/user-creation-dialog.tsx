@@ -89,7 +89,7 @@ export default function UserCreationDialog() {
   };
 
   return (
-    <DialogContent className="max-w-md">
+    <DialogContent className="bg-library-dark text-ivory-50">
       <DialogHeader>
         <DialogTitle>Create New User</DialogTitle>
         <DialogDescription>
@@ -103,7 +103,9 @@ export default function UserCreationDialog() {
 
           {/* Username */}
           <div className="space-y-2">
-            <Label htmlFor="username">Username *</Label>
+            <Label htmlFor="username" className="text-ivory-50">
+              Username *
+            </Label>
             <Input
               id="username"
               {...register("username", {
@@ -114,6 +116,7 @@ export default function UserCreationDialog() {
                 },
               })}
               placeholder="Enter username"
+              className="bg-ivory-50 text-library-dark"
             />
             {errors.username && (
               <p className="text-sm text-destructive">
@@ -124,7 +127,9 @@ export default function UserCreationDialog() {
 
           {/* DNI */}
           <div className="space-y-2">
-            <Label htmlFor="dni">DNI *</Label>
+            <Label htmlFor="dni" className="text-ivory-50">
+              DNI *
+            </Label>
             <Input
               id="dni"
               {...register("dni", {
@@ -135,6 +140,7 @@ export default function UserCreationDialog() {
                 },
               })}
               placeholder="Enter DNI (11 digits)"
+              className="bg-ivory-50 text-library-dark"
             />
             {errors.dni && (
               <p className="text-sm text-destructive">
@@ -145,7 +151,9 @@ export default function UserCreationDialog() {
 
           {/* Password */}
           <div className="space-y-2">
-            <Label htmlFor="password">Password *</Label>
+            <Label htmlFor="password" className="text-ivory-50">
+              Password *
+            </Label>
             <Input
               id="password"
               type="password"
@@ -157,6 +165,7 @@ export default function UserCreationDialog() {
                 },
               })}
               placeholder="Enter password"
+              className="bg-ivory-50 text-library-dark"
             />
             {errors.password && (
               <p className="text-sm text-destructive">
@@ -167,7 +176,9 @@ export default function UserCreationDialog() {
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password *</Label>
+            <Label htmlFor="confirmPassword" className="text-ivory-50">
+              Confirm Password *
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -176,6 +187,7 @@ export default function UserCreationDialog() {
                   value === watch("password") || "Passwords do not match",
               })}
               placeholder="Confirm password"
+              className="bg-ivory-50 text-library-dark"
             />
             {errors.confirmPassword && (
               <p className="text-sm text-destructive">
@@ -186,7 +198,9 @@ export default function UserCreationDialog() {
 
           {/* Role Selector */}
           <div className="space-y-2">
-            <Label htmlFor="role">User Role *</Label>
+            <Label htmlFor="role" className="text-ivory-50">
+              User Role *
+            </Label>
             <Select
               {...register("role", { required: "Role is required" })}
               defaultValue={Role.MEMBER}
@@ -216,12 +230,21 @@ export default function UserCreationDialog() {
 
         <DialogFooter>
           <DialogClose>
-            <Button type="button" onClick={cancel}>
+            <Button
+              type="button"
+              onClick={cancel}
+              className="bg-library-midnight text-ivory-50"
+            >
               Cancel
             </Button>
           </DialogClose>
 
-          <Button type="submit" aria-disabled={loading} disabled={loading}>
+          <Button
+            type="submit"
+            aria-disabled={loading}
+            disabled={loading}
+            className="bg-golden-amber text-library-dark hover:text-ivory-50"
+          >
             Create User
           </Button>
         </DialogFooter>

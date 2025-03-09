@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Role } from "@prisma/client";
 import { toast } from "react-hot-toast";
 import { useUserSession } from "@/app/hooks/useUserSession";
-import { MoreVerticalIcon, PlusIcon } from "lucide-react";
+import { MoreVerticalIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,12 @@ import {
 import UserCreationDialog from "./components/user-creation-dialog";
 import UserEditDialog from "./components/user-editing";
 import NextImprovements from "@/app/components/next-improvements";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type dashboardUser = {
   id: string;
@@ -108,10 +114,10 @@ const UsersDashboardPage = () => {
       toast.error("Error updating the role of the user");
     }
   };
-  // const handleCopyId = (userId: string) => {
-  //   navigator.clipboard.writeText(userId);
-  //   toast.success("Copied id");
-  // };
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(session!.id!);
+    toast.success("Copied id");
+  };
 
   if (loading) {
     return <>LOADING...</>;
@@ -132,138 +138,186 @@ const UsersDashboardPage = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col  gap-4 justify-between items-start sm:items-center">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center w-full">
-          <Input
-            placeholder="Search by name or ID..."
-            className="max-w-md text-black"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Create New User
-              </Button>
-            </DialogTrigger>
-
-            <UserCreationDialog />
-          </Dialog>
-        </div>
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        ) : (
-          <>
-            <Table className="bg-gray-200 rounded">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User ID</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Active Loans</TableHead>
-                  <TableHead className="text-center">
-                    Pending Requests
-                  </TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium ">
-                      {/* <Copy width={15} onClick={() => handleCopyId(user.id)} /> */}
-                      {user.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell>{user.username}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={user.role}
-                        onValueChange={(value: Role) =>
-                          updateRole(user.id, value)
-                        }
-                        disabled={session.id === user.id}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.values(Role).map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      {/* <Badge variant={user.isActive ? "default" : "secondary"}>
-                        {user.isActive ? "Online" : "Offline"}
-                      </Badge> */}
-                      <Badge variant={"default"}>Online</Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user._count?.bookLoans || 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user._count?.bookLoanRequests || 0}
-                    </TableCell>
-                    <TableCell className="flex items-center justify-center gap-2">
-                      <Button
-                        variant={"outline"}
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        Edit
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVerticalIcon className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(user.id)}
-                            disabled={session.id === user.id}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {users.length === 0 && (
-              <div className="text-center w-full p-3 text-lg text-gray-700">
-                No Users found with that id or name
-              </div>
-            )}
-          </>
-        )}
+    <div className="p-6 space-y-6 bg-library-dark text-ivory-50 rounded-xl shadow-2xl border border-library-midnight">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <Input
+          placeholder="Search by name or ID..."
+          className="max-w-md text-library-dark bg-ivory-50 border-2 border-golden-amber focus:ring-2 focus:ring-golden-amber"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-golden-amber hover:bg-golden-amber/90 text-library-dark font-bold transition-transform hover:scale-105">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Create New User
+            </Button>
+          </DialogTrigger>
+          <UserCreationDialog />
+        </Dialog>
       </div>
-      {/* TODO: VERIFICATION AND IMPLEMENTATION */}
+
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton
+              key={i}
+              className="h-12 w-full bg-library-midnight/50 animate-pulse"
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          <Table className="bg-library-midnight/50 rounded-lg overflow-hidden">
+            <TableHeader className="bg-golden-amber">
+              <TableRow>
+                {[
+                  "User ID",
+                  "Username",
+                  "Role",
+                  "Status",
+                  "Active Loans",
+                  "Pending Requests",
+                  "Actions",
+                ].map((header) => (
+                  <TableHead
+                    key={header}
+                    className="text-library-dark font-black text-center"
+                  >
+                    {header}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow
+                  key={user.id}
+                  className="hover:bg-library-midnight/30 transition-colors"
+                >
+                  <TableCell
+                    onClick={handleCopyId}
+                    className="font-medium text-golden-amber text-center"
+                  >
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span>{user.id.slice(0, 8)}</span>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-ivory-50 text-library-dark">
+                          <p>Click to copy ID</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell className="text-center">{user.username}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={user.role}
+                      onValueChange={(value: Role) =>
+                        updateRole(user.id, value)
+                      }
+                      disabled={session.id === user.id}
+                    >
+                      <SelectTrigger className="w-32 bg-ivory-50 text-library-dark border-2 border-golden-amber">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-ivory-50 text-library-dark border-2 border-golden-amber">
+                        {Object.values(Role).map((role) => (
+                          <SelectItem
+                            key={role}
+                            value={role}
+                            className="hover:bg-golden-amber/20"
+                          >
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      variant="default"
+                      className="bg-emerald-500 text-ivory-50 "
+                    >
+                      Online
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center text-golden-amber font-bold">
+                    {user._count?.bookLoans || 0}
+                  </TableCell>
+                  <TableCell className="text-center text-golden-amber font-bold">
+                    {user._count?.bookLoanRequests || 0}
+                  </TableCell>
+                  <TableCell className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedUser(user)}
+                      className="border-golden-amber text-golden-amber hover:bg-golden-amber/10"
+                    >
+                      Edit
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-golden-amber hover:bg-golden-amber/10"
+                        >
+                          <MoreVerticalIcon className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-library-dark border border-golden-amber">
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(user.id)}
+                          disabled={session.id === user.id}
+                          className="text-ivory-50 hover:bg-golden-amber/20"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {users.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-[40vh] bg-library-midnight/50 rounded-xl">
+              <SearchIcon className="h-16 w-16 text-golden-amber mb-4" />
+              <h3 className="text-xl font-bold text-ivory-50">
+                No users found
+              </h3>
+              <p className="text-golden-amber/80">
+                Try adjusting your search criteria
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
       {selectedUser && (
         <UserEditDialog
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
         />
       )}
+
       <NextImprovements>
-        <ol className="space-y-2 mt-3">
-          {next.map((item: string, index: number) => (
-            <li key={index}>
-              {index + 1} - {item}
-            </li>
-          ))}
-        </ol>
+        <div className="mt-8 p-4 bg-library-midnight/50 rounded-lg">
+          <h4 className="text-golden-amber font-bold mb-3">
+            Next Improvements
+          </h4>
+          <ol className="space-y-2 text-ivory-50/80">
+            {next.map((item: string, index: number) => (
+              <li key={index} className="flex items-center">
+                <span className="text-golden-amber mr-2">▶</span>
+                {index + 1}. {item}
+              </li>
+            ))}
+          </ol>
+        </div>
       </NextImprovements>
     </div>
   );

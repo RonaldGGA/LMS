@@ -22,13 +22,22 @@ export default auth((req) => {
   );
 
   //Awlays allow going to the apiauth
+
   if (isApiAuthRoute) {
     return NextResponse.next();
   }
   //allow to auth if not authenticated, if it is, dont allow
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      if (session?.user.role === Role.MEMBER) {
+        return NextResponse.redirect(
+          new URL(DEFAULT_LOGIN_REDIRECT[0], nextUrl)
+        );
+      } else {
+        return NextResponse.redirect(
+          new URL(DEFAULT_LOGIN_REDIRECT[1], nextUrl)
+        );
+      }
     }
     return NextResponse.next();
   }
@@ -54,6 +63,12 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/",
+    "/books(/.*)?",
+    "/dashboard(/.*)?",
+    "/api/((?!auth).*)",
+    "/auth",
+    "/profile(/.*)?",
+    "/notifications(/.*)?",
   ],
 };

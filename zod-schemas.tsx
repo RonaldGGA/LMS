@@ -209,19 +209,29 @@ export const updateProfileSchema = z
     }
   });
 
+export const categorySchema = z.object({ id: z.string(), name: z.string() });
+
 export const bookSchema = z.object({
-  book_name: z.string().min(2, {
-    message: "Invalid book name, min 2 characters",
-  }),
-  author: z.string(),
-  categories: z.array(z.string()),
-  price: priceSchema,
-  img: z.string(),
-  description: z.string(),
+  title: z.string().min(3, "Mínimo 3 caracteres"),
+  price: z
+    .number({
+      required_error: "El precio es requerido",
+      invalid_type_error: "El precio debe ser un numero",
+    })
+    .min(0.0, "El precio es a partir de 0"),
+  img: z.string().optional(),
+  author: z.string().min(3, "Minimo 3 caracteres"),
+  categories: z
+    .array(categorySchema)
+    .min(1, "Se requiere al menos 1 categoría"),
+  description: z
+    .string()
+    .min(50, "Al menos 50 caracteres necesarios")
+    .max(5000, "Máximo 500 caracteres"),
 });
 
 export const searchSchema = z.object({
-  title: z.string(),
+  searchTerm: z.string(),
 });
 
 export const ratingSchema = z.object({

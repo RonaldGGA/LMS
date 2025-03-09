@@ -1,4 +1,4 @@
-const DEFAULT_LOGIN_REDIRECT = "/";
+const DEFAULT_LOGIN_REDIRECT = ["/", "/dashboard"];
 const authRoutes = [
   "/auth/login",
   "/auth/register",

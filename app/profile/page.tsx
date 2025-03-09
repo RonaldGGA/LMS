@@ -51,7 +51,11 @@ const Profile = () => {
   }, [userId, router]);
 
   if (loading) {
-    return <>LOADING....</>;
+    return (
+      <div className="flex items-center justify-center h-[200px] bg-ivory-50 rounded-lg">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-golden-amber"></div>
+      </div>
+    );
   }
 
   if (!dbUserData) {
@@ -76,11 +80,10 @@ const Profile = () => {
           />
         ) : (
           <ShowProfile
-            toogleEdit={() => setIsEditing(true)}
-            isEditing={isEditing}
+            toggleEdit={() => setIsEditing(true)}
             username={dbUserData.username}
-            createdAt={dbUserData.createdAt}
             DNI={dbUserData.dni}
+            userImg={dbUserData.img}
           />
         )}
       </div>

@@ -1,7 +1,7 @@
 import { BookLoanRequestStatus, BookLoanStatus } from "@prisma/client";
 
 export type CategoryPlus = BookCategory & {
-  isNew: boolean;
+  isNew?: boolean;
 };
 
 declare global {
@@ -90,3 +90,5 @@ export type BigRequest = {
   };
   description: string | null;
 };
+
+export type BookFormValues = z.infer<typeof bookSchema>;

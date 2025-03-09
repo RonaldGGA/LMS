@@ -96,7 +96,7 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
     <div className="fixed bottom-6 right-6 bg-white shadow-xl rounded-lg p-4 border border-gray-200 w-64">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-blue-600" />
+          <AlertCircle className="w-5 h-5 text-golden-amber" />
           Active Loans
         </h3>
         <X
@@ -122,10 +122,10 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
         {timeLeft && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-600" />
+              <Clock className="w-4 h-4 text-library-midnight" />
               Due in
             </span>
-            <span className="font-medium text-blue-600">
+            <span className="font-medium text-library-midnight">
               {timeLeft || "..."}
             </span>
           </div>
@@ -133,8 +133,8 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
       </div>
 
       <Link
-        href={`/issued?id=${user_id}`}
-        className="mt-4 w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center justify-center gap-2"
+        href={`/books/issued?id=${user_id}`}
+        className="mt-4 w-full text-center text-sm font-medium text-library-midnight hover:text-golden-amber flex items-center justify-center gap-2"
       >
         <Info className="w-4 h-4" />
         View Details

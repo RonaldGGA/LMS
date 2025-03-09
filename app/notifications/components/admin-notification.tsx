@@ -84,8 +84,7 @@ const AdminNotification: React.FC<AdminNotificationProps> = ({
             size="sm"
             className="gap-2 w-full"
           >
-            {disabled ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
-            <XCircle className="w-4 h-4" />
+            {disabled ? <Loader2 className="animate-spin" /> : <XCircle />}
             Decline Request
           </Button>
         </div>

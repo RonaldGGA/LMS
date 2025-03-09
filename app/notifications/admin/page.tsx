@@ -93,32 +93,57 @@ const NotificationsPage = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4 text-slate-800">
-        Pending Requests
-      </h1>
-
       {notifications?.length ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {notifications.map((item) => (
-            <AdminNotification
-              key={item.id}
-              title={item.bookCopy.bookTitle.title}
-              price={item.bookCopy.bookTitle.book_price}
-              requestDate={item.requestDate}
-              userId={item.userId}
-              handleAccept={() =>
-                handleAccept(item.id, item.bookCopy.bookTitle.id, item.userId)
-              }
-              handleReject={() => handleReject(item.id)}
-              disabled={loading}
-            />
-          ))}
-        </div>
+        <>
+          <h1 className="text-2xl font-semibold mb-4 text-slate-800">
+            Pending Requests
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {notifications.map((item) => (
+              <AdminNotification
+                key={item.id}
+                title={item.bookCopy.bookTitle.title}
+                price={item.bookCopy.bookTitle.book_price}
+                requestDate={item.requestDate}
+                userId={item.userId}
+                handleAccept={() =>
+                  handleAccept(item.id, item.bookCopy.bookTitle.id, item.userId)
+                }
+                handleReject={() => handleReject(item.id)}
+                disabled={loading}
+              />
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="flex flex-col items-center justify-center h-[60vh]">
-          <div className="text-center space-y-2 text-slate-500">
-            <p className="text-xl">No pending requests</p>
-            <p className="text-sm">All requests are up to date</p>
+        <div className="flex flex-col items-center justify-center h-[60vh] bg-gradient-to-br from-blue-50 to-ivory-50 rounded-xl mx-4 shadow-lg">
+          <div className="animate-bounce mb-8">
+            <svg
+              className="w-24 h-24 text-antique-gold"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-bold text-antique-gold mb-2 font-mono">
+              ¡Todo al día! 🎉
+            </h2>
+            <p className="text-lg text-library-dark font-semibold">
+              No hay solicitudes pendientes
+            </p>
+            <p className="text-sm text-library-dark max-w-md mx-auto">
+              Tu bandeja de solicitudes está completamente actualizada. ¡Buen
+              trabajo! Cuando lleguen nuevas solicitudes, aparecerán aquí.
+            </p>
           </div>
         </div>
       )}

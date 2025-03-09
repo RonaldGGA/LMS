@@ -1,8 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function SkeletonDemo() {
+export function SkeletonDemo({ className }: { className?: string }) {
   return (
-    <div className="relative group bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all">
+    <div
+      className={`relative group bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all  ${className}"`}
+    >
       <div className="overflow-hidden">
         {/* Promo Badge Skeleton */}
         <div className="absolute top-3 right-3 z-10">

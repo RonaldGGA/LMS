@@ -25,6 +25,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  // En _app.js o layout principal
 
   let dbUser = null;
   if (session?.user?.id) {
@@ -34,12 +35,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <SessionProvider refetchInterval={300} refetchOnWindowFocus={true}>
-        <body
-          className={`min-h-screen bg-gradient-to-b from-gray-50 to-white relative font-${andika}`}
-        >
+        <body className={`min-h-screen bg-ivory-50 relative font-${andika}`}>
           <Toaster />
           <HomeNavbar user={dbUser} />
-          <main className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8 pb-40">
+          <main className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px] py-8 pb-40">
             {children}
 
             {dbUser && dbUser.bookLoans.length > 0 && (
