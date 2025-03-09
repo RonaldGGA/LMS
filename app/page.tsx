@@ -129,7 +129,7 @@ const Home = () => {
           </div>
 
           {/* Next Improvements Section */}
-          <NextImprovements className="mt-10 space-y-5 text-ivory-50 bg-gray-500">
+          {/* <NextImprovements className="mt-10 space-y-5 text-ivory-50 bg-gray-500">
             <ul className="space-y-2 list-disc pl-5 marker:text-golden-amber">
               {next.map((item, i) => (
                 <li
@@ -140,7 +140,7 @@ const Home = () => {
                 </li>
               ))}
             </ul>
-          </NextImprovements>
+          </NextImprovements> */}
         </div>
       </div>
     </>

@@ -372,13 +372,13 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
         </div>
-        <NextImprovements className="mt-10 space-y-5 text-library-midnight">
+        {/* <NextImprovements className="mt-10 space-y-5 text-library-midnight">
           <ul className="space-y-2">
             {next.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
-        </NextImprovements>
+        </NextImprovements> */}
       </div>
     </div>
   );

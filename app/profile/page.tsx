@@ -87,13 +87,13 @@ const Profile = () => {
           />
         )}
       </div>
-      <NextImprovements className={"mt-10 space-y-5"}>
+      {/* <NextImprovements className={"mt-10 space-y-5"}>
         <ul className="space-y-2">
           {next.map((item, i) => (
             <li key={i}>{item}</li>
           ))}
         </ul>
-      </NextImprovements>
+      </NextImprovements> */}
     </div>
   );
 };

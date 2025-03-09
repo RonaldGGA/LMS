@@ -55,22 +55,20 @@ const LoginPage = () => {
 
   return (
     <div className="max-w-md mx-auto space-y-8">
-      {/* Encabezado con diseño temático */}
       <div className="text-center space-y-4">
         <div className="inline-flex bg-library-dark/5 p-4 rounded-2xl">
           <BookOpen className="h-12 w-12 text-library-dark" />
         </div>
         <h1 className="text-4xl font-serif font-bold text-library-dark">
-          Welcome to Alexandria
+          Welcome to Library Hub
         </h1>
         <p className="text-lg text-library-dark/80">
-          Access your digital library account
+          Access your digital library-managment account
         </p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Campo Usuario con micro-interacciones */}
           <FormField
             control={form.control}
             name="username"
@@ -86,15 +84,12 @@ const LoginPage = () => {
                       className="h-14 rounded-xl border-library-dark/20 focus:ring-2 focus:ring-antique-gold/50 text-library-dark placeholder:text-library-dark/40 hover:border-library-dark/30 transition-all"
                       {...field}
                     />
-                    {/* <LibraryCard className="h-5 w-5 absolute right-4 top-1/2 -translate-y-1/2 text-library-dark/40 group-focus-within:text-antique-gold" /> */}
                   </div>
                 </FormControl>
                 <FormMessage className="text-red-600/90 text-sm" />
               </FormItem>
             )}
           />
-
-          {/* Campo Contraseña con diseño mejorado */}
           <FormField
             control={form.control}
             name="password"
@@ -105,10 +100,11 @@ const LoginPage = () => {
                     Password
                   </FormLabel>
                   <Link
-                    href="/forgot-password"
-                    className="text-sm text-antique-gold hover:text-library-dark transition-colors"
+                    aria-disabled={true}
+                    href="#"
+                    className="aria-disabled:cursor-no-allowed aria-disabled:text-muted-foreground text-sm text-antique-gold hover:text-library-dark transition-colors"
                   >
-                    Forgot Password?
+                    Forgot Password? (ToDo)
                   </Link>
                 </div>
                 <FormControl>
@@ -139,7 +135,6 @@ const LoginPage = () => {
             )}
           />
 
-          {/* Botón de Login con feedback mejorado */}
           <Button
             type="submit"
             disabled={loading}
@@ -154,7 +149,6 @@ const LoginPage = () => {
             {loading ? "Authenticating..." : "Access Library"}
           </Button>
 
-          {/* Mensaje de error con diseño mejorado */}
           {errorMessage && (
             <div className="bg-red-50/80 p-4 rounded-xl border border-red-100 flex items-start gap-3 backdrop-blur-sm">
               <AlertCircle className="h-5 w-5 text-red-600/90 flex-shrink-0 mt-0.5" />
@@ -164,7 +158,6 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Sección de registro con diseño mejorado */}
           <div className="text-center space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

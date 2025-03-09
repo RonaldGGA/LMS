@@ -38,12 +38,14 @@ export default async function AuthLayout({
                 <div className="space-y-6 bg-antique-white/5 p-8 rounded-xl border border-antique-gold/20 backdrop-blur-sm">
                   <BookOpenIcon className="h-12 w-12 mx-auto text-antique-gold/40" />
                   <blockquote className="text-2xl font-serif font-medium leading-relaxed italic text-antique-gold">
-                    “Libros: naves que surcan los mares del tiempo”
+                    “Books are the quietest and most constant of friends; they
+                    are the most accessible and wisest of counselors, and the
+                    most patient of teachers”
                   </blockquote>
                   <div className="flex items-center justify-center space-x-3">
                     <div className="h-px w-16 bg-antique-gold/30" />
                     <p className="text-sm font-medium text-antique-gold/80">
-                      Francis Bacon
+                      Charles W. Eliot
                     </p>
                     <div className="h-px w-16 bg-antique-gold/30" />
                   </div>
@@ -62,7 +64,7 @@ export default async function AuthLayout({
 
                   <div className="absolute bottom-4 left-4 bg-antique-gold/90 px-3 py-1 rounded-md text-xs font-medium text-library-dark flex items-center">
                     <ArchiveIcon className="h-4 w-4 mr-2" />
-                    Colección Digitalizada 2024
+                    All books are physically available in our library
                   </div>
                 </div>
 
@@ -84,12 +86,12 @@ export default async function AuthLayout({
                           }`}
                         />
                         <span className="text-antique-gold/90">
-                          {isOpen ? "Abierto ahora" : "Cerrado ahora"}
+                          {isOpen ? "Open now" : "Closed Now"}
                         </span>
                         <span className="text-antique-gold/60">
                           {isOpen
-                            ? `Horario: ${openingHour}:00 - ${closingHour}:00`
-                            : `Abre a las ${openingHour}:00`}
+                            ? `Schedule: ${openingHour}:00 - ${closingHour}:00`
+                            : `Open at ${openingHour}:00`}
                         </span>
                       </div>
                     </div>
@@ -99,12 +101,11 @@ export default async function AuthLayout({
             </div>
 
             <div className="p-8 sm:p-12 lg:p-16 bg-ivory-50 relative">
-              {/* Contenido principal */}
               <div className="space-y-10">{children}</div>
             </div>
           </div>
         </div>
-        <div className="w-full items-center justify-start flex flex-col  ">
+        {/* <div className="w-full items-center justify-start flex flex-col  ">
           <NextImprovements className=" space-y-6 bg-gray-200 ">
             <ul className="space-y-3">
               {next.map((item, i) => (
@@ -115,7 +116,7 @@ export default async function AuthLayout({
               ))}
             </ul>
           </NextImprovements>
-        </div>
+        </div> */}
       </div>
     </div>
   );

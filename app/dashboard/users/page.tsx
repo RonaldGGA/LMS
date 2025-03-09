@@ -304,7 +304,7 @@ const UsersDashboardPage = () => {
         />
       )}
 
-      <NextImprovements>
+      {/* <NextImprovements>
         <div className="mt-8 p-4 bg-library-midnight/50 rounded-lg">
           <h4 className="text-golden-amber font-bold mb-3">
             Next Improvements
@@ -318,7 +318,7 @@ const UsersDashboardPage = () => {
             ))}
           </ol>
         </div>
-      </NextImprovements>
+      </NextImprovements> */}
     </div>
   );
 };
