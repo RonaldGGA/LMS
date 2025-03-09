@@ -12,6 +12,7 @@ export const getCategories = async (name: string) => {
           mode: "insensitive",
         },
       },
+      take: 10,
     });
     return {
       success: true,

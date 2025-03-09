@@ -37,11 +37,10 @@ import { Progress } from "@/components/ui/progress";
 
 interface RatingProps {
   bookInfo: BigBook;
-  setReload: () => void;
   userId: string;
 }
 
-const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
+const Rating: React.FC<RatingProps> = ({ bookInfo, userId }) => {
   const [open, setOpen] = useState(false);
   const [pickedStars, setPickedStars] = useState(0);
   const [hoverStars, setHoverStars] = useState(0);
@@ -84,7 +83,7 @@ const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
         throw new Error(result.error ? result.error : "Something went wrong");
       } else {
         toast.success("Thanks for your rating!");
-        setReload();
+        window.location.reload();
         setOpen(false);
         form.reset();
       }
@@ -117,7 +116,7 @@ const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
             className={cn(
               "w-6 h-6 transition-all duration-150",
               ratingValue <= value
-                ? "fill-blue-600 stroke-blue-600"
+                ? "fill-golden-amber stroke-golden-amber "
                 : "fill-gray-200 stroke-gray-300",
               interactive && "cursor-pointer hover:scale-125"
             )}
@@ -191,7 +190,7 @@ const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
   return (
     <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200 w-full md:max-w-md">
       <div className="flex items-center gap-3">
-        <BookOpen className="w-6 h-6 text-blue-600" />
+        <BookOpen className="w-6 h-6 text-library-midnight" />
         <h3 className="text-lg font-semibold">Reader Ratings</h3>
         <Badge variant="outline" className="ml-2">
           {totalRatings} reviews
@@ -202,7 +201,7 @@ const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
         <StarsRatingTooltip ratingDistribution={ratingDistribution}>
           <div className="space-y-2 flex-1">
             <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-blue-600">
+              <span className="text-4xl font-bold text-library-midnight">
                 {averageRating}
               </span>
               <div className="space-y-1">
@@ -272,7 +271,7 @@ const Rating: React.FC<RatingProps> = ({ bookInfo, setReload, userId }) => {
                         <Button
                           type="submit"
                           disabled={!pickedStars || form.formState.isSubmitting}
-                          className="bg-blue-600 hover:bg-blue-700"
+                          className="bg-library-midnight hover:bg-library-midnight"
                         >
                           {form.formState.isSubmitting ? (
                             <div className="flex items-center gap-2">

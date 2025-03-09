@@ -18,7 +18,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { updateProfile } from "@/actions/update-profile";
 import { debounce } from "lodash-es";
-import { Lock, User, XCircle } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ImageUpload } from "@/app/components/image-upload";
 
@@ -140,27 +140,28 @@ const EditProfile: React.FC<EditProfileProps> = ({
   };
 
   return (
-    <Card className="w-full max-w-2xl bg-white shadow-sm border border-gray-100 mx-auto">
-      <CardHeader className="pb-2">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <User className="w-6 h-6 text-blue-600" />
-          Edit Profile
-        </h2>
+    <Card className="w-full max-w-2xl bg-ivory-50 shadow-lg border border-golden-amber/20 mx-auto">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-golden-amber/10 rounded-full">
+            <Pencil className="w-6 h-6 text-golden-amber" />
+          </div>
+          <h2 className="text-2xl font-bold text-library-dark">Edit Profile</h2>
+        </div>
       </CardHeader>
 
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Sección de Imagen */}
+            {/* Profile Image Upload */}
             <FormField
-              control={form.control}
               name="profileImg"
               render={({ field }) => (
                 <FormItem className="flex flex-col items-center">
                   <div className="relative group">
-                    <div className="relative h-32 w-32 rounded-full border-4 border-white shadow-lg">
+                    <div className="relative group h-32 w-32">
                       {field.value ? (
-                        <>
+                        <div className="relative w-full h-full rounded-full border-4 border-golden-amber/20 shadow-md transition-all hover:border-golden-amber/40">
                           <Image
                             src={field.value}
                             alt="Profile"
@@ -170,22 +171,17 @@ const EditProfile: React.FC<EditProfileProps> = ({
                           <button
                             type="button"
                             onClick={() => form.setValue("profileImg", null)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
                           >
-                            <XCircle className="w-6 h-6" />
+                            <X className="w-5 h-5" />
                           </button>
-                        </>
-                      ) : (
-                        <div className="h-full w-full bg-gray-100 rounded-full flex items-center justify-center">
-                          <ImageUpload
-                            onSuccess={(url) => {
-                              form.setValue("profileImg", url);
-                              form.clearErrors("profileImg");
-                            }}
-                            isValue={!!field.value}
-                            type="user"
-                          />
                         </div>
+                      ) : (
+                        <ImageUpload
+                          type="user"
+                          onSuccess={(url) => form.setValue("profileImg", url)}
+                          isValue={!!profileImg}
+                        />
                       )}
                     </div>
                   </div>
@@ -193,101 +189,61 @@ const EditProfile: React.FC<EditProfileProps> = ({
               )}
             />
 
-            {/* Campos del Formulario */}
+            {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700">Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="h-12 rounded-lg"
-                        placeholder="JohnDoe123"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500 text-sm" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                name="DNI"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700">DNI</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="h-12 rounded-lg"
-                        placeholder="001-1234567-8"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500 text-sm" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                name="oldPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 flex items-center gap-2">
-                      <Lock className="w-4 h-4" />
-                      Current Password
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ? field.value : ""}
-                        type="password"
-                        className="h-12 rounded-lg"
-                        placeholder="••••••••"
-                        onBlur={() => form.trigger("oldPassword")}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500 text-sm" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 flex items-center gap-2">
-                      <Lock className="w-4 h-4" />
-                      New Password
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ? field.value : ""}
-                        type="password"
-                        className="h-12 rounded-lg"
-                        placeholder="••••••••"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500 text-sm" />
-                  </FormItem>
-                )}
-              />
+              {["username", "DNI", "oldPassword", "newPassword"].map(
+                (fieldName) => (
+                  <FormField
+                    key={fieldName}
+                    name={fieldName}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-golden-amber">
+                          {fieldName === "oldPassword"
+                            ? "Current Password"
+                            : fieldName === "newPassword"
+                            ? "New Password"
+                            : fieldName.toUpperCase()}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type={
+                              fieldName.includes("Password")
+                                ? "password"
+                                : "text"
+                            }
+                            className="h-12 rounded-lg border-golden-amber/20 focus:ring-golden-amber/50"
+                            placeholder={
+                              fieldName === "username"
+                                ? "JohnDoe123"
+                                : fieldName === "DNI"
+                                ? "001-1234567-8"
+                                : "••••••••"
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                )
+              )}
             </div>
 
-            {/* Botones de Acción */}
+            {/* Action Buttons */}
             <div className="flex flex-col md:flex-row gap-3 justify-end">
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 w-full md:w-32"
+                className="h-12 w-full md:w-32 border-golden-amber/30 text-library-dark hover:bg-golden-amber/5"
                 onClick={isDirty ? reset : toggleEdit}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-12 w-full md:w-32 bg-blue-600 hover:bg-blue-700 text-white"
+                className="h-12 w-full md:w-32 bg-golden-amber hover:bg-golden-amber/90 text-library-dark font-medium transition-all"
                 disabled={!isDirty}
               >
                 Save Changes

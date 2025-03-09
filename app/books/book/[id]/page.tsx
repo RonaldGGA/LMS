@@ -38,7 +38,6 @@ type BigUser = {
 };
 
 const SingleBookPage = ({ params }: { params: { id: string } }) => {
-  const [reload, setReload] = useState(false);
   const userSession = useUserSession();
   const [bookInfo, setBookInfo] = useState<BigBook | null>(null);
   const [issuedByUser, setIssuedByUser] = useState(false);
@@ -95,11 +94,13 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
           item.status === "ISSUED" &&
           item.bookCopy.bookTitleId === params.id
       );
-      const userPendingRequest = userDb?.bookLoanRequests.filter(
+      const userPendingRequest = userDb?.bookLoanRequests.some(
         (item) =>
           item.bookCopy.bookTitleId === bookInfo.id &&
-          item.status === BookLoanRequestStatus.PENDING
+          item.status === BookLoanRequestStatus.PENDING &&
+          item.userId === userId
       );
+
       const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) =>
         item.bookLoanRequests.some(
           (item) =>
@@ -160,13 +161,17 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               : "Book Issued successfully"
           );
 
-          setReload((prev) => !prev);
           return;
         }
+      } else {
+        const res = await issueBook(params.id, userId);
+        if (res.error) {
+          toast.error(res.error);
+        } else {
+          toast.success("Book borrowed");
+          await Promise.all([getBook(), getUserFromDb()]);
+        }
       }
-
-      // Actualizar datos incluso si no hay precio
-      await Promise.all([getBook(), getUserFromDb()]);
     } catch (error) {
       // Revertir cambios si hay error
       setIssuedByUser(false);
@@ -214,7 +219,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     } catch (error) {
       console.error(error);
       toast.error("Couldn't add the copy, check console for details");
-      setReload(!true);
     } finally {
       setLoading(false);
     }
@@ -231,7 +235,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-ivory-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
@@ -253,19 +257,15 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             {/* Detalles del Libro */}
             <div className="space-y-6">
               {/* Cabecera */}
-              <div className="border-b border-gray-100 pb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="border-b border-library-midnight/10 pb-6">
+                <h1 className="text-3xl font-bold text-library-dark mb-2">
                   {bookInfo.title}
                 </h1>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-library-midnight">
                   by {bookInfo.author.author_name}
                 </p>
                 <div className="mt-3 flex items-center gap-2">
-                  <Rating
-                    userId={userId!}
-                    bookInfo={bookInfo}
-                    setReload={() => setReload(!reload)}
-                  />
+                  <Rating userId={userId!} bookInfo={bookInfo} />
                 </div>
               </div>
 
@@ -275,7 +275,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                   <Badge
                     key={category.name}
                     variant="secondary"
-                    className="px-3 py-1 text-sm"
+                    className="px-3 py-1 text-sm bg-ivory-50 text-library-midnight border-library-midnight/10"
                   >
                     {category.name}
                   </Badge>
@@ -283,24 +283,24 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               </div>
 
               {/* Descripción */}
-              <div className="prose text-gray-600 leading-relaxed">
+              <div className="prose text-library-midnight leading-relaxed">
                 {bookInfo.description}
               </div>
 
               {/* Información de Precio y Stock */}
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-ivory-50 rounded-lg p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-2xl font-bold text-library-dark">
                       ${parseFloat(bookInfo.book_price).toFixed(2)}
                     </span>
-                    <span className="block text-sm text-gray-600 mt-1">
+                    <span className="block text-sm text-library-midnight mt-1">
                       per loan period
                     </span>
                   </div>
                   <Badge
                     variant={bookInfo.stock > 0 ? "default" : "destructive"}
-                    className="px-4 py-2"
+                    className="px-4 py-2 bg-library-dark text-white hover:bg-antique-gold/90"
                   >
                     {bookInfo.stock > 0
                       ? `${bookInfo.stock} in stock`
@@ -313,17 +313,17 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm">
                   {issuedByUser ? (
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-green-500">
                       <CheckCircle className="w-5 h-5" />
                       <span>Currently borrowed by you</span>
                     </div>
                   ) : pendingRequest ? (
-                    <div className="flex items-center gap-2 text-blue-600">
+                    <div className="flex items-center gap-2 text-antique-gold">
                       <Clock className="w-5 h-5" />
                       <span>{pendingRequest}</span>
                     </div>
                   ) : (
-                    <div className="text-gray-600">
+                    <div className="text-library-midnight">
                       {bookInfo.stock > 0
                         ? "Available for loan"
                         : "Check back soon"}
@@ -360,7 +360,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                       <Button
                         onClick={createBookCopy}
                         variant="outline"
-                        className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                        className="w-full hover:bg-antique-gold/10 border-library-dark text-library-dark hover:text-black"
                         size="lg"
                       >
                         <Plus className="mr-2 h-5 w-5" />
@@ -372,14 +372,14 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
         </div>
+        <NextImprovements className="mt-10 space-y-5 text-library-midnight">
+          <ul className="space-y-2">
+            {next.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+        </NextImprovements>
       </div>
-      <NextImprovements className={"mt-10 space-y-5"}>
-        <ul className="space-y-2">
-          {next.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      </NextImprovements>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 // app/dashboard/books/page.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,20 +22,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "react-hot-toast";
 import { useUserSession } from "@/app/hooks/useUserSession";
-import { Book, MoreVerticalIcon, PlusIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  BookXIcon,
+  MoreVerticalIcon,
+  PlusIcon,
+} from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import FormBooks from "@/app/components/form-books";
+import FormBooks from "@/app/components/form-book";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { BookCategory } from "@prisma/client";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export type dashboardBook = {
   title: string;
+  img: string;
   id: string;
   book_price: string;
   stock: number;
+  description: string;
   author: {
     author_name: string;
   };
@@ -95,16 +103,14 @@ const BooksDashboard = () => {
       setLoading(false);
     }
   };
-  const bookRowRef = useRef(null);
 
   const handleBookClick = (
-    e: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     bookId: string
   ) => {
     e.stopPropagation();
-    // if (bookRowRef.current && e.currentTarget === bookRowRef.current) {
-    router.push(`/book/${bookId}`);
-    // }
+
+    router.push(`/books/book/${bookId}`);
   };
 
   const handleSelectBook = (
@@ -125,24 +131,18 @@ const BooksDashboard = () => {
   if (!session || !["SUPERADMIN", "LIBRARIAN"].includes(session.role)) {
     return <div>Unuathorized access</div>;
   }
-  if (loading) {
-    return (
-      <div className="text-3xl text-white text-center mx-auto">
-        LOADING.....
-      </div>
-    );
-  }
+
   return (
-    <div className="p-6 space-y-6  rounded-md">
+    <div className="p-6 space-y-6 bg-library-dark text-ivory-50 rounded-xl shadow-2xl border border-library-midnight">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <Input
           placeholder="Search by title or author..."
-          className="max-w-md text-white"
+          className="max-w-md text-library-dark bg-ivory-50 border-2 border-golden-amber focus:ring-2 focus:ring-golden-amber"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Link href="/add">
-          <Button>
+        <Link href="/books/add">
+          <Button className="bg-golden-amber hover:bg-golden-amber/90 text-library-dark font-bold transition-transform hover:scale-105">
             <PlusIcon className="mr-2 h-4 w-4" />
             Add New Book
           </Button>
@@ -152,76 +152,104 @@ const BooksDashboard = () => {
       {loading ? (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <Skeleton
+              key={i}
+              className="h-12 w-full bg-library-midnight/50 animate-pulse"
+            />
           ))}
         </div>
       ) : (
-        <Table className="bg-gray-200 rounded-md">
-          <TableHeader>
+        <Table className="bg-library-midnight/50 rounded-lg overflow-hidden">
+          <TableHeader className="bg-golden-amber">
             <TableRow>
-              <TableHead>More</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Categories</TableHead>
-              <TableHead>Actions</TableHead>
+              {[
+                "More",
+                "Title",
+                "Author",
+                "Price",
+                "Stock",
+                "Categories",
+                "Actions",
+              ].map((header) => (
+                <TableHead
+                  key={header}
+                  className="text-library-dark font-black text-center"
+                >
+                  {header}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {books.map((book) => (
-              <TableRow id={book.id} ref={bookRowRef} key={book.id}>
-                <TableCell
-                  className="hover:bg-gray-700 hover:text-white cursor-pointer rounded-r-md transition"
-                  onClick={(e) => handleBookClick(e, book.id)}
-                >
-                  <Book />
+              <TableRow
+                key={book.id}
+                className="hover:bg-library-midnight/30 transition-colors"
+              >
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    className="text-golden-amber hover:bg-golden-amber/10"
+                    onClick={(e) => handleBookClick(e, book.id)}
+                  >
+                    <BookOpenIcon className="h-5 w-5" />
+                  </Button>
                 </TableCell>
-                <TableCell className="font-medium group-hover:text-gray-200">
+                <TableCell className="font-medium text-golden-amber text-center">
                   {book.title}
                 </TableCell>
-                <TableCell className="group-hover:text-gray-200">
+                <TableCell className="text-center">
                   {book.author.author_name}
                 </TableCell>
-                <TableCell className="group-hover:text-gray-200">
+                <TableCell className="text-center text-emerald-400 font-bold">
                   ${book.book_price}
                 </TableCell>
-                <TableCell>
-                  <Badge variant={book.stock > 0 ? "default" : "destructive"}>
+                <TableCell className="text-center">
+                  <Badge
+                    variant={book.stock > 0 ? "default" : "destructive"}
+                    className={cn({
+                      "bg-emerald-500": book.stock > 0,
+                      "bg-red-500": book.stock <= 0,
+                    })}
+                  >
                     {book.stock}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {book.categories.slice(0, 3).map((category) => (
-                      <Badge key={category.id} variant="secondary">
+                      <Badge
+                        key={category.id}
+                        variant="secondary"
+                        className="bg-ivory-50 text-library-dark border border-golden-amber"
+                      >
                         {category.name}
                       </Badge>
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="flex items-center gap-2">
+                <TableCell className="flex items-center justify-center gap-2">
                   <Button
-                    variant={"outline"}
+                    variant="outline"
                     onClick={(e) => handleSelectBook(e, book)}
+                    className="border-golden-amber text-golden-amber hover:bg-golden-amber/10"
                   >
                     Edit
                   </Button>
-
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        className="group-hover:bg-gray-200"
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => e.stopPropagation()}
+                        className="text-golden-amber hover:bg-golden-amber/10"
                       >
                         <MoreVerticalIcon className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuContent className="bg-library-dark border border-golden-amber">
                       <DropdownMenuItem
                         onClick={(e) => handleDelete(e, book.id)}
+                        className="text-ivory-50 hover:bg-golden-amber/20"
                       >
                         Delete
                       </DropdownMenuItem>
@@ -233,6 +261,17 @@ const BooksDashboard = () => {
           </TableBody>
         </Table>
       )}
+
+      {books.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center h-[40vh] bg-library-midnight/50 rounded-xl">
+          <BookXIcon className="h-16 w-16 text-golden-amber mb-4" />
+          <h3 className="text-xl font-bold text-ivory-50">No books found</h3>
+          <p className="text-golden-amber/80">
+            Try adjusting your search terms
+          </p>
+        </div>
+      )}
+
       {selectedBook && (
         <EditDialog
           selectedBook={selectedBook}
@@ -256,7 +295,7 @@ const EditDialog: React.FC<EditDialogProps> = ({
 }) => {
   return (
     <Dialog open={!!selectedBook} onOpenChange={() => setSelectedBook(null)}>
-      <DialogContent className="overflow-auto max-w-[600px] bg-gray-50 h-full">
+      <DialogContent className="overflow-auto max-w-[900px]  bg-gray-500/80 h-full">
         <FormBooks
           book={selectedBook ? selectedBook : undefined}
           onSuccess={() => handleSuccess()}

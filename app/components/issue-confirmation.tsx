@@ -64,7 +64,10 @@ const Confirmation: React.FC<ConfirmationProps> = ({
             Return Book
           </Button>
         ) : (
-          <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+          <Button
+            className="w-full bg-library-midnight hover:text-golden-amber"
+            size="lg"
+          >
             <ArrowLeftCircle className="mr-2 h-5 w-5" />
             Borrow Book
           </Button>
@@ -83,7 +86,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
                 back, if it were a fine, check our{" "}
                 <Link
                   href="/info"
-                  className="text-semibold text-blue-500 underline underline-offset-4 hover:text-blue-700 transition-colors"
+                  className="text-semibold text-golden-amber underline underline-offset-4 hover:text-blue-700 transition-colors"
                 >
                   Info Section
                 </Link>{" "}
@@ -94,7 +97,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
                 By issuing the book, you accept the{" "}
                 <Link
                   href={"/"}
-                  className="underline hover:text-blue-800  transition-colors underline-offset-4 text-blue-500"
+                  className="underline   transition-colors underline-offset-4 text-golden-amber"
                 >
                   terms & conditions
                 </Link>{" "}

@@ -2,12 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { format } from "date-fns";
 import Link from "next/link";
 import React, { useMemo } from "react";
-import { Star, Bookmark, Zap } from "lucide-react";
+import { Star, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 
 interface CardBookProps {
   id: string;
@@ -20,6 +19,7 @@ interface CardBookProps {
   returnDate?: Date;
   popularity?: number;
   limitedOffer?: boolean;
+  className?: string;
 }
 
 const CardBook: React.FC<CardBookProps> = ({
@@ -29,8 +29,6 @@ const CardBook: React.FC<CardBookProps> = ({
   author = "Unknown Author",
   categories = [],
   ratings = [],
-  price,
-  returnDate,
   popularity = 0,
   limitedOffer = false,
 }) => {
@@ -41,16 +39,11 @@ const CardBook: React.FC<CardBookProps> = ({
     return Number(average.toFixed(1));
   }, [ratings]);
 
-  const statusText = useMemo(() => {
-    if (price) return `Deposit: $${parseFloat(price).toFixed(2)}`;
-    if (returnDate)
-      return `Due: ${format(new Date(returnDate), "MMM dd, yyyy")}`;
-    return "Available Now";
-  }, [price, returnDate]);
-
   const popularityPercentage = useMemo(() => {
     return Math.min(Math.floor((popularity / 100) * 100), 100);
   }, [popularity]);
+
+  console.log(img);
 
   return (
     <motion.div
@@ -58,70 +51,69 @@ const CardBook: React.FC<CardBookProps> = ({
       transition={{ type: "spring", stiffness: 400 }}
       className="relative group bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all"
     >
-      <Card className="overflow-hidden">
-        {/* Promo Badge */}
-        {limitedOffer && (
-          <div className="absolute top-3 right-3 bg-blue-600 text-white px-2.5 py-1 text-xs font-medium rounded-full z-10 flex items-center">
-            <Zap size={12} className="mr-1" />
-            Limited
-          </div>
-        )}
+      <Link href={`/books/book/${id}`} className="group block">
+        <Card className="bg-ivory-50 overflow-hidden transition-all hover:shadow-lg hover:border-antique-gold/30">
+          {/* Promo Badge */}
+          {limitedOffer && (
+            <div className="absolute top-3 right-3 bg-antique-gold text-library-dark px-3 py-1 text-xs font-medium rounded-full z-10 flex items-center shadow-sm">
+              <Zap size={12} className="mr-1" />
+              Limited
+            </div>
+          )}
 
-        {/* Image Section */}
-        <div className="relative aspect-[6/4] max-h-[300px] bg-gray-50">
-          <CldImage
-            src={img || "/default-book.webp"}
-            alt={title}
-            fill
-            className="object-cover transition-opacity group-hover:opacity-90 max-h-[300px]"
-            sizes="(max-width: 768px) 100vw, 320px"
-          />
-          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-white">
-                {popularityPercentage}% Popular
-              </span>
-              <Badge variant="secondary" className="text-xs bg-white/90">
-                {statusText}
+          {/* Image Section - Simplified with hover zoom */}
+          <div className="relative aspect-[5/3] bg-gray-100 overflow-hidden">
+            <Image
+              src={img || "/default-book.webp"}
+              alt={title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 420px"
+              loading="lazy"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-library-dark/60">
+              <Badge className="bg-ivory-50 text-library-midnight hover:bg-ivory-50/90">
+                Popularity {popularityPercentage}%
               </Badge>
             </div>
           </div>
-        </div>
 
-        {/* Content Section */}
-        <div className="p-4">
-          <div className="mb-3">
-            <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">
-              {title}
-            </h3>
-            <p className="text-sm text-gray-500 truncate">{author}</p>
-          </div>
+          {/* Content Section - Minimal Info */}
+          <div className="p-4 space-y-3">
+            <div>
+              <h3 className="font-semibold text-library-dark line-clamp-2 text-lg">
+                {title}
+              </h3>
+              <p className="text-library-midnight/80 text-sm truncate">
+                {author}
+              </p>
+            </div>
 
-          {/* Rating & Categories */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-1.5">
+            {/* Rating & Categories - Simplified */}
+            <div className="flex items-center gap-1.5 text-antique-gold">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
                   size={16}
-                  className={`${
+                  fill={
                     i < Math.floor(ratingAverage)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300 fill-gray-300"
-                  }`}
+                      ? "currentColor"
+                      : "transparent"
+                  }
+                  className={
+                    i < Math.floor(ratingAverage) ? "" : "text-gray-300"
+                  }
                 />
               ))}
-              <span className="text-sm text-gray-500 ml-1">
-                ({ratings.length})
-              </span>
             </div>
 
+            {/* Categories - Single Line */}
             {categories.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {categories.slice(0, 2).map(({ name }, i) => (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {categories.map(({ name }, i) => (
                   <span
                     key={i}
-                    className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md"
+                    className="px-2 py-1 bg-library-midnight/10 text-library-midnight text-xs rounded-full whitespace-nowrap"
                   >
                     {name}
                   </span>
@@ -129,17 +121,8 @@ const CardBook: React.FC<CardBookProps> = ({
               </div>
             )}
           </div>
-
-          {/* Action Button */}
-          <Link
-            href={`/books/book/${id}`}
-            className="mt-4 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-md text-sm font-medium transition-colors"
-          >
-            <Bookmark size={14} />
-            Reserve Now
-          </Link>
-        </div>
-      </Card>
+        </Card>
+      </Link>
     </motion.div>
   );
 };

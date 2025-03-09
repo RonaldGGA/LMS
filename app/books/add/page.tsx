@@ -1,8 +1,12 @@
-import FormBooks from "@/app/components/form-books";
+import FormBooks from "@/app/components/form-book";
 import React from "react";
 
-const AddBook = () => {
-  return <FormBooks />;
+const AddBook = async () => {
+  return (
+    <div className="w-full">
+      <FormBooks book={undefined} onSuccess={undefined} />;
+    </div>
+  );
 };
 
 export default AddBook;

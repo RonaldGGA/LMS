@@ -57,7 +57,7 @@ const Sidebar = () => {
         <div className="flex flex-col h-full p-4 ">
           {/* Logo */}
           <div className="mb-8 px-2">
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-library-dark">
               Admin Dashboard
             </h2>
           </div>
@@ -71,15 +71,15 @@ const Sidebar = () => {
                 className={cn(
                   "flex items-center px-4 py-3 rounded-lg transition-colors",
                   item.current
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-library-dark text-golden-amber"
+                    : "text-library-midnight hover:bg-gray-100"
                 )}
                 onClick={() => setIsOpen(false)}
               >
                 <item.icon
                   className={cn(
                     "w-5 h-5 mr-3",
-                    item.current ? "text-blue-600" : "text-gray-500"
+                    item.current ? "text-golden-amber" : "text-gray-500"
                   )}
                 />
                 <span className="font-medium">{item.name}</span>

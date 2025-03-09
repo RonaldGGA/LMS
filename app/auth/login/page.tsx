@@ -48,7 +48,7 @@ const LoginPage = () => {
       setErrorMessage(res);
     } else {
       setErrorMessage("");
-      window.location.href = "/dashboard";
+      window.location.reload();
     }
     setLoading(false);
   }

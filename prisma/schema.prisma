@@ -31,7 +31,8 @@
 // Explicación: Categoría o género de un libro (ejemplo: "Ficción", "No Ficción", etc.).
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -86,6 +87,10 @@ model BookTitle {
   title       String @unique
   description String
 
+  loanCount     Int       @default(0)
+  averageRating Float     @default(0)
+  lastLoanedAt  DateTime?
+
   authorId String
   author   BookAuthor @relation(fields: [authorId], references: [id])
 
@@ -96,6 +101,8 @@ model BookTitle {
   bookCopies  BookCopy[]
   categories  BookCategory[]
   img         String?
+
+  usuallySearchedBy String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,6 +117,8 @@ model BookCopy {
   bookTitle   BookTitle @relation(fields: [bookTitleId], references: [id], onDelete: Cascade)
 
   copy_number Int @default(1)
+
+  durationDays Int?
 
   bookLoans            BookLoan[]
   bookSecurityDeposits BookSecurityDeposit[]
@@ -141,8 +150,8 @@ model BookLoan {
   user     UserAccount @relation(fields: [userId], references: [id])
   bookCopy BookCopy    @relation(fields: [bookCopyId], references: [id], onDelete: Cascade)
 
-  loanDate   DateTime  @default(now())
-  returnDate DateTime?
+  loanDate   DateTime @default(now())
+  returnDate DateTime
 }
 
 model BookCategory {

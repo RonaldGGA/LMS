@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { createErrorResponse } from "@/lib/utils";
 import { BookLoanRequestStatus, BookLoanStatus, Role } from "@prisma/client";
 import { acceptLoanRequest } from "./accept-issue-request";
+import { updateBookPopularity } from "./update-book-popularity";
 
 export const issueBook = async (
   id: string,
@@ -141,6 +142,8 @@ export const issueBook = async (
             );
           }
         }
+        await updateBookPopularity(id);
+
         return { success: true, error: null, data: bookLoanData };
       },
       {

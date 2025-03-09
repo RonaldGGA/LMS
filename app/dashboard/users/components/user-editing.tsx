@@ -101,7 +101,7 @@ const UserEditDialog = ({
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="bg-library-dark text-ivory-50">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -115,7 +115,9 @@ const UserEditDialog = ({
 
             {/* Username */}
             <div className="space-y-2">
-              <Label htmlFor="username">Username *</Label>
+              <Label htmlFor="username" className="text-ivory-50">
+                Username *
+              </Label>
               <Input
                 id="username"
                 {...register("username", {
@@ -126,6 +128,7 @@ const UserEditDialog = ({
                   },
                 })}
                 placeholder="Enter username"
+                className="bg-ivory-50 text-library-dark"
               />
               {errors.username && (
                 <p className="text-sm text-destructive">
@@ -136,7 +139,9 @@ const UserEditDialog = ({
 
             {/* DNI */}
             <div className="space-y-2">
-              <Label htmlFor="dni">DNI *</Label>
+              <Label htmlFor="dni" className="text-ivory-50">
+                DNI *
+              </Label>
               <Input
                 id="dni"
                 {...register("dni", {
@@ -147,6 +152,7 @@ const UserEditDialog = ({
                   },
                 })}
                 placeholder="Enter DNI (11 digits)"
+                className="bg-ivory-50 text-library-dark"
               />
               {errors.dni && (
                 <p className="text-sm text-destructive">
@@ -157,7 +163,9 @@ const UserEditDialog = ({
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password" className="text-ivory-50">
+                Password *
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -168,6 +176,7 @@ const UserEditDialog = ({
                   },
                 })}
                 placeholder="Enter password"
+                className="bg-ivory-50 text-library-dark"
               />
               {errors.newPassword && (
                 <p className="text-sm text-destructive">
@@ -178,7 +187,9 @@ const UserEditDialog = ({
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <Label htmlFor="confirmPassword" className="text-ivory-50">
+                Confirm Password *
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -187,6 +198,7 @@ const UserEditDialog = ({
                     value === watch("newPassword") || "Passwords do not match",
                 })}
                 placeholder="Confirm password"
+                className="bg-ivory-50 text-library-dark"
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">
@@ -197,7 +209,9 @@ const UserEditDialog = ({
 
             {/* Role Selector */}
             <div className="space-y-2">
-              <Label htmlFor="role">User Role *</Label>
+              <Label htmlFor="role" className="text-ivory-50">
+                User Role *
+              </Label>
               <Controller
                 name="role"
                 control={control}
@@ -206,10 +220,10 @@ const UserEditDialog = ({
                     {...field}
                     onValueChange={(value) => field.onChange(value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-ivory-50 text-library-dark">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-ivory-50 text-library-dark">
                       {Object.values(Role).map((role) => (
                         <SelectItem key={role} value={role}>
                           {role.charAt(0) + role.slice(1).toLowerCase()}
@@ -228,10 +242,19 @@ const UserEditDialog = ({
           </div>
 
           <DialogFooter>
-            <Button type="button" onClick={handleClose}>
+            <Button
+              type="button"
+              onClick={handleClose}
+              className="bg-library-midnight text-ivory-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" aria-disabled={loading} disabled={loading}>
+            <Button
+              type="submit"
+              aria-disabled={loading}
+              disabled={loading}
+              className="bg-golden-amber text-library-dark"
+            >
               Accept Changes
             </Button>
           </DialogFooter>

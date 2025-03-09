@@ -2,27 +2,27 @@
 
 import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
+import { bookSchema } from "@/zod-schemas";
 interface createBookProps {
-  book_name: string;
+  title: string;
   author: string;
-  categories: string[];
-  price: string;
-  img: string;
+  categories: { id: string; name: string }[];
+  price: number;
+  img?: string;
+  description: string;
 }
 
-export const createBook = async (
-  values: createBookProps,
-  categories: { id: string; name: string }[]
-) => {
+export const createBook = async (values: createBookProps) => {
   const result = await db.$transaction(
     async (tx) => {
       try {
         // get the values
-        const { book_name, author, img = "", price = "0" } = values;
-        console.log(`Your image src is ${img}`);
-        if (!book_name) {
-          return createErrorResponse("Invalid book name");
+        const { data, error } = bookSchema.safeParse(values);
+        if (error) {
+          return createErrorResponse(error.message);
         }
+
+        const { author, title, price, img, description, categories } = data;
 
         // Handle author creation
         let author_id = "";
@@ -35,7 +35,7 @@ export const createBook = async (
         // Handle repeated books, no books with the same author and name
         const isDbBook = await tx.bookTitle.findFirst({
           where: {
-            title: book_name,
+            title: title,
             authorId: authorDb?.id,
           },
         });
@@ -62,15 +62,12 @@ export const createBook = async (
         }
 
         //TODO: validate img Url
-
-        // Create the new book wiithot categories
-
         const newBook = await tx.bookTitle.create({
           data: {
-            title: book_name,
+            title: title,
             authorId: author_id,
-            book_price: parseInt(price) > 0 ? price : "0",
-            description: "",
+            book_price: price.toString(),
+            description,
             img,
             bookRatings: {},
             stock: 1,
@@ -91,8 +88,6 @@ export const createBook = async (
             },
           },
         });
-
-        // Connect the categories
 
         return { success: true, error: "", data: newBook };
       } catch (error) {
