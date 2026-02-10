@@ -51,8 +51,8 @@ const CardBook: React.FC<CardBookProps> = ({
       transition={{ type: "spring", stiffness: 400 }}
       className="relative group bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all"
     >
-      <Link href={`/books/book/${id}`} className="group block">
-        <Card className="bg-ivory-50 overflow-hidden transition-all hover:shadow-lg hover:border-antique-gold/30">
+      <Link href={`/books/book/${id}`} className="group block h-full">
+        <Card className="bg-ivory-50 overflow-hidden transition-all h-full hover:shadow-lg hover:border-antique-gold/30">
           {/* Promo Badge */}
           {limitedOffer && (
             <div className="absolute top-3 right-3 bg-antique-gold text-library-dark px-3 py-1 text-xs font-medium rounded-full z-10 flex items-center shadow-sm">

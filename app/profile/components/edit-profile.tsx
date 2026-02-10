@@ -53,7 +53,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
       oldPassword: undefined,
       newPassword: undefined,
     }),
-    [DNI, profileImg, username]
+    [DNI, profileImg, username],
   );
 
   // Set the values and form control
@@ -81,7 +81,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
 
         setIsDirty(isFormDirty);
       },
-      300
+      300,
     ); // Ajusta el tiempo de debounce según tus necesidades
 
     const subscription = form.watch((currentValues: Partial<FormValues>) => {
@@ -167,6 +167,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
                             alt="Profile"
                             fill
                             className="rounded-full object-cover"
+                            unoptimized
                           />
                           <button
                             type="button"
@@ -202,8 +203,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
                           {fieldName === "oldPassword"
                             ? "Current Password"
                             : fieldName === "newPassword"
-                            ? "New Password"
-                            : fieldName.toUpperCase()}
+                              ? "New Password"
+                              : fieldName.toUpperCase()}
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -218,8 +219,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
                               fieldName === "username"
                                 ? "JohnDoe123"
                                 : fieldName === "DNI"
-                                ? "001-1234567-8"
-                                : "••••••••"
+                                  ? "001-1234567-8"
+                                  : "••••••••"
                             }
                           />
                         </FormControl>
@@ -227,7 +228,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
                       </FormItem>
                     )}
                   />
-                )
+                ),
               )}
             </div>
 

@@ -15,7 +15,16 @@ export const ImageUpload = ({
         multiple: false,
         sources: ["local"], // Solo permite subir desde el ordenador
         resourceType: "image",
-        clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "jfif", "avif"],
+        clientAllowedFormats: [
+          "jpg",
+          "jpeg",
+          "png",
+          "webp",
+          "jfif",
+          "avif",
+          "svg",
+          "svg+xml",
+        ],
         maxFileSize: 5000000, // 5MB
         showAdvancedOptions: false,
         showUploadMoreButton: false,

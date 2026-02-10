@@ -4,6 +4,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { ArchiveIcon, BookOpenIcon } from "lucide-react";
+import DemoCredentialsFloater from "../components/demo-credentials";
 
 export default async function AuthLayout({
   children,
@@ -102,6 +103,7 @@ export default async function AuthLayout({
 
             <div className="p-8 sm:p-12 lg:p-16 bg-ivory-50 relative">
               <div className="space-y-10">{children}</div>
+              <DemoCredentialsFloater />
             </div>
           </div>
         </div>
