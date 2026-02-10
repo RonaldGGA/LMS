@@ -227,15 +227,6 @@ async function cleanDatabase() {
     await prisma.bookRating.deleteMany();
     await prisma.bookCopy.deleteMany();
 
-    // Para las relaciones muchos-a-muchos, elimina primero las relaciones
-    await prisma.bookTitle.updateMany({
-      data: {
-        categories: {
-          set: [],
-        },
-      },
-    });
-
     await prisma.bookTitle.deleteMany();
     await prisma.bookCategory.deleteMany();
     await prisma.bookAuthor.deleteMany();
