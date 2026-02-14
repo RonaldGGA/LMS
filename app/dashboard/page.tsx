@@ -29,7 +29,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-// import NextImprovements from "../components/next-improvements";
 
 type DashboardRecentLoans = {
   id: string;
@@ -59,15 +58,6 @@ type DashboardData = {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // const next = [
-  //   "Implement manage Loans",
-  //   "Implement manage requests",
-  //   "Implement manage deposits",
-  //   "Implement manage notifications",
-  //   "Implement system general settings ",
-  //   "Implement advanced reports ",
-  // ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,7 +94,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-8 block">
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           title="Total Books"
@@ -128,7 +117,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Recent Loans Table */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Loans</CardTitle>
@@ -136,7 +124,7 @@ export default function DashboardPage() {
         <CardContent>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" disabled>
                 <FilterIcon className="mr-2 h-4 w-4" />
                 Filter
               </Button>
@@ -164,7 +152,7 @@ export default function DashboardPage() {
                       {new Date(loan.loanDate).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" disabled>
                         View Details
                       </Button>
                     </TableCell>
@@ -187,14 +175,13 @@ export default function DashboardPage() {
               </TableRow>
             </TableFooter>
           </Table>
-          <Button variant="ghost">
+          <Button variant="ghost" disabled>
             <DownloadIcon className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
       <div className="flex gap-4 flex-wrap items-center justify-around">
         <Link href={"/dashboard/books"}>
           <Button variant="secondary" className="bg-green-200 border-2">
@@ -210,14 +197,6 @@ export default function DashboardPage() {
           </Button>
         </Link>
       </div>
-
-      {/* <NextImprovements className={"mt-10 space-y-5"}>
-        <ul className="space-y-2">
-          {next.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      </NextImprovements> */}
     </div>
   );
 }
