@@ -4,13 +4,14 @@ import { FilterType, SortType } from "@/app/components/search";
 import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
+import { isString } from "lodash-es";
 
 export const getLiveSuggestionBooks = async (
   partial_search: string,
   sortOption: SortType,
-  selectedFilter: FilterType
+  selectedFilter: FilterType,
 ) => {
-  if (!partial_search) {
+  if (!partial_search && !isString(partial_search)) {
     return createErrorResponse("No value specified");
   }
 
@@ -29,7 +30,6 @@ export const getLiveSuggestionBooks = async (
               mode: "insensitive",
             },
           },
-          take: 6,
           select: {
             author: {
               select: {
@@ -54,7 +54,6 @@ export const getLiveSuggestionBooks = async (
               },
             },
           },
-          take: 6,
           select: {
             author: {
               select: {
@@ -78,7 +77,6 @@ export const getLiveSuggestionBooks = async (
               },
             },
           },
-          take: 6,
           select: {
             author: {
               select: {
@@ -94,8 +92,8 @@ export const getLiveSuggestionBooks = async (
         books = await db.bookTitle.findMany({
           where: {
             averageRating: {
-              gt: Number(partial_search) + 1.5, // Filtra donde rating < (partial_search + 1.5)
-              lt: Number(partial_search) - 1.5, // Filtra donde rating > (partial_search - 1.5)
+              gt: Number(partial_search) + 1.5,
+              lt: Number(partial_search) - 1.5,
             },
           },
           take: 6,
@@ -113,7 +111,6 @@ export const getLiveSuggestionBooks = async (
       default:
         console.log("searching by default..");
         books = await db.bookTitle.findMany({
-          take: 6,
           select: {
             author: {
               select: {
@@ -137,10 +134,26 @@ export const getLiveSuggestionBooks = async (
   }
 };
 
-export const getDefaultBooks = async (quantity: number) => {
+export const getDefaultBooks = async (
+  quantity: number,
+  sortOption: SortType,
+) => {
   if (!quantity) {
     return createErrorResponse("no specified quantity");
   }
+
+  const orderByOptions: Record<
+    string,
+    Prisma.BookTitleOrderByWithRelationInput
+  > = {
+    popularity: { loanCount: "desc", averageRating: "desc" },
+    price: { book_price: "desc" },
+    relevance: { lastLoanedAt: "desc" },
+    rating: { averageRating: "desc" },
+    default: { averageRating: "desc" },
+  };
+
+  const order = orderByOptions[sortOption] || orderByOptions.default;
 
   try {
     const books = await db.bookTitle.findMany({
@@ -166,9 +179,7 @@ export const getDefaultBooks = async (quantity: number) => {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: order,
     });
 
     return {
@@ -185,16 +196,8 @@ export const getDefaultBooks = async (quantity: number) => {
 export const getBooks = async (
   partial_search: string,
   sortOption: SortType,
-  selectedFilter: FilterType
+  selectedFilter: FilterType,
 ) => {
-  if (!partial_search) {
-    return createErrorResponse("No value specified");
-  }
-
-  if (isNaN(Number(partial_search)) && selectedFilter === "rating") {
-    return createErrorResponse("Invalid rating value");
-  }
-
   const orderByOptions: Record<
     string,
     Prisma.BookTitleOrderByWithRelationInput
@@ -209,6 +212,7 @@ export const getBooks = async (
   const order = orderByOptions[sortOption] || orderByOptions.default;
   try {
     let books;
+    if (partial_search === "") return {};
     switch (selectedFilter) {
       case "title":
         books = await db.bookTitle.findMany({
@@ -323,8 +327,8 @@ export const getBooks = async (
         books = await db.bookTitle.findMany({
           where: {
             averageRating: {
-              gt: Number(partial_search) + 1.5, // Filtra donde rating < (partial_search + 1.5)
-              lt: Number(partial_search) - 1.5, // Filtra donde rating > (partial_search - 1.5)
+              gt: Number(partial_search) + 1.5,
+              lt: Number(partial_search) - 1.5,
             },
           },
           select: {
@@ -355,7 +359,6 @@ export const getBooks = async (
       default:
         console.log("searching by default..");
         books = await db.bookTitle.findMany({
-          take: 6,
           select: {
             categories: {
               select: {
