@@ -37,7 +37,6 @@ export type FilterType = "title" | "author" | "category" | "rating";
 export type SortType = "relevance" | "popularity" | "rating" | "price";
 
 const Search: React.FC<SearchProps> = ({
-  searchedBooks,
   setSearchedBooks,
   setLoading,
   setErrorMessage,
@@ -259,8 +258,10 @@ const Search: React.FC<SearchProps> = ({
                     <SelectLabel className="sr-only">Sort Type</SelectLabel>
                     <SelectItem value="relevance">Relevance</SelectItem>
                     <SelectItem value="popularity">Popularity</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
                     <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="rating" disabled>
+                      Rating
+                    </SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

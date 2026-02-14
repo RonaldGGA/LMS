@@ -10,7 +10,6 @@ import AdminNotification from "../components/admin-notification";
 import { AdminNotificationSkeleton } from "../components/admin-notification-skeletion";
 
 const NotificationsPage = () => {
-  //add the type
   const [notifications, setNotifications] = useState<BigRequest[] | null>([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -25,7 +24,7 @@ const NotificationsPage = () => {
           setNotifications(
             notificationsResponse.data && notificationsResponse.data.length > 0
               ? notificationsResponse.data
-              : []
+              : [],
           );
         }
       };
@@ -41,7 +40,7 @@ const NotificationsPage = () => {
   const handleAccept = async (
     requestId: string,
     bookId: string,
-    userId: string
+    userId: string,
   ) => {
     try {
       setLoading(true);
@@ -64,7 +63,7 @@ const NotificationsPage = () => {
       setLoading(true);
       const rejectResult = await rejectIssueRequest(
         requestId,
-        "No payment validated"
+        "No payment validated",
       );
       if (rejectResult.error) {
         toast.error("something happended");
@@ -135,14 +134,14 @@ const NotificationsPage = () => {
 
           <div className="text-center space-y-4">
             <h2 className="text-3xl font-bold text-antique-gold mb-2 font-mono">
-              ¡Todo al día! 🎉
+              Everything up to date 🎉
             </h2>
             <p className="text-lg text-library-dark font-semibold">
-              No hay solicitudes pendientes
+              No pending requests
             </p>
             <p className="text-sm text-library-dark max-w-md mx-auto">
-              Tu bandeja de solicitudes está completamente actualizada. ¡Buen
-              trabajo! Cuando lleguen nuevas solicitudes, aparecerán aquí.
+              Your inbox is completeley up-to-date. ¡Good job! New requests will
+              appear here when they arrive.
             </p>
           </div>
         </div>
