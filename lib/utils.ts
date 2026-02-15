@@ -25,7 +25,6 @@ export const createErrorResponse = (message: string) => ({
   data: null,
 });
 
-// error-codes.ts
 export const ERROR_CODES = {
   VALIDATION: {
     code: "validation_error",

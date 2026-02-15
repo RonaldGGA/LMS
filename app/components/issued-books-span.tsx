@@ -43,7 +43,6 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
   };
 
   const getReturnDate = useCallback(() => {
-    // FIX EL PIE QUE LE METI CON ! AL FINAL A RETURN DATE
     const closestReturnDate =
       userBorrowedBooks.reduce<userBorrowedBooks | null>((closest, book) => {
         const returnDate = new Date(book.returnDate!);
@@ -57,7 +56,7 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
       }, null);
 
     setReturnDate(
-      closestReturnDate ? new Date(closestReturnDate.returnDate!) : null
+      closestReturnDate ? new Date(closestReturnDate.returnDate!) : null,
     );
   }, [userBorrowedBooks, currentTime]);
 
@@ -113,7 +112,7 @@ const IssuedBooksSpan: React.FC<IssuedBooksSpanProps> = ({
           <span className="font-medium text-gray-900">
             {
               userBorrowedBooks.filter(
-                (item) => item.status === BookLoanStatus.ISSUED
+                (item) => item.status === BookLoanStatus.ISSUED,
               ).length
             }
           </span>

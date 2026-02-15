@@ -17,7 +17,6 @@ function UserNotification({
 }: UserNotificationProps) {
   return (
     <div className="group relative flex w-full max-w-3xl items-start justify-between rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md md:items-center">
-      {/* Unread indicator */}
       {isUnread && (
         <div className="absolute left-0 top-1/2 h-full w-1 -translate-y-1/2 rounded-l-lg bg-golden-amber" />
       )}

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const {
     username = "",
@@ -44,7 +44,6 @@ export async function PATCH(
       throw new Error("Error updating the user");
     }
 
-    // Ensure password is excluded
     const safeUser = {
       ...user,
       password: undefined,
@@ -59,7 +58,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     await prisma.userAccount.delete({

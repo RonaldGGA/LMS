@@ -53,7 +53,6 @@ const CardBook: React.FC<CardBookProps> = ({
     >
       <Link href={`/books/book/${id}`} className="group block h-full">
         <Card className="bg-ivory-50 overflow-hidden transition-all h-full hover:shadow-lg hover:border-antique-gold/30">
-          {/* Promo Badge */}
           {limitedOffer && (
             <div className="absolute top-3 right-3 bg-antique-gold text-library-dark px-3 py-1 text-xs font-medium rounded-full z-10 flex items-center shadow-sm">
               <Zap size={12} className="mr-1" />
@@ -61,7 +60,6 @@ const CardBook: React.FC<CardBookProps> = ({
             </div>
           )}
 
-          {/* Image Section - Simplified with hover zoom */}
           <div className="relative aspect-[5/3] bg-gray-100 overflow-hidden">
             <Image
               src={img || "/default-book.webp"}
@@ -78,7 +76,6 @@ const CardBook: React.FC<CardBookProps> = ({
             </div>
           </div>
 
-          {/* Content Section - Minimal Info */}
           <div className="p-4 space-y-3">
             <div>
               <h3 className="font-semibold text-library-dark line-clamp-2 text-lg">
@@ -89,7 +86,6 @@ const CardBook: React.FC<CardBookProps> = ({
               </p>
             </div>
 
-            {/* Rating & Categories - Simplified */}
             <div className="flex items-center gap-1.5 text-antique-gold">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
@@ -107,7 +103,6 @@ const CardBook: React.FC<CardBookProps> = ({
               ))}
             </div>
 
-            {/* Categories - Single Line */}
             {categories.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {categories.map(({ name }, i) => (

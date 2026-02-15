@@ -18,30 +18,26 @@ export default auth((req) => {
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isAdminRoute = adminRoutes.some((path) =>
-    nextUrl.pathname.startsWith(path)
+    nextUrl.pathname.startsWith(path),
   );
-
-  //Awlays allow going to the apiauth
 
   if (isApiAuthRoute) {
     return NextResponse.next();
   }
-  //allow to auth if not authenticated, if it is, dont allow
   if (isAuthRoute) {
     if (isLoggedIn) {
       if (session?.user.role === Role.MEMBER) {
         return NextResponse.redirect(
-          new URL(DEFAULT_LOGIN_REDIRECT[0], nextUrl)
+          new URL(DEFAULT_LOGIN_REDIRECT[0], nextUrl),
         );
       } else {
         return NextResponse.redirect(
-          new URL(DEFAULT_LOGIN_REDIRECT[1], nextUrl)
+          new URL(DEFAULT_LOGIN_REDIRECT[1], nextUrl),
         );
       }
     }
     return NextResponse.next();
   }
-  //if is not public and isnt logged in dont allow going there
   if (!isLoggedIn && !isPublicRoute) {
     let callbackUrl = nextUrl.pathname;
     console.log({ NEXT_URL: nextUrl.search });
@@ -51,7 +47,7 @@ export default auth((req) => {
     }
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
     return NextResponse.redirect(
-      new URL(`auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
+      new URL(`auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl),
     );
   }
 

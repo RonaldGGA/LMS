@@ -55,7 +55,7 @@ const RegisterPage = () => {
     }
     if (!checked) {
       return setErrorMessage(
-        "You have to agree with the terms & conditions before"
+        "You have to agree with the terms & conditions before",
       );
     }
 
@@ -97,7 +97,6 @@ const RegisterPage = () => {
 
   return (
     <div className="max-w-md mx-auto space-y-8">
-      {/* Encabezado temático */}
       <div className="text-center space-y-4">
         <div className="inline-flex bg-library-dark/5 p-4 rounded-2xl">
           <LibrarySquare className="h-12 w-12 text-library-dark" />
@@ -112,7 +111,6 @@ const RegisterPage = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Campo DNI con icono */}
           <FormField
             name="dni"
             render={({ field }) => (
@@ -135,7 +133,6 @@ const RegisterPage = () => {
             )}
           />
 
-          {/* Campo Usuario */}
           <FormField
             control={form.control}
             name="username"
@@ -159,7 +156,6 @@ const RegisterPage = () => {
             )}
           />
 
-          {/* Sección de Contraseñas */}
           <div className="space-y-8">
             <FormField
               control={form.control}
@@ -222,7 +218,6 @@ const RegisterPage = () => {
             />
           </div>
 
-          {/* Términos y Condiciones */}
           <div className="flex items-center space-x-3 justify-center">
             <Checkbox
               onCheckedChange={() => setChecked(!checked)}
@@ -247,7 +242,6 @@ const RegisterPage = () => {
             </label>
           </div>
 
-          {/* Botón de Registro */}
           <Button
             type="submit"
             disabled={loading}
@@ -262,7 +256,6 @@ const RegisterPage = () => {
             {loading ? "Creating Account..." : "Join the Library"}
           </Button>
 
-          {/* Mensaje de Error */}
           {errorMessage && (
             <div className="bg-red-50/80 p-4 rounded-xl border border-red-100 flex items-start gap-3 backdrop-blur-sm">
               <AlertCircle className="h-5 w-5 text-red-600/90 flex-shrink-0 mt-0.5" />
@@ -272,7 +265,6 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {/* Enlace de Login */}
           <div className="text-center space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

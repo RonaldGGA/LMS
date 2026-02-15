@@ -15,7 +15,6 @@ export type UserPendingNotification = {
 };
 
 const NotificationsPage = () => {
-  //add the type
   const [notifications, setNotifications] = useState<UserPendingNotification[]>(
     [],
   );

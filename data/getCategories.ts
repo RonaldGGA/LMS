@@ -4,7 +4,6 @@ import db from "@/lib/prisma";
 
 export const getCategories = async (name: string) => {
   try {
-    //TODO:IMPROVE
     const categories = await db.bookCategory.findMany({
       where: {
         name: {

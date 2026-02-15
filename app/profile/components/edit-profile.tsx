@@ -56,33 +56,28 @@ const EditProfile: React.FC<EditProfileProps> = ({
     [DNI, profileImg, username],
   );
 
-  // Set the values and form control
   const form = useForm({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: defaultFormValues,
   });
 
-  // handle any change in the values, allow submit button
   useEffect(() => {
     const debouncedHandleChange = debounce(
       (currentValues: Partial<FormValues>) => {
-        // Comparación de valores para determinar si el formulario ha cambiado
         const isFormDirty = Object.keys(currentValues).some((key) => {
           const keyTyped = key as keyof FormValues;
 
-          // Excluir oldPassword y newPassword de la comparación si están vacíos
           if (keyTyped === "oldPassword" || keyTyped === "newPassword") {
             return !!currentValues[keyTyped];
           }
 
-          // Comparación con los valores iniciales
           return currentValues[keyTyped] !== defaultFormValues[keyTyped];
         });
 
         setIsDirty(isFormDirty);
       },
       300,
-    ); // Ajusta el tiempo de debounce según tus necesidades
+    );
 
     const subscription = form.watch((currentValues: Partial<FormValues>) => {
       debouncedHandleChange(currentValues);
@@ -94,7 +89,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
     };
   }, [form, username, DNI, profileImg, oldPassword, defaultFormValues]);
 
-  // submit the new values of the profile
   const onSubmit = async (values: z.infer<typeof updateProfileSchema>) => {
     const result = updateProfileSchema.safeParse(values);
     if (!result.success) {
@@ -125,7 +119,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
 
     toast.success("Profile Edited");
 
-    // everything to default
     reset();
     toggleEdit();
     setIsDirty(false);
@@ -153,7 +146,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Profile Image Upload */}
             <FormField
               name="profileImg"
               render={({ field }) => (
@@ -190,7 +182,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
               )}
             />
 
-            {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {["username", "DNI", "oldPassword", "newPassword"].map(
                 (fieldName) => (
@@ -232,7 +223,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
               )}
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-col md:flex-row gap-3 justify-end">
               <Button
                 type="button"

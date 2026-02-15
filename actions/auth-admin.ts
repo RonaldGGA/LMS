@@ -5,9 +5,6 @@ import { hashPassword } from "@/lib/utils";
 import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-//register a new user
-
-//get all the inputs
 interface registerAdminProps {
   username: string;
   password: string;
@@ -15,11 +12,9 @@ interface registerAdminProps {
   role?: Role;
 }
 
-//TODO validar si la fecha del DNI es valida
 export const registerAdmin = async (values: registerAdminProps) => {
   const result = db.$transaction(async (tx) => {
     const { username, password, dni } = values;
-    // TODO: validate Role
     if (!username || !password || !dni || dni.length != 11) {
       return { success: false, error: "Missing or invalid values" };
     }
@@ -57,7 +52,6 @@ export const registerAdmin = async (values: registerAdminProps) => {
   return result;
 };
 
-//login a new user
 interface loginUserProps {
   username: string;
   password: string;
@@ -67,13 +61,10 @@ export const loginUser = async (values: loginUserProps) => {
   let user = null;
 
   try {
-    // get the inputs and validate
-    // console.log(values);
     const { username, password } = values;
     if (!username || !password) {
       return user;
     }
-    // get the user in the db and validate
     const dbUser = await db.userAccount.findFirst({
       where: {
         username,
@@ -82,12 +73,10 @@ export const loginUser = async (values: loginUserProps) => {
     if (!dbUser) {
       return user;
     }
-    // validate the password correctness
     const validatePassword = await bcrypt.compare(password, dbUser.password);
     if (!validatePassword) {
       return user;
     }
-    // return the user with username and password
     user = {
       id: dbUser.id,
       username: dbUser.username,

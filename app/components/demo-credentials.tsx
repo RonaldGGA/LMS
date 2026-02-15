@@ -1,4 +1,3 @@
-// components/DemoCredentialsFloater.tsx
 "use client";
 
 import { useState } from "react";
@@ -9,14 +8,6 @@ export default function DemoCredentialsFloater() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Ocultar después de 30 segundos (opcional)
-  //   useEffect(() => {
-  //     const timer = setTimeout(() => {
-  //       setIsVisible(false);
-  //     }, 30000);
-
-  //     return () => clearTimeout(timer);
-  //   }, []);
 
   const copyToClipboard = async (text: string, type: string) => {
     await navigator.clipboard.writeText(text);
@@ -43,7 +34,6 @@ export default function DemoCredentialsFloater() {
 
   return (
     <div className="fixed bottom-4 right-4 z-40">
-      {/* Tarjeta principal */}
       <div
         className={`
           relative transition-all duration-300 ease-in-out
@@ -54,7 +44,6 @@ export default function DemoCredentialsFloater() {
           }
         `}
       >
-        {/* Botón de cierre */}
         <button
           onClick={() => setIsVisible(false)}
           className="absolute -top-2 -right-2 z-50 w-6 h-6 rounded-full 
@@ -65,7 +54,6 @@ export default function DemoCredentialsFloater() {
           <X size={12} className="text-yellow-400" />
         </button>
 
-        {/* Contenido expandido */}
         {isExpanded ? (
           <div
             className="bg-black/95 backdrop-blur-sm border border-yellow-500/30 
@@ -159,7 +147,6 @@ export default function DemoCredentialsFloater() {
             </div>
           </div>
         ) : (
-          /* Botón colapsado */
           <button
             onClick={() => setIsExpanded(true)}
             className="w-full h-12 rounded-lg bg-black/95 backdrop-blur-sm 

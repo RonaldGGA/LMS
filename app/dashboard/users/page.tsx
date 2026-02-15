@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UserCreationDialog from "./components/user-creation-dialog";
 import UserEditDialog from "./components/user-editing";
-// import NextImprovements from "@/app/components/next-improvements";
 import {
   Tooltip,
   TooltipContent,
@@ -105,8 +104,8 @@ const UsersDashboardPage = () => {
       }
       setUsers(
         users.map((user) =>
-          user.id === userId ? { ...user, role: newRole } : user
-        )
+          user.id === userId ? { ...user, role: newRole } : user,
+        ),
       );
       toast.success("User role updated succesfully");
     } catch (error) {
@@ -124,18 +123,8 @@ const UsersDashboardPage = () => {
   }
 
   if (!session || !["SUPERADMIN", "LIBRARIAN"].includes(session.role)) {
-    // Probably not need as I have middleware
     return <div className="p-6">Unauthorized access</div>;
   }
-
-  // const next = [
-  //   "Implement user status handling online/offline",
-  //   "Implement unique user view page for the admin",
-  //   "Implement user loans and request handling",
-  //   "implement a better actions ui",
-  //   "Improve user creatin requirements, actually an admin can create invalid users",
-  //   "Implement pagination, table pagination and better mobile ux and ui",
-  // ];
 
   return (
     <div className="p-6 space-y-6 bg-library-dark text-ivory-50 rounded-xl shadow-2xl border border-library-midnight">
@@ -303,22 +292,6 @@ const UsersDashboardPage = () => {
           onClose={() => setSelectedUser(null)}
         />
       )}
-
-      {/* <NextImprovements>
-        <div className="mt-8 p-4 bg-library-midnight/50 rounded-lg">
-          <h4 className="text-golden-amber font-bold mb-3">
-            Next Improvements
-          </h4>
-          <ol className="space-y-2 text-ivory-50/80">
-            {next.map((item: string, index: number) => (
-              <li key={index} className="flex items-center">
-                <span className="text-golden-amber mr-2">▶</span>
-                {index + 1}. {item}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </NextImprovements> */}
     </div>
   );
 };

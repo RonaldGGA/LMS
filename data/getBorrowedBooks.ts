@@ -4,7 +4,6 @@ import db from "@/lib/prisma";
 import { createErrorResponse } from "@/lib/utils";
 
 export const getBorrowedBooksByUser = async (id: string) => {
-  //improve this
   try {
     const response = await db.bookLoan.findMany({
       where: {
@@ -33,7 +32,7 @@ export const getBorrowedBooksByUser = async (id: string) => {
     });
     if (!response) {
       return createErrorResponse(
-        "Error fetching the books borrowed by the user"
+        "Error fetching the books borrowed by the user",
       );
     }
     return { success: true, error: null, data: response };
@@ -41,7 +40,7 @@ export const getBorrowedBooksByUser = async (id: string) => {
     if (err) {
       console.log(err);
       return createErrorResponse(
-        "Internal server error finding the books borrowed by the user"
+        "Internal server error finding the books borrowed by the user",
       );
     }
   }

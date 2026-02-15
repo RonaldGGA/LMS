@@ -4,7 +4,7 @@ import { CategoryPlus } from "@/types";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const currentBook = await prisma.bookTitle.findUnique({
     where: {
@@ -26,8 +26,6 @@ export async function GET(
     return new NextResponse("Book not found", { status: 404 });
   }
 
-  // Recomendations by same author
-
   const sameAuthor = await prisma.bookTitle.findMany({
     where: {
       authorId: currentBook.authorId,
@@ -36,8 +34,6 @@ export async function GET(
     take: 3,
     orderBy: [{ loanCount: "desc" }, { averageRating: "desc" }],
   });
-
-  // Recomnendations by same categories
 
   const categoryIds = currentBook.categories.map((cat) => cat.id);
 
@@ -56,8 +52,6 @@ export async function GET(
     orderBy: [{ loanCount: "desc" }, { averageRating: "desc" }],
   });
 
-  // Recomendations by usually borrowed together books(VERY simple)
-
   const frequentlyTogether = await prisma.bookTitle.findMany({
     where: {
       id: {
@@ -71,7 +65,6 @@ export async function GET(
     take: 3,
   });
 
-  // Combine and unduplicate
   const recommendations = [
     ...sameAuthor,
     ...sameCategories,
@@ -85,7 +78,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const {
@@ -96,11 +89,10 @@ export async function PATCH(
       price = "",
     } = await req.json();
 
-    // Validar ID
     if (!params.id) {
       return NextResponse.json(
         { error: "ID of the book required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,12 +107,10 @@ export async function PATCH(
           categories?: any;
         } = {};
 
-        // Actualizar campos básicos
         if (book_name) data.title = book_name;
         if (img) data.img = img;
         if (price) data.book_price = price;
 
-        // Manejar autor
         if (author) {
           const authorExists = await tx.bookAuthor.findUnique({
             where: { author_name: author },
@@ -135,9 +125,7 @@ export async function PATCH(
             data.author = newAuthor.id;
           }
         }
-        // Handle categories
         if (categories.length > 0) {
-          // Map categories for connectOrCreate
           data.categories = {
             connectOrCreate: categories.map((category: CategoryPlus) => ({
               where: { id: category.id },
@@ -146,7 +134,6 @@ export async function PATCH(
           };
         }
 
-        // Update book title
         const book = await tx.bookTitle.update({
           where: { id: params.id },
           data: {
@@ -165,7 +152,7 @@ export async function PATCH(
       },
       {
         timeout: 30000,
-      }
+      },
     );
 
     return NextResponse.json(result);
@@ -173,14 +160,14 @@ export async function PATCH(
     console.error("Error en PATCH:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     await prisma.bookTitle.delete({

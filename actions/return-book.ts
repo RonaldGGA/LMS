@@ -14,13 +14,11 @@ export const returnBook = async (bookId: string) => {
   const result = await db.$transaction(
     async (tx) => {
       try {
-        //get the book from the db
         const dbBook = await getBookById(bookId);
         if (!dbBook?.success || !dbBook.data) {
           throw new Error(`Invalid book with id ${bookId}`);
         }
 
-        //get the actual user
         const session = await auth();
         const userId = session?.user?.id;
         if (!userId) {
@@ -46,18 +44,18 @@ export const returnBook = async (bookId: string) => {
         });
         if (!book || !book.bookCopies || book.bookCopies.length === 0) {
           return createErrorResponse(
-            `Book with the id ${bookId} has no copies available`
+            `Book with the id ${bookId} has no copies available`,
           );
         }
         const activeLoan = book.bookCopies
           .flatMap((copy) => copy.bookLoans)
           .filter(
             (loan) =>
-              loan.status === BookLoanStatus.ISSUED && loan.userId === userId
+              loan.status === BookLoanStatus.ISSUED && loan.userId === userId,
           );
         if (activeLoan.length > 1) {
           return createErrorResponse(
-            "There are 2 copies or more borrowed by the same user "
+            "There are 2 copies or more borrowed by the same user ",
           );
         }
         if (activeLoan.length === 0) {
@@ -90,7 +88,7 @@ export const returnBook = async (bookId: string) => {
 
           if (!BookLoanRequest) {
             return createErrorResponse(
-              `No se encontró una solicitud de préstamo aceptada para el usuario ${userId} y la copia del libro con el id:${bookId}`
+              `No se encontró una solicitud de préstamo aceptada para el usuario ${userId} y la copia del libro con el id:${bookId}`,
             );
           }
           const securityDepositRefund = await tx.bookSecurityDeposit.update({
@@ -109,7 +107,6 @@ export const returnBook = async (bookId: string) => {
           }
         }
 
-        // Update the returned date of the book to now and the avaibility in the issue table
         const updateLoanResult = await tx.bookLoan.update({
           where: {
             id: activeLoan[0].id,
@@ -121,10 +118,9 @@ export const returnBook = async (bookId: string) => {
         });
         if (!updateLoanResult) {
           return createErrorResponse(
-            `Error updating the status of the book in the loan table`
+            `Error updating the status of the book in the loan table`,
           );
         }
-        // Update the book stock status
         const updateStockResult = await tx.bookTitle.update({
           where: {
             id: bookId,
@@ -137,8 +133,6 @@ export const returnBook = async (bookId: string) => {
           return createErrorResponse("Error updating the stock of the book");
         }
 
-        // We should handle the amount as the user inputs it, maybe next year xd
-
         return { success: true, error: null, data: updateStockResult };
       } catch (error) {
         console.log(error);
@@ -147,7 +141,7 @@ export const returnBook = async (bookId: string) => {
     },
     {
       timeout: 30000,
-    }
+    },
   );
   return result;
 };

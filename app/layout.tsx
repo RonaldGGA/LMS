@@ -25,7 +25,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  // En _app.js o layout principal
 
   let dbUser = null;
   if (session?.user?.id) {
@@ -49,7 +48,6 @@ export default async function RootLayout({
             )}
           </main>
 
-          {/* Footer Opcional */}
           <footer className="border-t border-gray-200 mt-16 absolute bottom-0 left-0 w-full -z-10">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-sm text-gray-500">
               © {format(new Date(Date.now()), "yyy")} LibraryHub. All rights

@@ -51,8 +51,6 @@ type DashboardData = {
     totalDeposits: string;
   };
   recentLoans: DashboardRecentLoans[];
-  // activeDeposits: any[];
-  // pendingRequests: any[];
 };
 
 export default function DashboardPage() {

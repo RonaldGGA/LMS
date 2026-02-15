@@ -1,8 +1,6 @@
 import { Role } from "@prisma/client";
 import { z } from "zod";
 
-// Single fields schema
-
 export const dniSchema = z
   .string()
   .length(11, {
@@ -20,17 +18,15 @@ export const dniSchema = z
       if (month < 1 || month > 12) return false;
       if (day < 1 || day > 31) return false;
 
-      // Validación avanzada de días por mes
       const daysInMonth = new Date(2000 + year, month, 0).getDate();
       return day <= daysInMonth;
     },
     {
       message: "First 6 digits do not make a valid date (YYMMDD)",
-    }
+    },
   )
   .refine(
     (dni) => {
-      // Validate these digits with country-specific logics
       const sequence = dni.substring(6, 9);
       const checkDigit = dni.substring(9, 11);
 
@@ -38,7 +34,7 @@ export const dniSchema = z
     },
     {
       message: "Post-sequency invalid",
-    }
+    },
   );
 
 export const usernameSchema = z
@@ -51,7 +47,7 @@ export const usernameSchema = z
   })
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Username can only contain letters, numbers and underscores"
+    "Username can only contain letters, numbers and underscores",
   )
   .regex(/^(?![0-9_]).*$/, "Username cannot start with a number or underscore");
 
@@ -65,12 +61,11 @@ export const priceSchema = z
     },
     {
       message: "Minimum price is 0 and maximum price is 999",
-    }
+    },
   );
 export const passwordSchema = z
   .string()
   .superRefine((val, ctx) => {
-    // Permitir strings vacíos que serán transformados a undefined
     if (val === "") return true;
 
     if (val.length < 8) {
@@ -123,8 +118,6 @@ export const passwordSchema = z
   })
   .transform((val) => (val === "" ? undefined : val));
 
-// formSchemas
-
 export const loginSchema = z.object({
   username: usernameSchema,
   password: z.string().min(1, "Password is required"),
@@ -134,22 +127,22 @@ export const registerSchema = z.object({
   username: usernameSchema,
   password: z
     .string()
-    .min(1, "Password is required") // Validar campo requerido
+    .min(1, "Password is required")
     .min(8, "Password must be at least 8 characters")
     .max(30, "Password cannot exceed 30 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>]).{8,}$/,
-      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character"
+      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character",
     )
     .transform((val) => val.trim()),
   confirmPassword: z
     .string()
-    .min(1, "Password is required") // Validar campo requerido
+    .min(1, "Password is required")
     .min(8, "Password must be at least 8 characters")
     .max(30, "Password cannot exceed 30 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>]).{8,}$/,
-      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character"
+      "Password must contain at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character",
     )
     .transform((val) => val.trim()),
   dni: dniSchema,

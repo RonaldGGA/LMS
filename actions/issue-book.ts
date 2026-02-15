@@ -13,12 +13,11 @@ export const issueBook = async (
   id: string,
   providedUserId?: string,
   requestId?: string,
-  role?: Role
+  role?: Role,
 ) => {
   try {
     const result = await db.$transaction(
       async (tx) => {
-        // get the userId
         const session = await auth();
         let userId;
 
@@ -26,7 +25,7 @@ export const issueBook = async (
           userId = session?.user?.id;
           if (!userId) {
             throw new Error(
-              "Invalid userId, not signed or admin didnt called it"
+              "Invalid userId, not signed or admin didnt called it",
             );
           }
         } else {
@@ -39,7 +38,6 @@ export const issueBook = async (
           allowed = true;
         }
 
-        // get the book from the db
         const dbBook = await getBookById(id);
 
         if (!dbBook?.success || !dbBook.data) {
@@ -49,7 +47,6 @@ export const issueBook = async (
           throw new Error("Book not avaible, out of stock");
         }
 
-        // Check if the user already requested or owns one of the books
         const allBookRequestedCopies = await db.bookCopy.findFirst({
           where: {
             bookTitleId: id,
@@ -71,7 +68,6 @@ export const issueBook = async (
           throw new Error("User already owns or requested one of the books");
         }
 
-        // Check if there are books avaible in stock
         if (dbBook.data.stock <= 0) {
           throw new Error("Book not avaible in stock");
         }
@@ -79,11 +75,11 @@ export const issueBook = async (
         // ToDo:not needed for mvp time zone correct handling
         const issued_date = format(
           new Date(Date.now()),
-          "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        ); // 'Z' indica UTC
+          "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        );
         const return_date = format(
           new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-          "yyyy-MM-dd'T'HH:mm:ss'Z'"
+          "yyyy-MM-dd'T'HH:mm:ss'Z'",
         );
 
         const bookCopy = await tx.bookCopy.findFirst({
@@ -95,13 +91,11 @@ export const issueBook = async (
           throw new Error("Error searching an avaible copy to issue");
         }
 
-        // Use the data from the book to coonect that book with the issued ones
         const bookLoanData = await tx.bookLoan.create({
           data: {
             bookCopyId: bookCopy.id,
             userId,
             status: BookLoanStatus.ISSUED,
-            //Improve time zone handling, not needed for the mvp
             loanDate: issued_date,
             returnDate: return_date,
           },
@@ -111,7 +105,6 @@ export const issueBook = async (
           throw new Error("Something happened creating the new loan");
         }
 
-        // Update all the copies of the book in the stock
         const updateStock = await tx.bookTitle.update({
           where: {
             id,
@@ -124,7 +117,6 @@ export const issueBook = async (
           throw new Error("Error updating the book in the stock");
         }
 
-        // If the book needs a payment, then accept it if the admin called this function allowing it
         if (
           dbBook.data &&
           parseFloat(dbBook.data?.book_price) > 0 &&
@@ -134,11 +126,11 @@ export const issueBook = async (
           const acceptIssueRequestResult = await acceptLoanRequest(
             requestId,
             "Paymend correctly verified",
-            role
+            role,
           );
           if (!acceptIssueRequestResult.success) {
             return createErrorResponse(
-              "Couldnt manage the notification request"
+              "Couldnt manage the notification request",
             );
           }
         }
@@ -148,14 +140,14 @@ export const issueBook = async (
       },
       {
         timeout: 30000,
-      }
+      },
     );
 
     return result;
   } catch (error) {
     console.log(error);
     return createErrorResponse(
-      "Something happened server side in issue-books action"
+      "Something happened server side in issue-books action",
     );
   }
 };

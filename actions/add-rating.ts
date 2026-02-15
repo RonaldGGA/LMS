@@ -14,14 +14,10 @@ export const addRating = async (values: addRatingProps) => {
   const result = await db.$transaction(
     async (tx) => {
       try {
-        // validate inputs
         if (!userId || !userRating || !bookId || !bookId) {
           return createErrorResponse("Invalid rating values");
         }
 
-        // TODO: really validate the inputs
-
-        //check if the user already rated it
         const dbRating = await tx.bookRating.findFirst({
           where: {
             userId,
@@ -39,7 +35,7 @@ export const addRating = async (values: addRatingProps) => {
           });
           if (!updatedRating) {
             return createErrorResponse(
-              "Something happened updating the rating"
+              "Something happened updating the rating",
             );
           } else {
             return {
@@ -50,7 +46,6 @@ export const addRating = async (values: addRatingProps) => {
           }
         }
 
-        // add the rating if its a new rating
         const rating = await tx.bookRating.create({
           data: {
             userId,
@@ -67,13 +62,13 @@ export const addRating = async (values: addRatingProps) => {
       } catch (error) {
         console.log(error);
         return createErrorResponse(
-          "Something happened in the server in rating adding"
+          "Something happened in the server in rating adding",
         );
       }
     },
     {
       timeout: 30000,
-    }
+    },
   );
   return result;
 };

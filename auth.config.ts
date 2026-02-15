@@ -14,12 +14,10 @@ export default {
       async authorize(credentials) {
         try {
           const { success, error, data } = loginSchema.safeParse(credentials);
-          // Input validation
           if (!success) {
             throw new Error(error.message);
           }
 
-          // Find user in database
           const dbUser = await prisma.userAccount.findFirst({
             where: {
               username: data.username || "",
@@ -30,10 +28,9 @@ export default {
             throw new Error("User not found");
           }
 
-          // Validate password
           const validatePassword = await bcrypt.compare(
             data.password,
-            dbUser.password
+            dbUser.password,
           );
 
           if (!validatePassword) {

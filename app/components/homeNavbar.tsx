@@ -58,7 +58,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
         const countResponse = await getUserNotificationsCount(user.id);
         if (countResponse.success) {
           setUserNotificationsCount(
-            countResponse.data ? countResponse.data : 0
+            countResponse.data ? countResponse.data : 0,
           );
         }
       }
@@ -81,7 +81,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
   const handleLogout = async () => {
     await signOut({
       redirectTo: "/auth/login",
-    }); // Assuming you're using next-auth
+    });
     router.push("/auth/login");
   };
   if (!user) {
@@ -100,7 +100,6 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {(user?.role === Role.LIBRARIAN ||
               user?.role === Role.SUPERADMIN) && (
@@ -124,7 +123,6 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center gap-4">
           <Link
             href="/"

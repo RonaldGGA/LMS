@@ -7,7 +7,6 @@ import { getUserForProfile } from "@/data/getUser";
 import toast from "react-hot-toast";
 import EditProfile from "./components/edit-profile";
 import ShowProfile from "./components/show-profile";
-// import NextImprovements from "../components/next-improvements";
 
 export type UserProfile = {
   username: string;
@@ -25,17 +24,16 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch user data from the database
     const getUserDb = async (userId: string) => {
       try {
         const dbUser = await getUserForProfile(userId);
         if (!dbUser || (dbUser?.success && dbUser?.error)) {
-          toast.error("User not found"); // Inform user about the issue
-          router.push("/auth/login"); // Redirect to login
+          toast.error("User not found");
+          router.push("/auth/login");
           return;
         }
         if (!dbUser?.data) {
-          toast.error("No data from the user"); // Inform user about the issue
+          toast.error("No data from the user");
         }
         setDbUserData(dbUser.data);
       } catch (error) {
@@ -61,11 +59,6 @@ const Profile = () => {
   if (!dbUserData) {
     return <>User not found</>;
   }
-  // const next = [
-  //   "Make this page prettier",
-  //   "Show more information",
-  //   "Implement better loading states ",
-  // ];
 
   return (
     <div className="container w-full p-4">
@@ -87,13 +80,6 @@ const Profile = () => {
           />
         )}
       </div>
-      {/* <NextImprovements className={"mt-10 space-y-5"}>
-        <ul className="space-y-2">
-          {next.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      </NextImprovements> */}
     </div>
   );
 };

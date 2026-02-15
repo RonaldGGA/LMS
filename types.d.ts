@@ -10,7 +10,6 @@ declare global {
   }
 }
 
-///////////////
 type ServiceError = {
   code: string;
   userMessage: string;

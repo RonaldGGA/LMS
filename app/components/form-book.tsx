@@ -33,15 +33,14 @@ const FormBooks: React.FC<FormBooksProps> = ({ book, onSuccess }) => {
   const router = useRouter();
 
   const [selectedCategories, setSelectedCategories] = useState<CategoryPlus[]>(
-    []
+    [],
   );
   const [isSubmiting, setIsSubmiting] = useState(false);
 
-  // In edit: Initialice categories and author name
   useEffect(() => {
     if (book?.categories) {
       setSelectedCategories(
-        book.categories.map((item) => ({ ...item, isNew: false }))
+        book.categories.map((item) => ({ ...item, isNew: false })),
       );
     }
   }, [book]);
@@ -131,7 +130,6 @@ const FormBooks: React.FC<FormBooksProps> = ({ book, onSuccess }) => {
       <CardContent className="pt-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Image Input */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,7 +156,6 @@ const FormBooks: React.FC<FormBooksProps> = ({ book, onSuccess }) => {
                 </motion.div>
               </div>
 
-              {/* Right Column */}
               <div className="space-y-8">
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
@@ -228,7 +225,6 @@ const FormBooks: React.FC<FormBooksProps> = ({ book, onSuccess }) => {
                 </Button>
               </div>
 
-              {/* Error Indicator */}
               <div className="mt-4 text-center">
                 {form.formState.errors &&
                   Object.keys(form.formState.errors).length > 0 && (

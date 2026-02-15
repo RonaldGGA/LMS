@@ -34,7 +34,6 @@ const AdminNotification: React.FC<AdminNotificationProps> = ({
   return (
     <div className="group relative bg-white rounded-xl p-6 shadow-sm transition-all hover:shadow-md border border-slate-100 max-w-2xl w-full">
       <div className="flex flex-col gap-4">
-        {/* Header Section */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -50,7 +49,6 @@ const AdminNotification: React.FC<AdminNotificationProps> = ({
           </Badge>
         </div>
 
-        {/* Metadata Section */}
         <div className="flex flex-col text-sm">
           <div className="flex items-center gap-2 text-slate-600">
             <User className="w-4 h-4 text-slate-400" />
@@ -66,7 +64,6 @@ const AdminNotification: React.FC<AdminNotificationProps> = ({
           </div>
         </div>
 
-        {/* Action Section */}
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <Button
             onClick={handleAccept}

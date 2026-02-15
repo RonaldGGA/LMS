@@ -7,7 +7,6 @@ export async function GET() {
   try {
     const session = await auth();
 
-    // check the user is logged in and his admin role
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -28,10 +27,7 @@ export async function GET() {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    // Get all the data
-    // const [stats, recentLoans, activeDeposits, pendingRequests] =
     const [stats, recentLoans] = await Promise.all([
-      // Stats
       {
         totalBooks: await prisma.bookTitle.count(),
 
@@ -58,7 +54,6 @@ export async function GET() {
             }, 0);
           }),
       },
-      // Recent Loans
 
       prisma.bookLoan.findMany({
         where: { status: "ISSUED" },
@@ -84,34 +79,6 @@ export async function GET() {
         orderBy: { loanDate: "desc" },
         take: 5,
       }),
-
-      // Active Deposits
-
-      // prisma.bookSecurityDeposit.findMany({
-      //   where: {
-      //     state: "ACTIVE",
-      //   },
-      //   select: {
-      //     bookCopy: { include: { bookTitle: true } },
-      //     user: {
-      //       select: {
-      //         id: true,
-      //       },
-      //     },
-      //   },
-      // }),
-
-      // Pending Requests
-
-      //   prisma.bookLoanRequest.findMany({
-      //     where: { status: "PENDING" },
-      //     include: {
-      //       bookCopy: {
-      //         include: { bookTitle: true },
-      //       },
-      //       user: true,
-      //     },
-      //   }),
     ]);
     return Response.json({
       stats,

@@ -37,18 +37,16 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Actualizar el valor del formulario cuando cambian las categorías seleccionadas
   useEffect(() => {
     if (selectedCategories.length > 0) {
       form.setValue(
         "categories",
         selectedCategories.map(({ id, name }) => ({ id, name })),
-        { shouldValidate: !!form.formState.submitCount }
+        { shouldValidate: !!form.formState.submitCount },
       );
     }
   }, [selectedCategories, form]);
 
-  // Búsqueda debounceada
   const searchCategories = useMemo(
     () =>
       debounce(async (query: string) => {
@@ -56,7 +54,7 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
           const res = await getCategories(query);
           if (res?.success && res.data) {
             setAvailableCategories(
-              res.data.map((c) => ({ ...c, isNew: false }))
+              res.data.map((c) => ({ ...c, isNew: false })),
             );
           }
         } catch (error) {
@@ -64,7 +62,7 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
           toast.error("Error loading categories");
         }
       }, 300),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -98,16 +96,16 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
 
   const handleRemoveCategory = (categoryId: string) => {
     setSelectedCategories(
-      selectedCategories.filter((c) => c.id !== categoryId)
+      selectedCategories.filter((c) => c.id !== categoryId),
     );
   };
 
   const filteredCategories = useMemo(
     () =>
       availableCategories.filter(
-        (c) => !selectedCategories.some((sc) => sc.id === c.id)
+        (c) => !selectedCategories.some((sc) => sc.id === c.id),
       ),
-    [availableCategories, selectedCategories]
+    [availableCategories, selectedCategories],
   );
 
   return (
@@ -126,7 +124,6 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
 
             <FormControl>
               <div className="space-y-3 relative">
-                {/* Selected Categories */}
                 <div className="flex flex-wrap gap-2 min-h-[20px] items-start p-1">
                   {selectedCategories.map((category) => (
                     <Badge
@@ -151,7 +148,6 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
                   ))}
                 </div>
 
-                {/* Search & Dropdown */}
                 <div className="relative group">
                   <div className="relative flex gap-2 items-center">
                     <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-ivory-50/50" />
@@ -227,7 +223,7 @@ const CategoriesInput: React.FC<CategoriesInputProps> = ({
                               {category.name}
                             </span>
                             {selectedCategories.some(
-                              (c) => c.id === category.id
+                              (c) => c.id === category.id,
                             ) && (
                               <Check className="w-4 h-4 text-antique-gold" />
                             )}

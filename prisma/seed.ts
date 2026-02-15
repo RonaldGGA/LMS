@@ -1,8 +1,6 @@
-// prisma/seed.ts
 import dotenv from "dotenv";
 import path from "path";
 
-// Load environment variables FIRST
 dotenv.config({
   path: path.resolve(process.cwd(), ".env.local"),
 });
@@ -21,7 +19,6 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// Sample data arrays
 const authors = [
   {
     name: "J.K. Rowling",
@@ -220,7 +217,6 @@ async function cleanDatabase() {
   console.log("🧹 Cleaning existing data...");
 
   try {
-    // Usa deleteMany en lugar de TRUNCATE
     await prisma.bookLoanRequest.deleteMany();
     await prisma.bookSecurityDeposit.deleteMany();
     await prisma.bookLoan.deleteMany();
@@ -247,7 +243,6 @@ async function main() {
     await prisma.$connect();
     console.log("✅ Connected to database");
 
-    // Optional: Uncomment to clean database first
     await cleanDatabase();
 
     console.log("👥 Creating users...");
@@ -291,7 +286,6 @@ async function main() {
     console.log("📚 Creating book titles...");
     const createdBookTitles = [];
     for (const bookData of bookTitles) {
-      // Find category IDs for this book
       const categoryIds = createdCategories
         .filter((cat) => bookData.categories.includes(cat.name))
         .map((cat) => ({ id: cat.id }));
@@ -403,7 +397,6 @@ async function main() {
 
       depositAndRequestPromises.push(
         (async () => {
-          // First create a security deposit
           const deposit = await prisma.bookSecurityDeposit.create({
             data: {
               userId: user.id,
@@ -424,7 +417,6 @@ async function main() {
             },
           });
 
-          // Then create the loan request linked to the deposit
           return prisma.bookLoanRequest.create({
             data: {
               bookCopyId: copy.id,
@@ -450,7 +442,7 @@ async function main() {
                 "Course requirement",
                 "Gift for a friend",
               ][Math.floor(Math.random() * 5)],
-              bookSecurityDepositId: deposit.id, // This field is required
+              bookSecurityDepositId: deposit.id,
             },
           });
         })(),
@@ -499,7 +491,6 @@ async function main() {
     });
     console.log(`   Created ${notificationData.length} notifications`);
 
-    // Update book statistics based on created data
     console.log("📊 Updating book statistics...");
     for (const bookTitle of createdBookTitles) {
       const ratings = await prisma.bookRating.findMany({
@@ -555,7 +546,6 @@ async function main() {
   }
 }
 
-// Execute
 if (require.main === module) {
   main();
 }

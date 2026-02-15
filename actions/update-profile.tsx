@@ -17,13 +17,11 @@ interface updateProfileProps {
 export const updateProfile = async (values: updateProfileProps) => {
   try {
     const { username, DNI, profileImg, newPassword, oldPassword } = values;
-    //get the userID
     const session = await auth();
     if (!session?.user?.id) {
       return createErrorResponse("User unreachable");
     }
 
-    // TODO: improve validate inputs
     if (
       username &&
       DNI &&
@@ -37,17 +35,16 @@ export const updateProfile = async (values: updateProfileProps) => {
 
     if (!newPassword && oldPassword) {
       return createErrorResponse(
-        "You just need your old password if you are going to change your new password"
+        "You just need your old password if you are going to change your new password",
       );
     }
 
     if (newPassword) {
       if (!oldPassword) {
         return createErrorResponse(
-          "You need to provide the old password if you are setting a new one"
+          "You need to provide the old password if you are setting a new one",
         );
       } else {
-        //check last password
         const user = await getUserById(session.user.id);
         if (!user) {
           return createErrorResponse("Error getting the user");
@@ -55,21 +52,18 @@ export const updateProfile = async (values: updateProfileProps) => {
         const result = await bcrypt.compare(oldPassword, user.password);
         if (!result) {
           return createErrorResponse(
-            "Your old password is incorrect, please provide the last password you used for your account"
+            "Your old password is incorrect, please provide the last password you used for your account",
           );
         }
         if (newPassword.length < 7) {
           return createErrorResponse(
-            "Your password must be larger, 7 characters minimun"
+            "Your password must be larger, 7 characters minimun",
           );
         }
         hashedPassword = await hashPassword(newPassword);
       }
     }
 
-    // TODO: really check all the inputs
-
-    // update the user info
     const user = await db.userAccount.update({
       where: {
         id: session.user.id,

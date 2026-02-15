@@ -13,7 +13,7 @@ export const ImageUpload = ({
     <CldUploadWidget
       options={{
         multiple: false,
-        sources: ["local"], // Solo permite subir desde el ordenador
+        sources: ["local"],
         resourceType: "image",
         clientAllowedFormats: [
           "jpg",
@@ -32,22 +32,22 @@ export const ImageUpload = ({
           palette: {
             window: "#ffffff",
             windowBorder: "#e0e0e0",
-            tabIcon: "library-midnight", // Color principal
-            menuIcons: "library-midnight", // Color de íconos
-            textDark: "#1f2937", // Texto oscuro
-            textLight: "#ffffff", // Texto claro
-            link: "library-midnight", // Enlaces
-            action: "antique-gold", // Botones de acción
-            inactiveTabIcon: "#9ca3af", // Pestañas inactivas
-            error: "#dc2626", // Errores
-            inProgress: "library-midnight", // Progreso
-            complete: "#16a34a", // Completado
+            tabIcon: "library-midnight",
+            menuIcons: "library-midnight",
+            textDark: "#1f2937",
+            textLight: "#ffffff",
+            link: "library-midnight",
+            action: "antique-gold",
+            inactiveTabIcon: "#9ca3af",
+            error: "#dc2626",
+            inProgress: "library-midnight",
+            complete: "#16a34a",
           },
           frame: {
             background: "transparent",
           },
           fonts: {
-            default: null, // Usa la fuente de tu sitio
+            default: null,
           },
         },
         text: {
@@ -92,7 +92,6 @@ export const ImageUpload = ({
               aria-label="Upload profile photo"
             >
               <div className="relative flex flex-col items-center">
-                {/* Icon Container with animated background */}
                 <div
                   className="  
       p-3 rounded-full  
@@ -113,7 +112,6 @@ export const ImageUpload = ({
                   />
                 </div>
 
-                {/* Text Label with responsive visibility */}
                 <span
                   className="  
       mt-2 text-sm font-medium text-library-midnight   
@@ -125,7 +123,6 @@ export const ImageUpload = ({
                 </span>
               </div>
 
-              {/* Hover Overlay */}
               <div
                 className="  
     absolute inset-0 rounded-full   
@@ -135,7 +132,6 @@ export const ImageUpload = ({
   "
               />
 
-              {/* Loading State */}
               {isLoading && (
                 <div
                   className="  

@@ -24,7 +24,6 @@ const AuthorInput = ({ form }: { form: UseFormReturn<BookFormValues> }) => {
   const bookValue = form.watch("title");
   const authorValue = form.watch("author");
 
-  // Debounced search function
   const fetchAuthors = useCallback(
     debounce(async (query: string) => {
       if (query.length < 2) {
@@ -45,7 +44,7 @@ const AuthorInput = ({ form }: { form: UseFormReturn<BookFormValues> }) => {
         setIsLoading(false);
       }
     }, 300),
-    [authorValue]
+    [authorValue],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

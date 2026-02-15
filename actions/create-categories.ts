@@ -6,14 +6,9 @@ import { CategoryPlus } from "@/types";
 
 export const createCategoriesPlus = async (values: CategoryPlus[]) => {
   try {
-    // validate inputs
     if (!(values.length > 0)) {
       return createErrorResponse("Invalid category quantity");
     }
-
-    // TODO: really validate the inputs
-
-    // create the categories
     const categories = await db.bookCategory.createMany({
       data: values.map((item) => ({ id: item.id, name: item.name })),
     });

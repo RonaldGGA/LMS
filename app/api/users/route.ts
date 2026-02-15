@@ -4,7 +4,6 @@ import { registerUser } from "@/actions/auth-user";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// Get users
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("query") || "";
@@ -34,7 +33,6 @@ export async function GET(req: Request) {
   }
 }
 
-// CREATE USER
 export async function POST(req: Request) {
   let body;
   try {
@@ -49,14 +47,14 @@ export async function POST(req: Request) {
 
     const response = await registerUser({ username, password, dni, role });
     if (!response.success) {
-      console.error("registerUser error:", response.error); // Use console.error for errors
+      console.error("registerUser error:", response.error);
       return NextResponse.json(
         { error: response.error || "Failed to create user" },
-        { status: 400 }
-      ); // Send specific error
+        { status: 400 },
+      );
     }
-    console.log("registerUser success:", response.data); // Log success data (remove in prod)
-    return NextResponse.json(response.data, { status: 201 }); //  return only data and status 201
+    console.log("registerUser success:", response.data);
+    return NextResponse.json(response.data, { status: 201 });
   } catch (error) {
     console.log(error);
     return new NextResponse("Internal server error", { status: 500 });

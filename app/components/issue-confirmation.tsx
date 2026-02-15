@@ -32,10 +32,9 @@ interface ConfirmationProps {
   loading: boolean;
   handleBorrowBook?: (
     paymentMethod: BookPaymentMethod,
-    paymentReference?: string
+    paymentReference?: string,
   ) => void;
   handleReturnBook?: () => void;
-  //Fix this shit with the BookStatus type
   type: string;
 }
 const Confirmation: React.FC<ConfirmationProps> = ({
@@ -46,7 +45,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
   type = "IN_STOCK",
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<BookPaymentMethod>(
-    BookPaymentMethod.CASH
+    BookPaymentMethod.CASH,
   );
   const [paymentReference, setPaymentReference] = useState("");
 
@@ -80,7 +79,6 @@ const Confirmation: React.FC<ConfirmationProps> = ({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {type == "ISSUED" ? (
-              //Improve this with the admin generated code maybe...
               <>
                 Before returning this, make sure you get the money of the fine
                 back, if it were a fine, check our{" "}
@@ -114,7 +112,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
                         setPaymentMethod(
                           value == "TRANSFER"
                             ? BookPaymentMethod.TRANSFER
-                            : BookPaymentMethod.CASH
+                            : BookPaymentMethod.CASH,
                         )
                       }
                     >
@@ -163,7 +161,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({
                 handleBorrowBook &&
                 handleBorrowBook(
                   paymentMethod,
-                  paymentReference && paymentReference
+                  paymentReference && paymentReference,
                 )
               }
             >

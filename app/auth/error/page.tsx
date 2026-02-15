@@ -10,7 +10,6 @@ export default function AuthErrorPage() {
   useEffect(() => {
     if (errorCode) {
       console.error(`Auth Error: ${errorCode}`);
-      // Opcional: Enviar error a servicio de monitoreo
     }
   }, [errorCode]);
 

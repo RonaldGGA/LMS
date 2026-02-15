@@ -6,7 +6,6 @@ import { createErrorResponse } from "@/lib/utils";
 export const addBookCopy = async (bookId: string) => {
   const result = db.$transaction(async (tx) => {
     try {
-      // 1. the other copies
       const bookCopy = await db.bookCopy.findFirstOrThrow({
         where: {
           bookTitleId: bookId,
@@ -56,7 +55,7 @@ export const addBookCopy = async (bookId: string) => {
     } catch (error) {
       console.log(error);
       return createErrorResponse(
-        `Internal server error creating the book copy`
+        `Internal server error creating the book copy`,
       );
     }
   });

@@ -18,7 +18,6 @@ interface requestIssueBookProps {
 export const requestIssueBook = async (values: requestIssueBookProps) => {
   const result = await db.$transaction(async (tx) => {
     try {
-      // get the values
       const {
         id,
         name,
@@ -35,7 +34,6 @@ export const requestIssueBook = async (values: requestIssueBookProps) => {
       if (!session?.user?.id) {
         throw new Error("User not authenticated");
       }
-      //Validate if book in stock
       const dbBook = await db.bookTitle.findUnique({
         where: {
           id,
@@ -52,11 +50,9 @@ export const requestIssueBook = async (values: requestIssueBookProps) => {
       if (dbBook && dbBook.stock <= 0) {
         throw new Error("Book not available, no book in stock");
       }
-      // TODO: validate inputs correctly, overall the payment reference
-      // Create the bail
 
       const bookCopies = dbBook?.bookCopies.filter((copy) =>
-        copy.bookLoans.every((item) => item.status === "IN_STOCK")
+        copy.bookLoans.every((item) => item.status === "IN_STOCK"),
       );
 
       if (!bookCopies) {
@@ -72,11 +68,10 @@ export const requestIssueBook = async (values: requestIssueBookProps) => {
           amount: price,
           paymentMethod,
           paymentReference,
-          // Upgrade this
           returnDate: new Date(
             new Date().getFullYear(),
             new Date().getMonth(),
-            new Date().getDate() + 20
+            new Date().getDate() + 20,
           ),
         },
       });
@@ -84,8 +79,6 @@ export const requestIssueBook = async (values: requestIssueBookProps) => {
         throw new Error("Couldnt create the bail");
       }
       console.log("Security deposit created");
-
-      // Send the request to accept the bail to the admins
 
       const newRequestResponse = await tx.bookLoanRequest.create({
         data: {
@@ -103,7 +96,7 @@ export const requestIssueBook = async (values: requestIssueBookProps) => {
       if (error) {
         console.log(error);
         return createErrorResponse(
-          `Something happened creating the new book ... {error}`
+          `Something happened creating the new book ... {error}`,
         );
       }
     }

@@ -20,7 +20,7 @@ export async function authenticate(formData: SignInData) {
     }
     const result = await signIn("credentials", {
       ...formData,
-      redirect: false, // Prevent automatic redirect
+      redirect: false,
     });
 
     if (result?.error) {

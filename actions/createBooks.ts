@@ -16,7 +16,6 @@ export const createBook = async (values: createBookProps) => {
   const result = await db.$transaction(
     async (tx) => {
       try {
-        // get the values
         const { data, error } = bookSchema.safeParse(values);
         if (error) {
           return createErrorResponse(error.message);
@@ -24,7 +23,6 @@ export const createBook = async (values: createBookProps) => {
 
         const { author, title, price, img, description, categories } = data;
 
-        // Handle author creation
         let author_id = "";
         const authorDb = await tx.bookAuthor.findFirst({
           where: {
@@ -32,7 +30,6 @@ export const createBook = async (values: createBookProps) => {
           },
         });
 
-        // Handle repeated books, no books with the same author and name
         const isDbBook = await tx.bookTitle.findFirst({
           where: {
             title: title,
@@ -61,7 +58,6 @@ export const createBook = async (values: createBookProps) => {
           return createErrorResponse("Database error with author handling");
         }
 
-        //TODO: validate img Url
         const newBook = await tx.bookTitle.create({
           data: {
             title: title,
@@ -94,12 +90,12 @@ export const createBook = async (values: createBookProps) => {
         if (error) {
           console.log(error);
           return createErrorResponse(
-            "Something happened creating the new book"
+            "Something happened creating the new book",
           );
         }
       }
     },
-    { timeout: 30000 }
+    { timeout: 30000 },
   );
   return result;
 };

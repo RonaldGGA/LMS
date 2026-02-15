@@ -20,7 +20,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Clock, Plus } from "lucide-react";
 import BookSkeleton from "./components/Book-skeleton";
 import { format } from "date-fns";
-// import NextImprovements from "@/app/components/next-improvements";
 
 type BigUser = {
   role: Role;
@@ -63,13 +62,11 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         return;
       }
       setBookInfo(result.data || null);
-      // console.log("Got the book");
     } catch (error) {
       console.error(error);
     }
   }, [params.id]);
 
-  // Definir getUserFromDb como función independiente
   const getUserFromDb = useCallback(async () => {
     const userDb = await getBigUser(userId as string);
     if (userDb?.success && userDb.data) {
@@ -92,29 +89,29 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         (item) =>
           item.userId === userId &&
           item.status === "ISSUED" &&
-          item.bookCopy.bookTitleId === params.id
+          item.bookCopy.bookTitleId === params.id,
       );
       const userPendingRequest = userDb?.bookLoanRequests.some(
         (item) =>
           item.bookCopy.bookTitleId === bookInfo.id &&
           item.status === BookLoanRequestStatus.PENDING &&
-          item.userId === userId
+          item.userId === userId,
       );
 
       const hasPendingRequestFromOthers = bookInfo.bookCopies.some((item) =>
         item.bookLoanRequests.some(
           (item) =>
             item.userId !== userId &&
-            item.status === BookLoanRequestStatus.PENDING
-        )
+            item.status === BookLoanRequestStatus.PENDING,
+        ),
       );
       setIssuedByUser(isIssued);
       setPendingRequest(
         userPendingRequest
           ? `Requested by you on ${format(new Date(Date.now()), "hh/dd/yyy")}`
           : hasPendingRequestFromOthers && bookInfo.stock === 1
-          ? "Requested by another user"
-          : ""
+            ? "Requested by another user"
+            : "",
       );
       setPageLoading(false);
     };
@@ -123,12 +120,11 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
 
   const handleBorrowBook = async (
     paymentMethod: BookPaymentMethod,
-    paymentReference: string | undefined
+    paymentReference: string | undefined,
   ) => {
     try {
       setLoading(true);
 
-      // Optimistic UI update
       setIssuedByUser(true);
       setPendingRequest("");
 
@@ -148,17 +144,16 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               params.id,
               userId,
               response.data?.id,
-              Role.SUPERADMIN
+              Role.SUPERADMIN,
             );
           }
 
-          // Actualizar datos antes de cualquier redirección
           await Promise.all([getBook(), getUserFromDb()]);
 
           toast.success(
             userRole === Role.MEMBER
               ? "Book requested, please wait for admin confirmation"
-              : "Book Issued successfully"
+              : "Book Issued successfully",
           );
 
           return;
@@ -173,7 +168,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         }
       }
     } catch (error) {
-      // Revertir cambios si hay error
       setIssuedByUser(false);
       setPendingRequest("");
       console.error(error);
@@ -186,7 +180,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
   const handleReturnBook = async () => {
     try {
       setLoading(true);
-      // Optimistic UI update
       setIssuedByUser(false);
 
       const result = await returnBook(params.id);
@@ -197,7 +190,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
         throw new Error(result.error || "Something went wrong");
       }
     } catch (error) {
-      // Revertir cambios si hay error
       setIssuedByUser(true);
       console.error(error);
       toast.error("Error returning book");
@@ -228,18 +220,11 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
     return <BookSkeleton />;
   }
 
-  // const next = [
-  //   "Implement a better loading state and handling while changing from issued, pending, etc...",
-  //   "Implement popularity logic, add it to the database",
-  //   "Implement  better image optimization",
-  // ];
-
   return (
     <div className="min-h-screen bg-ivory-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Sección de Imagen */}
             <div className="relative aspect-[5/4] lg:aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden">
               {pageLoading ? (
                 <Skeleton className="h-full w-full rounded-xl" />
@@ -254,9 +239,7 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
               )}
             </div>
 
-            {/* Detalles del Libro */}
             <div className="space-y-6">
-              {/* Cabecera */}
               <div className="border-b border-library-midnight/10 pb-6">
                 <h1 className="text-3xl font-bold text-library-dark mb-2">
                   {bookInfo.title}
@@ -269,7 +252,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                 </div>
               </div>
 
-              {/* Categorías */}
               <div className="flex flex-wrap gap-2">
                 {bookInfo.categories?.map((category) => (
                   <Badge
@@ -282,12 +264,10 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                 ))}
               </div>
 
-              {/* Descripción */}
               <div className="prose text-library-midnight leading-relaxed">
                 {bookInfo.description}
               </div>
 
-              {/* Información de Precio y Stock */}
               <div className="bg-ivory-50 rounded-lg p-4">
                 <div className="flex justify-between items-center">
                   <div>
@@ -309,7 +289,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                 </div>
               </div>
 
-              {/* Estado y Acciones */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm">
                   {issuedByUser ? (
@@ -331,7 +310,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
                   )}
                 </div>
 
-                {/* Botones de Acción */}
                 <div className="space-y-2">
                   {issuedByUser && (
                     <Confirmation
@@ -372,13 +350,6 @@ const SingleBookPage = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
         </div>
-        {/* <NextImprovements className="mt-10 space-y-5 text-library-midnight">
-          <ul className="space-y-2">
-            {next.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </NextImprovements> */}
       </div>
     </div>
   );

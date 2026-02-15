@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Book, Users, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils"; // Assuming you have a utility class merger
+import { cn } from "@/lib/utils";
 import { useUserSession } from "@/app/hooks/useUserSession";
 
 const Sidebar = () => {
@@ -30,7 +30,6 @@ const Sidebar = () => {
 
   return (
     <div className="">
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="lg:hidden fixed top-14 right-4 z-50 p-2 rounded-lg bg-white shadow-md"
@@ -38,7 +37,6 @@ const Sidebar = () => {
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
@@ -46,23 +44,20 @@ const Sidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-all duration-300 ease-in-out",
           "lg:translate-x-0 lg:sticky lg:top-[97px]",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex flex-col h-full p-4 ">
-          {/* Logo */}
           <div className="mb-8 px-2">
             <h2 className="text-2xl font-bold text-library-dark">
               Admin Dashboard
             </h2>
           </div>
 
-          {/* Navigation Items */}
           <nav className="flex-1 space-y-1">
             {navigation.map((item) => (
               <Link
@@ -72,14 +67,14 @@ const Sidebar = () => {
                   "flex items-center px-4 py-3 rounded-lg transition-colors",
                   item.current
                     ? "bg-library-dark text-golden-amber"
-                    : "text-library-midnight hover:bg-gray-100"
+                    : "text-library-midnight hover:bg-gray-100",
                 )}
                 onClick={() => setIsOpen(false)}
               >
                 <item.icon
                   className={cn(
                     "w-5 h-5 mr-3",
-                    item.current ? "text-golden-amber" : "text-gray-500"
+                    item.current ? "text-golden-amber" : "text-gray-500",
                   )}
                 />
                 <span className="font-medium">{item.name}</span>
@@ -87,7 +82,6 @@ const Sidebar = () => {
             ))}
           </nav>
 
-          {/* Profile Section (optional) */}
           <div className="border-t border-gray-100 pt-4">
             <div className="flex items-center px-2">
               <div className="flex-shrink-0">

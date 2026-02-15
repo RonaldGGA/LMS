@@ -21,11 +21,10 @@ const validateDNI = (dni: string) => {
 };
 
 export const registerUser = async (
-  values: registerUserProps
+  values: registerUserProps,
 ): Promise<ServiceResponse<UserAccount>> => {
   const { username, password, dni, role = Role.MEMBER } = values;
   try {
-    // Validación de campos requeridos
     if (!username || !password || !dni) {
       return {
         success: false,
@@ -43,8 +42,6 @@ export const registerUser = async (
         },
       };
     }
-
-    // Validación de formato DNI
     const dniValidation = validateDNI(dni);
     if (!dniValidation.isValid) {
       return {
@@ -67,7 +64,6 @@ export const registerUser = async (
       };
     }
 
-    // Verificar usuario existente
     const existingUser = await db.userAccount.findFirst({
       where: { username },
     });
@@ -86,7 +82,6 @@ export const registerUser = async (
       };
     }
 
-    // Creación de usuario
     const newUser = await db.userAccount.create({
       data: { username, password: hashedPassword, dni, role },
     });
@@ -94,8 +89,6 @@ export const registerUser = async (
     return { success: true, data: newUser };
   } catch (error) {
     console.error("Registration Error:", error);
-
-    //handle db errors
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
@@ -117,8 +110,6 @@ export const registerUser = async (
       };
     }
 
-    // Error generic
-
     return {
       success: false,
       error: {
@@ -130,7 +121,6 @@ export const registerUser = async (
   }
 };
 
-//login a new user
 interface loginUserProps {
   username: string;
   password: string;
@@ -139,12 +129,10 @@ export const loginUser = async (values: loginUserProps) => {
   try {
     const { username, password } = values;
     const { success, error } = loginSchema.safeParse(values);
-    // Input validation
     if (!success) {
       return createErrorResponse(error.message);
     }
 
-    // Find user in database
     const dbUser = await db.userAccount.findFirst({
       where: {
         username,
@@ -153,18 +141,16 @@ export const loginUser = async (values: loginUserProps) => {
 
     if (!dbUser) {
       return createErrorResponse(
-        "Username not found. Please check your username."
+        "Username not found. Please check your username.",
       );
     }
 
-    // Validate password
     const validatePassword = await bcrypt.compare(password, dbUser.password);
 
     if (!validatePassword) {
       return createErrorResponse("The password you entered is incorrect.");
     }
 
-    // Construct user data without password
     const user = {
       id: dbUser.id,
       username: dbUser.username,
@@ -175,7 +161,7 @@ export const loginUser = async (values: loginUserProps) => {
   } catch (err) {
     console.error("Login Error:", err);
     return createErrorResponse(
-      "A server error occurred during login. Please try again."
+      "A server error occurred during login. Please try again.",
     );
   }
 };

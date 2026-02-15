@@ -1,4 +1,3 @@
-// app/dashboard/books/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -78,12 +77,12 @@ const BooksDashboard = () => {
 
   const handleDelete = async (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    bookId: string
+    bookId: string,
   ) => {
     e.stopPropagation();
     if (
       !confirm(
-        "Are you sure you want to delete this book, there is no way back after this"
+        "Are you sure you want to delete this book, there is no way back after this",
       )
     ) {
       return null;
@@ -106,7 +105,7 @@ const BooksDashboard = () => {
 
   const handleBookClick = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    bookId: string
+    bookId: string,
   ) => {
     e.stopPropagation();
 
@@ -117,7 +116,7 @@ const BooksDashboard = () => {
     e:
       | React.MouseEvent<HTMLButtonElement, MouseEvent>
       | React.MouseEvent<HTMLDivElement, MouseEvent>,
-    book: dashboardBook | null
+    book: dashboardBook | null,
   ) => {
     e.stopPropagation();
     setSelectedBook(book);
