@@ -65,15 +65,14 @@ model BookTitle {
   book_price String @default("0")
   stock      Int    @default(1)
 
-  bookRatings BookRating[]
-  bookCopies  BookCopy[]
-  categories  BookCategory[]
-  img         String?
-
+  bookRatings       BookRating[]
+  bookCopies        BookCopy[]
+  categories        BookCategory[]
+  img               String?
+  authorName        String
   usuallySearchedBy String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@index([title, authorId])
 }

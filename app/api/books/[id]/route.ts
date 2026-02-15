@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { CategoryPlus } from "@/types";
 
 export async function GET(
   req: Request,
@@ -81,90 +80,68 @@ export async function PATCH(
   { params }: { params: { id: string } },
 ) {
   try {
-    const {
-      book_name = "",
-      img = "",
-      author = "",
-      categories = [],
-      price = "",
-    } = await req.json();
+    const { book_name, img, author, categories, price } = await req.json();
 
     if (!params.id) {
-      return NextResponse.json(
-        { error: "ID of the book required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
     }
 
     const result = await prisma.$transaction(
       async (tx) => {
-        const data: {
-          title?: string;
-          img?: string;
-          book_price?: string;
-          author?: string;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          categories?: any;
-        } = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data: any = {};
 
         if (book_name) data.title = book_name;
         if (img) data.img = img;
         if (price) data.book_price = price;
 
         if (author) {
+          let authorId: string;
+          let authorName: string;
+
           const authorExists = await tx.bookAuthor.findUnique({
             where: { author_name: author },
           });
 
           if (authorExists) {
-            data.author = authorExists.id;
+            authorId = authorExists.id;
+            authorName = authorExists.author_name;
           } else {
             const newAuthor = await tx.bookAuthor.create({
               data: { author_name: author },
             });
-            data.author = newAuthor.id;
+            authorId = newAuthor.id;
+            authorName = newAuthor.author_name;
           }
+
+          data.authorId = authorId;
+          data.authorName = authorName;
         }
-        if (categories.length > 0) {
+
+        if (categories && categories.length > 0) {
           data.categories = {
-            connectOrCreate: categories.map((category: CategoryPlus) => ({
-              where: { id: category.id },
-              create: { name: category.name },
-            })),
+            set: [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            connect: categories.map((cat: any) => ({ id: cat.id })),
           };
         }
 
         const book = await tx.bookTitle.update({
           where: { id: params.id },
-          data: {
-            title: data.title,
-            categories: data.categories,
-            img: data.img,
-            authorId: data.author,
-            book_price: data.book_price,
-          },
+          data,
         });
-        if (!book) {
-          throw new Error("Error updating the book");
-        }
 
         return book;
       },
-      {
-        timeout: 30000,
-      },
+      { timeout: 30000 },
     );
 
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error en PATCH:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
-
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } },

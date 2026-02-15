@@ -45,6 +45,11 @@ const authors = [
     bio: "American fantasy and science fiction writer",
   },
   { name: "Rebecca Yarros", bio: "Contemporary romance author" },
+  { name: "Ernest Hemingway", bio: "American novelist and short story writer" },
+  { name: "Isabel Allende", bio: "Chilean writer of magical realism" },
+  { name: "Haruki Murakami", bio: "Japanese writer of surrealist fiction" },
+  { name: "Agatha Christie", bio: "English writer known for detective novels" },
+  { name: "Toni Morrison", bio: "American novelist and Nobel laureate" },
 ];
 
 const categories = [
@@ -70,109 +75,27 @@ const categories = [
   "Philosophy",
 ];
 
-const bookTitles = [
-  {
-    title: "Harry Potter and the Philosopher's Stone",
-    description:
-      "The first book in the Harry Potter series where Harry discovers he is a wizard",
-    authorIndex: 0,
-    price: "19.99",
-    categories: ["Fantasy", "Young Adult", "Children"],
-    img: "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400",
-    usuallySearchedBy: ["magic", "wizard school", "fantasy"],
-  },
-  {
-    title: "A Game of Thrones",
-    description:
-      "First novel in the epic fantasy series A Song of Ice and Fire",
-    authorIndex: 1,
-    price: "24.99",
-    categories: ["Fantasy", "Historical Fiction"],
-    img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400",
-    usuallySearchedBy: ["medieval", "dragon", "political intrigue"],
-  },
-  {
-    title: "Pride and Prejudice",
-    description:
-      "Romantic novel of manners that charts the emotional development of protagonist Elizabeth Bennet",
-    authorIndex: 2,
-    price: "14.99",
-    categories: ["Classics", "Romance", "Historical Fiction"],
-    img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400",
-    usuallySearchedBy: ["regency", "romance", "classic literature"],
-  },
-  {
-    title: "The Shining",
-    description: "Horror novel about a family's winter at an isolated hotel",
-    authorIndex: 3,
-    price: "18.50",
-    categories: ["Horror", "Thriller"],
-    img: "https://images.unsplash.com/photo-1706717738138-8a9a95afe9ff?w=400",
-    usuallySearchedBy: [
-      "haunted hotel",
-      "psychological horror",
-      "supernatural",
-    ],
-  },
-  {
-    title: "One Hundred Years of Solitude",
-    description: "Landmark magical realism novel about the Buendía family",
-    authorIndex: 4,
-    price: "22.95",
-    categories: ["Classics", "Historical Fiction"],
-    img: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400",
-    usuallySearchedBy: [
-      "magical realism",
-      "latin american literature",
-      "family saga",
-    ],
-  },
-  {
-    title: "The Handmaid's Tale",
-    description: "Dystopian novel set in a totalitarian society",
-    authorIndex: 5,
-    price: "16.99",
-    categories: ["Science Fiction", "Dystopian", "Feminist Literature"],
-    img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400",
-    usuallySearchedBy: ["dystopia", "feminism", "political fiction"],
-  },
-  {
-    title: "Sapiens: A Brief History of Humankind",
-    description: "Explores the history of human evolution",
-    authorIndex: 6,
-    price: "21.99",
-    categories: ["Science", "History", "Non-fiction"],
-    img: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=400",
-    usuallySearchedBy: ["human history", "evolution", "anthropology"],
-  },
-  {
-    title: "Becoming",
-    description: "Memoir by former First Lady Michelle Obama",
-    authorIndex: 7,
-    price: "25.00",
-    categories: ["Biography", "Memoir", "Self-Help"],
-    img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400",
-    usuallySearchedBy: ["memoir", "inspiration", "autobiography"],
-  },
-  {
-    title: "The Way of Kings",
-    description: "Epic fantasy novel set in the world of Roshar",
-    authorIndex: 8,
-    price: "28.99",
-    categories: ["Fantasy", "Epic Fantasy"],
-    img: "https://images.unsplash.com/photo-1650737845108-3b551c9cd1ee?w=400",
-    usuallySearchedBy: ["epic fantasy", "world building", "magic system"],
-  },
-  {
-    title: "Fourth Wing",
-    description:
-      "Romantic fantasy about a young woman training to become a dragon rider",
-    authorIndex: 9,
-    price: "17.99",
-    categories: ["Fantasy", "Romance", "Young Adult"],
-    img: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400",
-    usuallySearchedBy: ["dragon riders", "romantasy", "academy setting"],
-  },
+const imageUrls = [
+  "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400",
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400",
+  "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400",
+  "https://images.unsplash.com/photo-1706717738138-8a9a95afe9ff?w=400",
+  "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400",
+  "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400",
+  "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=400",
+  "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400",
+  "https://images.unsplash.com/photo-1650737845108-3b551c9cd1ee?w=400",
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400",
+  "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400",
+  "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400",
+  "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400",
+  "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400",
+  "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400",
+  "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400",
+  "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=400",
+  "https://images.unsplash.com/photo-1497633762265-9d4e4b771b0a?w=400",
+  "https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=400",
+  "https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=400",
 ];
 
 const users = [
@@ -213,6 +136,107 @@ const users = [
   },
 ];
 
+// Generate unique book titles
+function generateUniqueBookTitles(count: number): string[] {
+  const prefixes = [
+    "The",
+    "A",
+    "Tales of",
+    "Chronicles of",
+    "Book of",
+    "History of",
+    "Adventures of",
+    "Mystery of",
+    "Secret of",
+    "Legend of",
+  ];
+  const middle = [
+    "Lost",
+    "Hidden",
+    "Dark",
+    "Forgotten",
+    "Ancient",
+    "Magical",
+    "Infinite",
+    "Silent",
+    "Broken",
+    "Eternal",
+  ];
+  const subjects = [
+    "Kingdom",
+    "Forest",
+    "City",
+    "Ocean",
+    "Mountain",
+    "Star",
+    "Soul",
+    "Dream",
+    "Shadow",
+    "Light",
+  ];
+  const suffixes = [
+    "Saga",
+    "Trilogy",
+    "Collection",
+    "Anthology",
+    "Story",
+    "Tale",
+    "Legend",
+    "Myth",
+    "Chronicle",
+    "Memoir",
+  ];
+
+  const titles = new Set<string>();
+  while (titles.size < count) {
+    const pattern = Math.floor(Math.random() * 5);
+    let title = "";
+    switch (pattern) {
+      case 0:
+        title = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${middle[Math.floor(Math.random() * middle.length)]} ${subjects[Math.floor(Math.random() * subjects.length)]}`;
+        break;
+      case 1:
+        title = `${subjects[Math.floor(Math.random() * subjects.length)]} of the ${middle[Math.floor(Math.random() * middle.length)]}`;
+        break;
+      case 2:
+        title = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${subjects[Math.floor(Math.random() * subjects.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+        break;
+      case 3:
+        title = `The ${middle[Math.floor(Math.random() * middle.length)]} ${subjects[Math.floor(Math.random() * subjects.length)]}`;
+        break;
+      default:
+        title = `${subjects[Math.floor(Math.random() * subjects.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+    }
+    // Add a unique suffix to avoid duplicates
+    const uniqueSuffix = ` #${titles.size + 1}`;
+    titles.add(title + uniqueSuffix);
+  }
+  return Array.from(titles);
+}
+
+const keywords = [
+  "adventure",
+  "magic",
+  "fantasy",
+  "science",
+  "history",
+  "romance",
+  "mystery",
+  "thriller",
+  "horror",
+  "biography",
+  "self-help",
+  "classic",
+  "young adult",
+  "children",
+  "poetry",
+  "cooking",
+  "travel",
+  "art",
+  "philosophy",
+  "drama",
+];
+
 async function cleanDatabase() {
   console.log("🧹 Cleaning existing data...");
 
@@ -245,6 +269,7 @@ async function main() {
 
     await cleanDatabase();
 
+    // Crear usuarios
     console.log("👥 Creating users...");
     const createdUsers = [];
     for (const userData of users) {
@@ -261,20 +286,20 @@ async function main() {
       console.log(`   Created ${user.role.toLowerCase()}: ${user.username}`);
     }
 
+    // Crear autores
     console.log("✍️ Creating authors...");
     const createdAuthors = [];
     for (const authorData of authors) {
       const author = await prisma.bookAuthor.create({
-        data: {
-          author_name: authorData.name,
-        },
+        data: { author_name: authorData.name },
       });
       createdAuthors.push(author);
     }
     console.log(`   Created ${createdAuthors.length} authors`);
 
+    // Crear categorías
     console.log("🏷️ Creating categories...");
-    const createdCategories = [];
+    const createdCategories: { id: string; name: string }[] = [];
     for (const categoryName of categories) {
       const category = await prisma.bookCategory.create({
         data: { name: categoryName },
@@ -283,40 +308,73 @@ async function main() {
     }
     console.log(`   Created ${createdCategories.length} categories`);
 
-    console.log("📚 Creating book titles...");
+    // ==================== CREAR 200 LIBROS ÚNICOS ====================
+    console.log("📚 Creating 200 book titles...");
+    const bookTitlesToCreate = 200;
+    const generatedTitles = generateUniqueBookTitles(bookTitlesToCreate);
     const createdBookTitles = [];
-    for (const bookData of bookTitles) {
-      const categoryIds = createdCategories
-        .filter((cat) => bookData.categories.includes(cat.name))
+
+    for (let i = 0; i < bookTitlesToCreate; i++) {
+      // Seleccionar autor aleatorio
+      const author =
+        createdAuthors[Math.floor(Math.random() * createdAuthors.length)];
+
+      // Seleccionar entre 1 y 3 categorías aleatorias
+      const numCategories = Math.floor(Math.random() * 3) + 1;
+      const shuffledCategories = [...createdCategories].sort(
+        () => 0.5 - Math.random(),
+      );
+      const selectedCategories = shuffledCategories
+        .slice(0, numCategories)
         .map((cat) => ({ id: cat.id }));
+
+      // Seleccionar imagen aleatoria
+      const img = imageUrls[Math.floor(Math.random() * imageUrls.length)];
+
+      // Generar palabras clave (3-5)
+      const numKeywords = Math.floor(Math.random() * 3) + 3;
+      const shuffledKeywords = [...keywords].sort(() => 0.5 - Math.random());
+      const selectedKeywords = shuffledKeywords.slice(0, numKeywords);
+
+      // Precio aleatorio entre 5 y 30
+      const price = (Math.random() * 25 + 5).toFixed(2);
+
+      // Descripción genérica
+      const description = `A fascinating ${selectedCategories.map((c) => createdCategories.find((cat) => cat.id === c.id)?.name).join(", ")} book that will captivate readers.`;
 
       const bookTitle = await prisma.bookTitle.create({
         data: {
-          title: bookData.title,
-          description: bookData.description,
-          authorId: createdAuthors[bookData.authorIndex].id,
-          book_price: bookData.price,
-          stock: Math.floor(Math.random() * 5) + 2, // 2-6 copies
-          averageRating: 4 + Math.random(), // 4.0-5.0
-          loanCount: Math.floor(Math.random() * 100) + 20,
+          title: generatedTitles[i],
+          description,
+          authorName: author.author_name,
+          authorId: author.id,
+          book_price: price,
+          stock: Math.floor(Math.random() * 8) + 2, // 2-9 copias
+          averageRating: 3 + Math.random() * 2, // 3.0-5.0
+          loanCount: Math.floor(Math.random() * 150) + 10,
           lastLoanedAt: new Date(
-            Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
+            Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000,
           ),
-          img: bookData.img,
-          usuallySearchedBy: bookData.usuallySearchedBy,
+          img,
+          usuallySearchedBy: selectedKeywords,
           categories: {
-            connect: categoryIds,
+            connect: selectedCategories,
           },
         },
       });
       createdBookTitles.push(bookTitle);
-    }
-    console.log(`   Created ${createdBookTitles.length} book titles`);
 
+      if ((i + 1) % 50 === 0) {
+        console.log(`   ... ${i + 1} books created`);
+      }
+    }
+    console.log(`   ✅ Created ${createdBookTitles.length} book titles`);
+
+    // ==================== CREAR COPIES ====================
     console.log("📑 Creating book copies...");
     const createdBookCopies = [];
     for (const bookTitle of createdBookTitles) {
-      const numberOfCopies = Math.floor(Math.random() * 3) + 2; // 2-4 copies per title
+      const numberOfCopies = Math.floor(Math.random() * 3) + 2; // 2-4 copias por título
       for (let i = 1; i <= numberOfCopies; i++) {
         const bookCopy = await prisma.bookCopy.create({
           data: {
@@ -535,7 +593,7 @@ async function main() {
 
     console.log("\n📚 FEATURED BOOKS IN DEMO:");
     console.log("========================");
-    createdBookTitles.forEach((book, i) => {
+    createdBookTitles.slice(0, 10).forEach((book, i) => {
       console.log(`  ${i + 1}. ${book.title} (${book.stock} copies available)`);
     });
   } catch (error) {

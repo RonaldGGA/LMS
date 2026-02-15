@@ -64,6 +64,7 @@ export const createBook = async (values: createBookProps) => {
             authorId: author_id,
             book_price: price.toString(),
             description,
+            authorName: author,
             img,
             bookRatings: {},
             stock: 1,
